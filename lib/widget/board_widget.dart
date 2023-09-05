@@ -1,3 +1,4 @@
+import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/widget/cell_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -22,8 +23,12 @@ class BoardWidget extends StatelessWidget {
       return cells;
     }
 
-    return SizedBox(
-        height: width,
+    return Container(
+        margin: EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Palette.brown400,
+        ),
+        height: width - 20,
         width: width,
         child: GridView.count(
           crossAxisCount: 8,

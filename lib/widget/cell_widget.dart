@@ -1,3 +1,4 @@
+import 'package:chess_rps/widget/custom/custom_gradient.dart';
 import 'package:flutter/material.dart';
 
 class CellWidget extends StatelessWidget {
@@ -11,8 +12,16 @@ class CellWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: isEven ? Colors.black38 : Colors.white12,
-      child: Text('cell'),
+      decoration: BoxDecoration(
+          // color: isEven ? Colors.black38 : Colors.white12,
+          borderRadius: BorderRadius.circular(4)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: CustomPaint(
+          painter: CustomGradient(),
+          child: Text('cell'),
+        ),
+      ),
     );
   }
 }
