@@ -8,6 +8,7 @@ class Palette {
   static const yellow800 = Color(0xFF806600);
 
   static const white200 = Color(0xFFEEEEEE);
+  static const white300 = Color(0xFFC6C6C6);
   static const white400 = Color(0xFFACACAC);
   static const white500 = Color(0xFFA3A3A3);
   static const white600 = Color(0xFFA4A4A4);

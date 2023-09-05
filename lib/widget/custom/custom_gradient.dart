@@ -1,20 +1,42 @@
 import 'dart:math' as math;
 
+import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:flutter/material.dart';
 
+const _darkPalette = [
+  Palette.yellow200,
+  Palette.yellow300,
+  Palette.yellow400,
+  Palette.yellow500,
+  Palette.yellow800
+];
+
+const _lightPalette = [
+  Palette.white200,
+  Palette.white300,
+  Palette.white400,
+  Palette.white500,
+  Palette.white600
+];
+
 class CustomGradient extends CustomPainter {
+  final Side cellSide;
+
+  const CustomGradient({required this.cellSide});
+
   @override
   void paint(Canvas canvas, Size size) {
-    final side = size.width;
-    final path = Path();
+    final palette = cellSide == Side.light ? _lightPalette : _darkPalette;
 
-    path.moveTo(0, side);
+    final side = size.width;
+
+    final path = Path()..moveTo(0, side);
 
     final paint = Paint()
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke
-      ..color = Colors.red;
+      ..color = palette[2];
 
     for (double i = -1; i <= 1; i += 0.1) {
       final x = (i + 1) / 2 * side;
@@ -26,7 +48,7 @@ class CustomGradient extends CustomPainter {
     canvas.drawPath(path, paint);
 
     final radialGradient = RadialGradient(
-      colors: const [Palette.yellow200, Palette.yellow400],
+      colors: [palette[0], palette[2]],
       radius: side / 8,
       center: Alignment.bottomCenter,
       stops: const [0.1, 0.9],
@@ -45,11 +67,11 @@ class CustomGradient extends CustomPainter {
 
     canvas.drawPath(bottomPath, bottomPaint);
 
-    const topGradient = LinearGradient(
-      colors: [Palette.yellow500, Palette.yellow300],
+    final topGradient = LinearGradient(
+      colors: [palette[3], palette[1]],
       begin: Alignment.bottomLeft,
       end: Alignment.topRight,
-      stops: [0.5, 1],
+      stops: const [0.5, 1],
     );
 
     final topPath = Path()
@@ -57,7 +79,7 @@ class CustomGradient extends CustomPainter {
       ..lineTo(0, 0);
 
     final topPaint = Paint()
-      ..color = Palette.yellow400
+      ..color = palette[3]
       ..shader = topGradient.createShader(
         Rect.fromCenter(
           center: Offset(0, side),
