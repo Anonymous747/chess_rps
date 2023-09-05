@@ -14,6 +14,14 @@ class CellWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
           // color: isEven ? Colors.black38 : Colors.white12,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.white.withOpacity(0.6),
+              blurRadius: 4,
+              blurStyle: BlurStyle.outer,
+              offset: const Offset(1, 2),
+            )
+          ],
           borderRadius: BorderRadius.circular(4)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(6),
