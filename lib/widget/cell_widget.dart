@@ -2,6 +2,8 @@ import 'package:chess_rps/model/cell.dart';
 import 'package:chess_rps/widget/custom/custom_gradient.dart';
 import 'package:flutter/material.dart';
 
+const String _imagesPath = 'assets/images/figures';
+
 class CellWidget extends StatelessWidget {
   final Cell cell;
 
@@ -9,6 +11,13 @@ class CellWidget extends StatelessWidget {
     required this.cell,
     Key? key,
   }) : super(key: key);
+
+  String get _appropriateImage {
+    final side = cell.side.toString();
+    final name = cell.figure!.runtimeType.toString().toLowerCase();
+
+    return '$_imagesPath/$side/$name.png';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +37,10 @@ class CellWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         child: CustomPaint(
           painter: CustomGradient(cellSide: cell.side),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [if (cell.figure != null) Image.asset(_appropriateImage)],
+          ),
         ),
       ),
     );

@@ -1,4 +1,12 @@
+const String _blackSide = 'black';
+const String _whiteSide = 'white';
+
 enum Side {
   light,
-  dark,
+  dark;
+
+  @override
+  String toString() {
+    return this == Side.dark ? _blackSide : _whiteSide;
+  }
 }

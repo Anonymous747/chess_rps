@@ -1,5 +1,6 @@
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/model/cell.dart';
+import 'package:chess_rps/model/figures/pawn.dart';
 
 const cellsRowCount = 8;
 
@@ -11,6 +12,7 @@ class Board {
 
   void startGame() {
     _fillEmptyCells();
+    _fillPawns();
   }
 
   void _fillEmptyCells() {
@@ -25,6 +27,16 @@ class Board {
       }
 
       cells.add(row);
+    }
+  }
+
+  void _fillPawns() {
+    final rows = [1, 6];
+
+    for (final row in rows) {
+      for (int i = 0; i < cellsRowCount; i++) {
+        cells[row][i].figure = Pawn();
+      }
     }
   }
 }

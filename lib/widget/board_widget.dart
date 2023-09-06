@@ -23,20 +23,6 @@ class BoardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
-    List<Widget> _buildCells() {
-      final cells = <Widget>[];
-
-      for (int i = 0; i < cellsRowCount; i++) {
-        for (int j = 0; j < cellsRowCount; j++) {
-          cells.add(CellWidget(
-            cell: board.cells[i][j],
-          ));
-        }
-      }
-
-      return cells;
-    }
-
     final sideSize = _calculateCellWidth(context);
 
     return Stack(
@@ -95,6 +81,21 @@ class BoardWidget extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  List<Widget> _buildCells() {
+    final cells = board.cells;
+    var widgets = <Widget>[];
+
+    for (int i = 0; i < cells.length; i++) {
+      for (int j = 0; j < cells[i].length; j++) {
+        widgets.add(CellWidget(
+          cell: board.cells[i][j],
+        ));
+      }
+    }
+
+    return widgets;
   }
 
   double _calculateCellWidth(BuildContext context) =>
