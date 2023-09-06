@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Palette {
+  static const yellow150 = Color(0xFFFFCC00);
   static const yellow200 = Color(0xFFEFC000);
   static const yellow300 = Color(0xFF988538);
   static const yellow400 = Color(0xFF8E771D);
@@ -16,4 +17,5 @@ class Palette {
   static const black = Color(0xFF000000);
 
   static const brown400 = Color(0xFF554400);
+  static const brown600 = Color(0xFF2B2200);
 }

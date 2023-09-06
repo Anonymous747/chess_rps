@@ -27,7 +27,7 @@ class CellWidget extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(6),
         child: CustomPaint(
-          painter: CustomGradient(cellSide: isEven ? Side.light : Side.dark),
+          painter: CustomGradient(cellSide: isEven ? Side.dark : Side.light),
         ),
       ),
     );
