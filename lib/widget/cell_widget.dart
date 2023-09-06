@@ -1,12 +1,12 @@
-import 'package:chess_rps/common/enum.dart';
+import 'package:chess_rps/model/cell.dart';
 import 'package:chess_rps/widget/custom/custom_gradient.dart';
 import 'package:flutter/material.dart';
 
 class CellWidget extends StatelessWidget {
-  final bool isEven;
+  final Cell cell;
 
   const CellWidget({
-    required this.isEven,
+    required this.cell,
     Key? key,
   }) : super(key: key);
 
@@ -27,7 +27,7 @@ class CellWidget extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(6),
         child: CustomPaint(
-          painter: CustomGradient(cellSide: isEven ? Side.dark : Side.light),
+          painter: CustomGradient(cellSide: cell.side),
         ),
       ),
     );

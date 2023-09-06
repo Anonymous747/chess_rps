@@ -1,4 +1,5 @@
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/model/board.dart';
 import 'package:chess_rps/widget/cell_widget.dart';
 import 'package:chess_rps/widget/collection/letters_collection.dart';
 import 'package:chess_rps/widget/collection/numbers_column.dart';
@@ -11,7 +12,12 @@ const double _parentBorderWidth = 20;
 const double _childBorderWidth = 6;
 
 class BoardWidget extends StatelessWidget {
-  const BoardWidget({Key? key}) : super(key: key);
+  final Board board;
+
+  const BoardWidget({
+    required this.board,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +26,11 @@ class BoardWidget extends StatelessWidget {
     List<Widget> _buildCells() {
       final cells = <Widget>[];
 
-      for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-          final isEven = (i + j + 1) % 2 == 0;
-
-          cells.add(CellWidget(isEven: isEven));
+      for (int i = 0; i < cellsRowCount; i++) {
+        for (int j = 0; j < cellsRowCount; j++) {
+          cells.add(CellWidget(
+            cell: board.cells[i][j],
+          ));
         }
       }
 
@@ -57,6 +63,7 @@ class BoardWidget extends StatelessWidget {
         ),
         Positioned(
           left: _parentBorderWidth + _childBorderWidth,
+          top: 2,
           child: LettersCollection(
             letters: _letters,
             cellWidth: sideSize,
