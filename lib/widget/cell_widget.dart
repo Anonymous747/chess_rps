@@ -13,7 +13,7 @@ class CellWidget extends StatelessWidget {
   }) : super(key: key);
 
   String get _appropriateImage {
-    final side = cell.side.toString();
+    final side = cell.figure!.side.toString();
     final name = cell.figure!.runtimeType.toString().toLowerCase();
 
     return '$_imagesPath/$side/$name.png';
@@ -38,8 +38,9 @@ class CellWidget extends StatelessWidget {
         child: CustomPaint(
           painter: CustomGradient(cellSide: cell.side),
           child: Stack(
-            alignment: Alignment.center,
-            children: [if (cell.figure != null) Image.asset(_appropriateImage)],
+            children: [
+              if (cell.figure != null) Image.asset(_appropriateImage),
+            ],
           ),
         ),
       ),
