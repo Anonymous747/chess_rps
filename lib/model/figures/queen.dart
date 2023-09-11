@@ -1,4 +1,5 @@
 import 'package:chess_rps/common/enum.dart';
+import 'package:chess_rps/model/cell.dart';
 import 'package:chess_rps/model/figure.dart';
 
 class Queen implements Figure {
@@ -10,12 +11,13 @@ class Queen implements Figure {
   Side get side => _side;
 
   @override
-  void moveTo() {
+  void moveTo(Cell to) {
     // TODO: implement moveTo
   }
 
   @override
-  void possibleMoves() {
+  bool possibleMoves() {
     // TODO: implement possibleMoves
+    return true;
   }
 }

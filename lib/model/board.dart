@@ -11,7 +11,6 @@ const cellsRowCount = 8;
 
 class Board {
   List<List<Cell>> cells = [];
-
   List<Cell> lostLightFigures = [];
   List<Cell> lostDarkFigures = [];
 
@@ -33,7 +32,7 @@ class Board {
         final isEven = (i + j + 1) % 2 == 0;
         final side = isEven ? Side.light : Side.dark;
 
-        row.add(Cell(side: side));
+        row.add(Cell(side: side, row: i, column: j));
       }
 
       cells.add(row);
