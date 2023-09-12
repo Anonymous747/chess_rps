@@ -13,6 +13,7 @@ class Cell with _$Cell {
     required Side side,
     required Position position,
     @Default(false) bool isSelected,
+    @Default(false) bool isAvailable,
     @Default(null) Figure? figure,
   }) = _Cell;
 }

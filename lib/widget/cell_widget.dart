@@ -7,7 +7,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 const String _imagesPath = 'assets/images/figures';
 
 class CellWidget extends HookConsumerWidget {
-  // final Cell cell;
   final int column;
   final int row;
 
@@ -52,6 +51,7 @@ class CellWidget extends HookConsumerWidget {
                 if (cell.figure != null)
                   Image.asset(_getAppropriateImage(cell)),
                 if (cell.isSelected) const Text('Selected'),
+                if (cell.isAvailable) const Text('Available'),
               ],
             ),
           ),

@@ -45,7 +45,7 @@ class ActionChecker {
     return true;
   }
 
-  static bool isDiagonalMoveAvailable(
+  static bool isDiagonalActionAvailable(
       Board board, Cell from, Cell to, Side fromSide) {
     if (to.figure?.side != null && fromSide == to.figure!.side) return false;
 
@@ -77,11 +77,18 @@ class ActionChecker {
     return false;
   }
 
+  static bool isBishopActionAvailable(
+      Board board, Cell from, Cell to, Side fromSide) {
+    if (isDiagonalActionAvailable(board, from, to, fromSide)) return true;
+
+    return false;
+  }
+
   static bool isQueenActionAvailable(
       Board board, Cell from, Cell to, Side fromSide) {
     if (isVerticalActionAvailable(board, from, to, fromSide)) return true;
     if (isHorizontalActionAvailable(board, from, to, fromSide)) return true;
-    if (isDiagonalMoveAvailable(board, from, to, fromSide)) return true;
+    if (isDiagonalActionAvailable(board, from, to, fromSide)) return true;
 
     return false;
   }

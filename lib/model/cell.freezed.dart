@@ -19,6 +19,7 @@ mixin _$Cell {
   Side get side => throw _privateConstructorUsedError;
   Position get position => throw _privateConstructorUsedError;
   bool get isSelected => throw _privateConstructorUsedError;
+  bool get isAvailable => throw _privateConstructorUsedError;
   Figure? get figure => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -30,7 +31,12 @@ abstract class $CellCopyWith<$Res> {
   factory $CellCopyWith(Cell value, $Res Function(Cell) then) =
       _$CellCopyWithImpl<$Res, Cell>;
   @useResult
-  $Res call({Side side, Position position, bool isSelected, Figure? figure});
+  $Res call(
+      {Side side,
+      Position position,
+      bool isSelected,
+      bool isAvailable,
+      Figure? figure});
 }
 
 /// @nodoc
@@ -49,6 +55,7 @@ class _$CellCopyWithImpl<$Res, $Val extends Cell>
     Object? side = null,
     Object? position = null,
     Object? isSelected = null,
+    Object? isAvailable = null,
     Object? figure = freezed,
   }) {
     return _then(_value.copyWith(
@@ -64,6 +71,10 @@ class _$CellCopyWithImpl<$Res, $Val extends Cell>
           ? _value.isSelected
           : isSelected // ignore: cast_nullable_to_non_nullable
               as bool,
+      isAvailable: null == isAvailable
+          ? _value.isAvailable
+          : isAvailable // ignore: cast_nullable_to_non_nullable
+              as bool,
       figure: freezed == figure
           ? _value.figure
           : figure // ignore: cast_nullable_to_non_nullable
@@ -78,7 +89,12 @@ abstract class _$$_CellCopyWith<$Res> implements $CellCopyWith<$Res> {
       __$$_CellCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Side side, Position position, bool isSelected, Figure? figure});
+  $Res call(
+      {Side side,
+      Position position,
+      bool isSelected,
+      bool isAvailable,
+      Figure? figure});
 }
 
 /// @nodoc
@@ -93,6 +109,7 @@ class __$$_CellCopyWithImpl<$Res> extends _$CellCopyWithImpl<$Res, _$_Cell>
     Object? side = null,
     Object? position = null,
     Object? isSelected = null,
+    Object? isAvailable = null,
     Object? figure = freezed,
   }) {
     return _then(_$_Cell(
@@ -107,6 +124,10 @@ class __$$_CellCopyWithImpl<$Res> extends _$CellCopyWithImpl<$Res, _$_Cell>
       isSelected: null == isSelected
           ? _value.isSelected
           : isSelected // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isAvailable: null == isAvailable
+          ? _value.isAvailable
+          : isAvailable // ignore: cast_nullable_to_non_nullable
               as bool,
       figure: freezed == figure
           ? _value.figure
@@ -123,6 +144,7 @@ class _$_Cell implements _Cell {
       {required this.side,
       required this.position,
       this.isSelected = false,
+      this.isAvailable = false,
       this.figure = null});
 
   @override
@@ -134,11 +156,14 @@ class _$_Cell implements _Cell {
   final bool isSelected;
   @override
   @JsonKey()
+  final bool isAvailable;
+  @override
+  @JsonKey()
   final Figure? figure;
 
   @override
   String toString() {
-    return 'Cell(side: $side, position: $position, isSelected: $isSelected, figure: $figure)';
+    return 'Cell(side: $side, position: $position, isSelected: $isSelected, isAvailable: $isAvailable, figure: $figure)';
   }
 
   @override
@@ -151,12 +176,14 @@ class _$_Cell implements _Cell {
                 other.position == position) &&
             (identical(other.isSelected, isSelected) ||
                 other.isSelected == isSelected) &&
+            (identical(other.isAvailable, isAvailable) ||
+                other.isAvailable == isAvailable) &&
             (identical(other.figure, figure) || other.figure == figure));
   }
 
   @override
   int get hashCode =>
-      Object.hash(runtimeType, side, position, isSelected, figure);
+      Object.hash(runtimeType, side, position, isSelected, isAvailable, figure);
 
   @JsonKey(ignore: true)
   @override
@@ -170,6 +197,7 @@ abstract class _Cell implements Cell {
       {required final Side side,
       required final Position position,
       final bool isSelected,
+      final bool isAvailable,
       final Figure? figure}) = _$_Cell;
 
   @override
@@ -178,6 +206,8 @@ abstract class _Cell implements Cell {
   Position get position;
   @override
   bool get isSelected;
+  @override
+  bool get isAvailable;
   @override
   Figure? get figure;
   @override
