@@ -17,6 +17,6 @@ class Pawn extends Figure {
 
   @override
   bool availableForMove(Board board, Cell to) {
-    return ActionChecker.isVerticalActionAvailable(board, cell, to, side);
+    return ActionChecker.isRookActionAvailable(board, cell, to, side);
   }
 }
