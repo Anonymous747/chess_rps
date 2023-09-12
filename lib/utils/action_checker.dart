@@ -45,6 +45,30 @@ class ActionChecker {
     return true;
   }
 
+  static bool isDiagonalMoveAvailable(
+      Board board, Cell from, Cell to, Side fromSide) {
+    if (to.figure?.side != null && fromSide == to.figure!.side) return false;
+
+    final absX = (to.position.col - from.position.col).abs();
+    final absY = (to.position.row - from.position.row).abs();
+
+    if (absX != absY) return false;
+
+    final originY = from.position.row < to.position.row ? 1 : -1;
+    final originX = from.position.col < to.position.col ? 1 : -1;
+
+    for (int i = 1; i < absY; i++) {
+      if (board
+          .getCellAt(
+              from.position.row + originY * i, from.position.col + originX * i)
+          .isOccupied) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   static bool isRookActionAvailable(
       Board board, Cell from, Cell to, Side fromSide) {
     if (isVerticalActionAvailable(board, from, to, fromSide)) return true;
@@ -57,6 +81,7 @@ class ActionChecker {
       Board board, Cell from, Cell to, Side fromSide) {
     if (isVerticalActionAvailable(board, from, to, fromSide)) return true;
     if (isHorizontalActionAvailable(board, from, to, fromSide)) return true;
+    if (isDiagonalMoveAvailable(board, from, to, fromSide)) return true;
 
     return false;
   }

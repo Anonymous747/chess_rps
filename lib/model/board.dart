@@ -56,9 +56,6 @@ class Board {
 
       side = Side.light;
     }
-
-    cells[3][3] =
-        cells[3][3].copyWith(figure: Pawn(side: side, cell: getCellAt(3, 3)));
   }
 
   void _fillRook() {
