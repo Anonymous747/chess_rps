@@ -14,6 +14,10 @@ class Board {
   List<Cell> lostLightFigures = [];
   List<Cell> lostDarkFigures = [];
 
+  Cell getCellAt(int col, int row) {
+    return cells[row][col];
+  }
+
   void startGame() {
     _fillEmptyCells();
     _fillPawns();
@@ -45,7 +49,7 @@ class Board {
     Side side = Side.dark;
     for (final row in rows) {
       for (int i = 0; i < cellsRowCount; i++) {
-        cells[row][i].figure = Pawn(side);
+        cells[row][i] = cells[row][i].copyWith(figure: Pawn(side));
       }
 
       side = Side.light;
@@ -53,33 +57,33 @@ class Board {
   }
 
   void _fillRook() {
-    cells[0][0].figure = const Rook(Side.dark);
-    cells[0][7].figure = const Rook(Side.dark);
-    cells[7][0].figure = const Rook(Side.light);
-    cells[7][7].figure = const Rook(Side.light);
+    cells[0][0] = cells[0][0].copyWith(figure: const Rook(Side.dark));
+    cells[0][7] = cells[0][7].copyWith(figure: const Rook(Side.dark));
+    cells[7][0] = cells[7][0].copyWith(figure: const Rook(Side.light));
+    cells[7][7] = cells[7][7].copyWith(figure: const Rook(Side.light));
   }
 
   void _fillKnight() {
-    cells[0][1].figure = const Knight(Side.dark);
-    cells[0][6].figure = const Knight(Side.dark);
-    cells[7][1].figure = const Knight(Side.light);
-    cells[7][6].figure = const Knight(Side.light);
+    cells[0][1] = cells[0][1].copyWith(figure: const Knight(Side.dark));
+    cells[0][6] = cells[0][6].copyWith(figure: const Knight(Side.dark));
+    cells[7][1] = cells[7][1].copyWith(figure: const Knight(Side.light));
+    cells[7][6] = cells[7][6].copyWith(figure: const Knight(Side.light));
   }
 
   void _fillBishops() {
-    cells[0][2].figure = const Bishop(Side.dark);
-    cells[0][5].figure = const Bishop(Side.dark);
-    cells[7][2].figure = const Bishop(Side.light);
-    cells[7][5].figure = const Bishop(Side.light);
+    cells[0][2] = cells[0][2].copyWith(figure: const Bishop(Side.dark));
+    cells[0][5] = cells[0][5].copyWith(figure: const Bishop(Side.dark));
+    cells[7][2] = cells[7][2].copyWith(figure: const Bishop(Side.light));
+    cells[7][5] = cells[7][5].copyWith(figure: const Bishop(Side.light));
   }
 
   void _fillQueen() {
-    cells[0][3].figure = const Queen(Side.dark);
-    cells[7][4].figure = const Queen(Side.light);
+    cells[0][3] = cells[0][3].copyWith(figure: const Queen(Side.dark));
+    cells[7][4] = cells[7][4].copyWith(figure: const Queen(Side.light));
   }
 
   void _fillKing() {
-    cells[0][4].figure = const King(Side.dark);
-    cells[7][3].figure = const King(Side.light);
+    cells[0][4] = cells[0][4].copyWith(figure: const King(Side.dark));
+    cells[7][3] = cells[7][3].copyWith(figure: const King(Side.light));
   }
 }

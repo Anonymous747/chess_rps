@@ -1,23 +1,23 @@
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/model/figure.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class Cell {
-  final Side side;
-  final int row;
-  final int column;
-  final bool isSelected;
+part 'cell.freezed.dart';
 
-  Figure? figure;
+const separatedSign = '-';
 
-  String get positionHash => '$row-$column';
+@freezed
+class Cell with _$Cell {
+  factory Cell({
+    required Side side,
+    required int row,
+    required int column,
+    @Default(null) Figure? figure,
+    @Default(false) bool isSelected,
+  }) = _Cell;
+}
 
+extension CellExtension on Cell {
+  String get positionHash => '$row$separatedSign$column';
   bool get isOccupied => figure != null;
-
-  Cell({
-    required this.side,
-    required this.row,
-    required this.column,
-    this.isSelected = false,
-    this.figure,
-  });
 }

@@ -24,7 +24,7 @@ class GameController extends _$GameController {
       final row = position.row;
       final col = position.col;
 
-      // state.cells[row][col] = state.cells[row][col].copyWith(isSelected: true);
+      state.cells[row][col] = state.cells[row][col].copyWith(isSelected: true);
     }
 
     ref.notifyListeners();
