@@ -16,7 +16,7 @@ class Pawn implements Figure {
   }
 
   @override
-  bool possibleMoves() {
+  bool availableForMove(Cell to) {
     return true;
   }
 }

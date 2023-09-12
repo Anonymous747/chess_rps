@@ -16,7 +16,7 @@ class King implements Figure {
   }
 
   @override
-  bool possibleMoves() {
+  bool availableForMove(Cell to) {
     return true;
     // TODO: implement possibleMoves
   }

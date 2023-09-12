@@ -16,7 +16,7 @@ class Knight implements Figure {
   }
 
   @override
-  bool possibleMoves() {
+  bool availableForMove(Cell to) {
     // TODO: implement possibleMoves
     return true;
   }

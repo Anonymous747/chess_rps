@@ -30,6 +30,7 @@ class CellWidget extends HookConsumerWidget {
     final cell = ref.watch(
         gameControllerProvider.select((board) => board.cells[row][column]));
 
+    print('========= build');
     return GestureDetector(
       onTap: cell.figure != null
           ? () => provider.showAvailableActions(cell)
@@ -51,7 +52,7 @@ class CellWidget extends HookConsumerWidget {
               children: [
                 if (cell.figure != null)
                   Image.asset(_getAppropriateImage(cell)),
-                if (cell.isSelected) Text('Selected'),
+                if (cell.isSelected) const Text('Selected'),
               ],
             ),
           ),

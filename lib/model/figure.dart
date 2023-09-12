@@ -5,5 +5,17 @@ abstract class Figure {
   Side get side;
 
   void moveTo(Cell to);
-  bool possibleMoves();
+  bool availableForMove(Cell to) {
+    if (!to.isOccupied) {
+      return true;
+    }
+
+    Figure occupiedFigure = to.figure!;
+
+    if (occupiedFigure.side == side) {
+      return false;
+    }
+
+    return true;
+  }
 }
