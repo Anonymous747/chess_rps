@@ -90,9 +90,8 @@ class BoardWidget extends StatelessWidget {
     for (int i = 0; i < cells.length; i++) {
       for (int j = 0; j < cells[i].length; j++) {
         widgets.add(CellWidget(
-          // cell: board.cells[i][j],
-          row: i,
           column: j,
+          row: i,
         ));
       }
     }

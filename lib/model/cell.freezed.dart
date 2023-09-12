@@ -17,10 +17,9 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$Cell {
   Side get side => throw _privateConstructorUsedError;
-  int get row => throw _privateConstructorUsedError;
-  int get column => throw _privateConstructorUsedError;
-  Figure? get figure => throw _privateConstructorUsedError;
+  Position get position => throw _privateConstructorUsedError;
   bool get isSelected => throw _privateConstructorUsedError;
+  Figure? get figure => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $CellCopyWith<Cell> get copyWith => throw _privateConstructorUsedError;
@@ -31,7 +30,7 @@ abstract class $CellCopyWith<$Res> {
   factory $CellCopyWith(Cell value, $Res Function(Cell) then) =
       _$CellCopyWithImpl<$Res, Cell>;
   @useResult
-  $Res call({Side side, int row, int column, Figure? figure, bool isSelected});
+  $Res call({Side side, Position position, bool isSelected, Figure? figure});
 }
 
 /// @nodoc
@@ -48,32 +47,27 @@ class _$CellCopyWithImpl<$Res, $Val extends Cell>
   @override
   $Res call({
     Object? side = null,
-    Object? row = null,
-    Object? column = null,
-    Object? figure = freezed,
+    Object? position = null,
     Object? isSelected = null,
+    Object? figure = freezed,
   }) {
     return _then(_value.copyWith(
       side: null == side
           ? _value.side
           : side // ignore: cast_nullable_to_non_nullable
               as Side,
-      row: null == row
-          ? _value.row
-          : row // ignore: cast_nullable_to_non_nullable
-              as int,
-      column: null == column
-          ? _value.column
-          : column // ignore: cast_nullable_to_non_nullable
-              as int,
-      figure: freezed == figure
-          ? _value.figure
-          : figure // ignore: cast_nullable_to_non_nullable
-              as Figure?,
+      position: null == position
+          ? _value.position
+          : position // ignore: cast_nullable_to_non_nullable
+              as Position,
       isSelected: null == isSelected
           ? _value.isSelected
           : isSelected // ignore: cast_nullable_to_non_nullable
               as bool,
+      figure: freezed == figure
+          ? _value.figure
+          : figure // ignore: cast_nullable_to_non_nullable
+              as Figure?,
     ) as $Val);
   }
 }
@@ -84,7 +78,7 @@ abstract class _$$_CellCopyWith<$Res> implements $CellCopyWith<$Res> {
       __$$_CellCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Side side, int row, int column, Figure? figure, bool isSelected});
+  $Res call({Side side, Position position, bool isSelected, Figure? figure});
 }
 
 /// @nodoc
@@ -97,32 +91,27 @@ class __$$_CellCopyWithImpl<$Res> extends _$CellCopyWithImpl<$Res, _$_Cell>
   @override
   $Res call({
     Object? side = null,
-    Object? row = null,
-    Object? column = null,
-    Object? figure = freezed,
+    Object? position = null,
     Object? isSelected = null,
+    Object? figure = freezed,
   }) {
     return _then(_$_Cell(
       side: null == side
           ? _value.side
           : side // ignore: cast_nullable_to_non_nullable
               as Side,
-      row: null == row
-          ? _value.row
-          : row // ignore: cast_nullable_to_non_nullable
-              as int,
-      column: null == column
-          ? _value.column
-          : column // ignore: cast_nullable_to_non_nullable
-              as int,
-      figure: freezed == figure
-          ? _value.figure
-          : figure // ignore: cast_nullable_to_non_nullable
-              as Figure?,
+      position: null == position
+          ? _value.position
+          : position // ignore: cast_nullable_to_non_nullable
+              as Position,
       isSelected: null == isSelected
           ? _value.isSelected
           : isSelected // ignore: cast_nullable_to_non_nullable
               as bool,
+      figure: freezed == figure
+          ? _value.figure
+          : figure // ignore: cast_nullable_to_non_nullable
+              as Figure?,
     ));
   }
 }
@@ -132,27 +121,24 @@ class __$$_CellCopyWithImpl<$Res> extends _$CellCopyWithImpl<$Res, _$_Cell>
 class _$_Cell implements _Cell {
   _$_Cell(
       {required this.side,
-      required this.row,
-      required this.column,
-      this.figure = null,
-      this.isSelected = false});
+      required this.position,
+      this.isSelected = false,
+      this.figure = null});
 
   @override
   final Side side;
   @override
-  final int row;
-  @override
-  final int column;
-  @override
-  @JsonKey()
-  final Figure? figure;
+  final Position position;
   @override
   @JsonKey()
   final bool isSelected;
+  @override
+  @JsonKey()
+  final Figure? figure;
 
   @override
   String toString() {
-    return 'Cell(side: $side, row: $row, column: $column, figure: $figure, isSelected: $isSelected)';
+    return 'Cell(side: $side, position: $position, isSelected: $isSelected, figure: $figure)';
   }
 
   @override
@@ -161,16 +147,16 @@ class _$_Cell implements _Cell {
         (other.runtimeType == runtimeType &&
             other is _$_Cell &&
             (identical(other.side, side) || other.side == side) &&
-            (identical(other.row, row) || other.row == row) &&
-            (identical(other.column, column) || other.column == column) &&
-            (identical(other.figure, figure) || other.figure == figure) &&
+            (identical(other.position, position) ||
+                other.position == position) &&
             (identical(other.isSelected, isSelected) ||
-                other.isSelected == isSelected));
+                other.isSelected == isSelected) &&
+            (identical(other.figure, figure) || other.figure == figure));
   }
 
   @override
   int get hashCode =>
-      Object.hash(runtimeType, side, row, column, figure, isSelected);
+      Object.hash(runtimeType, side, position, isSelected, figure);
 
   @JsonKey(ignore: true)
   @override
@@ -182,21 +168,18 @@ class _$_Cell implements _Cell {
 abstract class _Cell implements Cell {
   factory _Cell(
       {required final Side side,
-      required final int row,
-      required final int column,
-      final Figure? figure,
-      final bool isSelected}) = _$_Cell;
+      required final Position position,
+      final bool isSelected,
+      final Figure? figure}) = _$_Cell;
 
   @override
   Side get side;
   @override
-  int get row;
-  @override
-  int get column;
-  @override
-  Figure? get figure;
+  Position get position;
   @override
   bool get isSelected;
+  @override
+  Figure? get figure;
   @override
   @JsonKey(ignore: true)
   _$$_CellCopyWith<_$_Cell> get copyWith => throw _privateConstructorUsedError;

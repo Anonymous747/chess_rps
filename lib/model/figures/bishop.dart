@@ -1,14 +1,14 @@
 import 'package:chess_rps/common/enum.dart';
+import 'package:chess_rps/model/board.dart';
 import 'package:chess_rps/model/cell.dart';
 import 'package:chess_rps/model/figure.dart';
 
-class Bishop implements Figure {
-  final Side _side;
-
-  const Bishop(this._side);
-
-  @override
-  Side get side => _side;
+class Bishop extends Figure {
+  Bishop({required Side side, required Cell cell})
+      : super(
+          cell: cell,
+          side: side,
+        );
 
   @override
   void moveTo(Cell to) {
@@ -16,7 +16,7 @@ class Bishop implements Figure {
   }
 
   @override
-  bool availableForMove(Cell to) {
+  bool availableForMove(Board board, Cell to) {
     // TODO: implement possibleMoves
 
     return true;

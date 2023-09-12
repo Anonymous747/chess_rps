@@ -1,14 +1,14 @@
 import 'package:chess_rps/common/enum.dart';
+import 'package:chess_rps/model/board.dart';
 import 'package:chess_rps/model/cell.dart';
 import 'package:chess_rps/model/figure.dart';
+import 'package:chess_rps/utils/action_checker.dart';
 
-class Pawn implements Figure {
-  final Side _side;
-
-  const Pawn(this._side);
-
-  @override
-  Side get side => _side;
+class Pawn extends Figure {
+  Pawn({
+    required Side side,
+    required Cell cell,
+  }) : super(cell: cell, side: side);
 
   @override
   void moveTo(Cell to) {
@@ -16,7 +16,7 @@ class Pawn implements Figure {
   }
 
   @override
-  bool availableForMove(Cell to) {
-    return true;
+  bool availableForMove(Board board, Cell to) {
+    return ActionChecker.isVerticalActionAvailable(board, cell, to, side);
   }
 }
