@@ -10,7 +10,8 @@ class ChessScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final board = ref.read(gameControllerProvider);
+    final board =
+        ref.read(gameControllerProvider.select((state) => state.board));
 
     return Scaffold(
       body: SafeArea(

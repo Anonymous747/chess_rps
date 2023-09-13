@@ -6,12 +6,12 @@ part of 'game_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$gameControllerHash() => r'c03dd6dd99cf7d6b17a07e08b3610133d5bffa60';
+String _$gameControllerHash() => r'e12b573d4e24e54ef6c37dc6707d2b38341d5c6e';
 
 /// See also [GameController].
 @ProviderFor(GameController)
 final gameControllerProvider =
-    AutoDisposeNotifierProvider<GameController, Board>.internal(
+    AutoDisposeNotifierProvider<GameController, GameState>.internal(
   GameController.new,
   name: r'gameControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -21,6 +21,6 @@ final gameControllerProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$GameController = AutoDisposeNotifier<Board>;
+typedef _$GameController = AutoDisposeNotifier<GameState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

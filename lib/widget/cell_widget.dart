@@ -1,6 +1,7 @@
 import 'package:chess_rps/controller/game_controller.dart';
 import 'package:chess_rps/model/cell.dart';
 import 'package:chess_rps/widget/custom/animated_border.dart';
+import 'package:chess_rps/widget/custom/available_move.dart';
 import 'package:chess_rps/widget/custom/custom_gradient.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -27,8 +28,8 @@ class CellWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = ref.watch(gameControllerProvider.notifier);
-    final cell = ref.watch(
-        gameControllerProvider.select((board) => board.cells[row][column]));
+    final cell = ref.watch(gameControllerProvider
+        .select((state) => state.board.cells[row][column]));
 
     return GestureDetector(
       onTap: cell.figure != null
@@ -48,11 +49,13 @@ class CellWidget extends HookConsumerWidget {
           child: CustomPaint(
             painter: CustomGradient(cellSide: cell.side),
             child: Stack(
+              alignment: Alignment.center,
               children: [
                 if (cell.figure != null)
                   Image.asset(_getAppropriateImage(cell)),
-                if (cell.isSelected) AnimatedBorder(),
-                if (cell.isAvailable) const Text('Available'),
+                if (cell.isSelected) const AnimatedBorder(),
+                if (cell.isAvailable)
+                  AvailableMove(isAvailable: cell.isAvailable),
               ],
             ),
           ),
