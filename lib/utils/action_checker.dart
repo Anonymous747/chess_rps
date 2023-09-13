@@ -77,6 +77,16 @@ class ActionChecker {
     return false;
   }
 
+  static bool isKnightActionAvailable(
+      Board board, Cell from, Cell to, Side fromSide) {
+    if (to.figure?.side != null && fromSide == to.figure!.side) return false;
+
+    final absX = (from.position.col - to.position.col).abs();
+    final absY = (from.position.row - to.position.row).abs();
+
+    return absX == 2 && absY == 1 || absX == 1 && absY == 2;
+  }
+
   static bool isBishopActionAvailable(
       Board board, Cell from, Cell to, Side fromSide) {
     if (isDiagonalActionAvailable(board, from, to, fromSide)) return true;

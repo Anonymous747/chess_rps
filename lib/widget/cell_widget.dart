@@ -1,5 +1,6 @@
 import 'package:chess_rps/controller/game_controller.dart';
 import 'package:chess_rps/model/cell.dart';
+import 'package:chess_rps/widget/custom/animated_border.dart';
 import 'package:chess_rps/widget/custom/custom_gradient.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -50,7 +51,7 @@ class CellWidget extends HookConsumerWidget {
               children: [
                 if (cell.figure != null)
                   Image.asset(_getAppropriateImage(cell)),
-                if (cell.isSelected) const Text('Selected'),
+                if (cell.isSelected) AnimatedBorder(),
                 if (cell.isAvailable) const Text('Available'),
               ],
             ),
