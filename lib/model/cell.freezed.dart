@@ -20,6 +20,7 @@ mixin _$Cell {
   Position get position => throw _privateConstructorUsedError;
   bool get isSelected => throw _privateConstructorUsedError;
   bool get isAvailable => throw _privateConstructorUsedError;
+  bool get canBeKnockedDown => throw _privateConstructorUsedError;
   Figure? get figure => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -36,6 +37,7 @@ abstract class $CellCopyWith<$Res> {
       Position position,
       bool isSelected,
       bool isAvailable,
+      bool canBeKnockedDown,
       Figure? figure});
 }
 
@@ -56,6 +58,7 @@ class _$CellCopyWithImpl<$Res, $Val extends Cell>
     Object? position = null,
     Object? isSelected = null,
     Object? isAvailable = null,
+    Object? canBeKnockedDown = null,
     Object? figure = freezed,
   }) {
     return _then(_value.copyWith(
@@ -74,6 +77,10 @@ class _$CellCopyWithImpl<$Res, $Val extends Cell>
       isAvailable: null == isAvailable
           ? _value.isAvailable
           : isAvailable // ignore: cast_nullable_to_non_nullable
+              as bool,
+      canBeKnockedDown: null == canBeKnockedDown
+          ? _value.canBeKnockedDown
+          : canBeKnockedDown // ignore: cast_nullable_to_non_nullable
               as bool,
       figure: freezed == figure
           ? _value.figure
@@ -94,6 +101,7 @@ abstract class _$$_CellCopyWith<$Res> implements $CellCopyWith<$Res> {
       Position position,
       bool isSelected,
       bool isAvailable,
+      bool canBeKnockedDown,
       Figure? figure});
 }
 
@@ -110,6 +118,7 @@ class __$$_CellCopyWithImpl<$Res> extends _$CellCopyWithImpl<$Res, _$_Cell>
     Object? position = null,
     Object? isSelected = null,
     Object? isAvailable = null,
+    Object? canBeKnockedDown = null,
     Object? figure = freezed,
   }) {
     return _then(_$_Cell(
@@ -129,6 +138,10 @@ class __$$_CellCopyWithImpl<$Res> extends _$CellCopyWithImpl<$Res, _$_Cell>
           ? _value.isAvailable
           : isAvailable // ignore: cast_nullable_to_non_nullable
               as bool,
+      canBeKnockedDown: null == canBeKnockedDown
+          ? _value.canBeKnockedDown
+          : canBeKnockedDown // ignore: cast_nullable_to_non_nullable
+              as bool,
       figure: freezed == figure
           ? _value.figure
           : figure // ignore: cast_nullable_to_non_nullable
@@ -145,6 +158,7 @@ class _$_Cell implements _Cell {
       required this.position,
       this.isSelected = false,
       this.isAvailable = false,
+      this.canBeKnockedDown = false,
       this.figure = null});
 
   @override
@@ -159,11 +173,14 @@ class _$_Cell implements _Cell {
   final bool isAvailable;
   @override
   @JsonKey()
+  final bool canBeKnockedDown;
+  @override
+  @JsonKey()
   final Figure? figure;
 
   @override
   String toString() {
-    return 'Cell(side: $side, position: $position, isSelected: $isSelected, isAvailable: $isAvailable, figure: $figure)';
+    return 'Cell(side: $side, position: $position, isSelected: $isSelected, isAvailable: $isAvailable, canBeKnockedDown: $canBeKnockedDown, figure: $figure)';
   }
 
   @override
@@ -178,12 +195,14 @@ class _$_Cell implements _Cell {
                 other.isSelected == isSelected) &&
             (identical(other.isAvailable, isAvailable) ||
                 other.isAvailable == isAvailable) &&
+            (identical(other.canBeKnockedDown, canBeKnockedDown) ||
+                other.canBeKnockedDown == canBeKnockedDown) &&
             (identical(other.figure, figure) || other.figure == figure));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, side, position, isSelected, isAvailable, figure);
+  int get hashCode => Object.hash(runtimeType, side, position, isSelected,
+      isAvailable, canBeKnockedDown, figure);
 
   @JsonKey(ignore: true)
   @override
@@ -198,6 +217,7 @@ abstract class _Cell implements Cell {
       required final Position position,
       final bool isSelected,
       final bool isAvailable,
+      final bool canBeKnockedDown,
       final Figure? figure}) = _$_Cell;
 
   @override
@@ -208,6 +228,8 @@ abstract class _Cell implements Cell {
   bool get isSelected;
   @override
   bool get isAvailable;
+  @override
+  bool get canBeKnockedDown;
   @override
   Figure? get figure;
   @override

@@ -1,3 +1,4 @@
+import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/controller/game_controller.dart';
 import 'package:chess_rps/model/cell.dart';
 import 'package:chess_rps/widget/custom/animated_border.dart';
@@ -51,9 +52,20 @@ class CellWidget extends HookConsumerWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
+                if (cell.canBeKnockedDown)
+                  const AnimatedBorder(
+                    beginColor: Palette.white200,
+                    endColor: Palette.red500,
+                    backgroundColor: Palette.red300,
+                  ),
+                if (cell.isSelected)
+                  const AnimatedBorder(
+                    beginColor: Palette.white200,
+                    endColor: Palette.blue500,
+                    backgroundColor: Palette.blue300,
+                  ),
                 if (cell.figure != null)
                   Image.asset(_getAppropriateImage(cell)),
-                if (cell.isSelected) const AnimatedBorder(),
                 if (cell.isAvailable)
                   AvailableMove(isAvailable: cell.isAvailable),
               ],

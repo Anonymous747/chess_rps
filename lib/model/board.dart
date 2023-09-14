@@ -24,10 +24,11 @@ class Board {
       for (int row = 0; row < cellsRowCount; row++) {
         final cell = getCellAt(row, col);
 
-        if (cell.isAvailable || cell.isSelected) {
+        if (cell.isAvailable || cell.isSelected || cell.canBeKnockedDown) {
           cells[row][col] = cell.copyWith(
             isAvailable: false,
             isSelected: false,
+            canBeKnockedDown: false,
           );
         }
       }

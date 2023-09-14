@@ -14,6 +14,7 @@ class Cell with _$Cell {
     required Position position,
     @Default(false) bool isSelected,
     @Default(false) bool isAvailable,
+    @Default(false) bool canBeKnockedDown,
     @Default(null) Figure? figure,
   }) = _Cell;
 }

@@ -1,8 +1,16 @@
-import 'package:chess_rps/common/palette.dart';
 import 'package:flutter/material.dart';
 
 class AnimatedBorder extends StatefulWidget {
-  const AnimatedBorder({super.key});
+  final Color beginColor;
+  final Color endColor;
+  final Color? backgroundColor;
+
+  const AnimatedBorder({
+    required this.beginColor,
+    required this.endColor,
+    this.backgroundColor,
+    super.key,
+  });
 
   @override
   _AnimatedBorderState createState() => _AnimatedBorderState();
@@ -17,11 +25,11 @@ class _AnimatedBorderState extends State<AnimatedBorder>
 
   late final Animation<Decoration> _animation = DecorationTween(
     begin: BoxDecoration(
-      border: Border.all(color: Palette.white200, width: 2.0),
+      border: Border.all(color: widget.beginColor, width: 2.0),
       borderRadius: BorderRadius.circular(10.0),
     ),
     end: BoxDecoration(
-      border: Border.all(color: Colors.blue, width: 2.0),
+      border: Border.all(color: widget.endColor, width: 2.0),
       borderRadius: BorderRadius.circular(10.0),
     ),
   ).animate(_controller);
@@ -31,7 +39,13 @@ class _AnimatedBorderState extends State<AnimatedBorder>
     return DecoratedBoxTransition(
       position: DecorationPosition.background,
       decoration: _animation,
-      child: const SizedBox.expand(),
+      child: Container(
+        margin: EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10.0),
+          color: widget.backgroundColor,
+        ),
+      ),
     );
   }
 

@@ -9,6 +9,6 @@ class GameState with _$GameState {
   const factory GameState({
     required Board board,
     @Default(Side.light) Side currentOrder,
-    @Default(false) bool isFigureSelected,
+    @Default(null) String? selectedFigure,
   }) = _GameState;
 }

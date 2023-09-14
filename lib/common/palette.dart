@@ -20,4 +20,10 @@ class Palette {
   static const brown600 = Color(0xFF2B2200);
 
   static const green300 = Color(0xFFAFF153);
+
+  static const blue300 = Color(0xFF3F93DA);
+  static const blue500 = Color(0xFF2196F3);
+
+  static const red300 = Color(0xFFB66361);
+  static const red500 = Color(0xFFC75450);
 }

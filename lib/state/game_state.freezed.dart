@@ -18,7 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$GameState {
   Board get board => throw _privateConstructorUsedError;
   Side get currentOrder => throw _privateConstructorUsedError;
-  bool get isFigureSelected => throw _privateConstructorUsedError;
+  String? get selectedFigure => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $GameStateCopyWith<GameState> get copyWith =>
@@ -30,7 +30,7 @@ abstract class $GameStateCopyWith<$Res> {
   factory $GameStateCopyWith(GameState value, $Res Function(GameState) then) =
       _$GameStateCopyWithImpl<$Res, GameState>;
   @useResult
-  $Res call({Board board, Side currentOrder, bool isFigureSelected});
+  $Res call({Board board, Side currentOrder, String? selectedFigure});
 }
 
 /// @nodoc
@@ -48,7 +48,7 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
   $Res call({
     Object? board = null,
     Object? currentOrder = null,
-    Object? isFigureSelected = null,
+    Object? selectedFigure = freezed,
   }) {
     return _then(_value.copyWith(
       board: null == board
@@ -59,10 +59,10 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
           ? _value.currentOrder
           : currentOrder // ignore: cast_nullable_to_non_nullable
               as Side,
-      isFigureSelected: null == isFigureSelected
-          ? _value.isFigureSelected
-          : isFigureSelected // ignore: cast_nullable_to_non_nullable
-              as bool,
+      selectedFigure: freezed == selectedFigure
+          ? _value.selectedFigure
+          : selectedFigure // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -74,7 +74,7 @@ abstract class _$$_GameStateCopyWith<$Res> implements $GameStateCopyWith<$Res> {
       __$$_GameStateCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Board board, Side currentOrder, bool isFigureSelected});
+  $Res call({Board board, Side currentOrder, String? selectedFigure});
 }
 
 /// @nodoc
@@ -90,7 +90,7 @@ class __$$_GameStateCopyWithImpl<$Res>
   $Res call({
     Object? board = null,
     Object? currentOrder = null,
-    Object? isFigureSelected = null,
+    Object? selectedFigure = freezed,
   }) {
     return _then(_$_GameState(
       board: null == board
@@ -101,10 +101,10 @@ class __$$_GameStateCopyWithImpl<$Res>
           ? _value.currentOrder
           : currentOrder // ignore: cast_nullable_to_non_nullable
               as Side,
-      isFigureSelected: null == isFigureSelected
-          ? _value.isFigureSelected
-          : isFigureSelected // ignore: cast_nullable_to_non_nullable
-              as bool,
+      selectedFigure: freezed == selectedFigure
+          ? _value.selectedFigure
+          : selectedFigure // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -115,7 +115,7 @@ class _$_GameState implements _GameState {
   const _$_GameState(
       {required this.board,
       this.currentOrder = Side.light,
-      this.isFigureSelected = false});
+      this.selectedFigure = null});
 
   @override
   final Board board;
@@ -124,11 +124,11 @@ class _$_GameState implements _GameState {
   final Side currentOrder;
   @override
   @JsonKey()
-  final bool isFigureSelected;
+  final String? selectedFigure;
 
   @override
   String toString() {
-    return 'GameState(board: $board, currentOrder: $currentOrder, isFigureSelected: $isFigureSelected)';
+    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure)';
   }
 
   @override
@@ -139,13 +139,13 @@ class _$_GameState implements _GameState {
             (identical(other.board, board) || other.board == board) &&
             (identical(other.currentOrder, currentOrder) ||
                 other.currentOrder == currentOrder) &&
-            (identical(other.isFigureSelected, isFigureSelected) ||
-                other.isFigureSelected == isFigureSelected));
+            (identical(other.selectedFigure, selectedFigure) ||
+                other.selectedFigure == selectedFigure));
   }
 
   @override
   int get hashCode =>
-      Object.hash(runtimeType, board, currentOrder, isFigureSelected);
+      Object.hash(runtimeType, board, currentOrder, selectedFigure);
 
   @JsonKey(ignore: true)
   @override
@@ -158,14 +158,14 @@ abstract class _GameState implements GameState {
   const factory _GameState(
       {required final Board board,
       final Side currentOrder,
-      final bool isFigureSelected}) = _$_GameState;
+      final String? selectedFigure}) = _$_GameState;
 
   @override
   Board get board;
   @override
   Side get currentOrder;
   @override
-  bool get isFigureSelected;
+  String? get selectedFigure;
   @override
   @JsonKey(ignore: true)
   _$$_GameStateCopyWith<_$_GameState> get copyWith =>
