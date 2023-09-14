@@ -44,7 +44,6 @@ class GameController extends _$GameController {
   }
 
   void showAvailableActions(Cell fromCell) {
-    print('========= state.selectedFigure != null = ${state.selectedFigure}');
     if (state.selectedFigure != null) {
       state = state.copyWith(selectedFigure: null);
       state.board.removeSelection();
