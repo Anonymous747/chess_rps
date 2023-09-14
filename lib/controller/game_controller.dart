@@ -40,12 +40,11 @@ class GameController extends _$GameController {
         state.board.cells[row][col] =
             state.board.cells[row][col].copyWith(isAvailable: true);
       }
-
-      state = state.copyWith(selectedFigure: fromCell.positionHash);
     }
   }
 
   void showAvailableActions(Cell fromCell) {
+    print('========= state.selectedFigure != null = ${state.selectedFigure}');
     if (state.selectedFigure != null) {
       state = state.copyWith(selectedFigure: null);
       state.board.removeSelection();
@@ -60,6 +59,7 @@ class GameController extends _$GameController {
 
     state.board.cells[fromRow][fromCol] =
         fromCell.copyWith(isSelected: !fromCell.isSelected);
+    state = state.copyWith(selectedFigure: fromCell.positionHash);
 
     ref.notifyListeners();
   }
