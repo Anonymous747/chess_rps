@@ -46,10 +46,12 @@ class GameController extends _$GameController {
   }
 
   void showAvailableActions(Cell fromCell) {
-    if (state.selectedFigure != null || fromCell.isSelected) {
-      state.board.removeSelection();
+    if (state.selectedFigure != null) {
       state = state.copyWith(selectedFigure: null);
-    } else {
+      state.board.removeSelection();
+    }
+
+    if (!fromCell.isSelected) {
       _displayAvailableCells(fromCell);
     }
 
