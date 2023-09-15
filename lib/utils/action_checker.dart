@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/model/board.dart';
 import 'package:chess_rps/model/cell.dart';
+import 'package:chess_rps/model/position.dart';
 
 class ActionChecker {
   static bool isVerticalActionAvailable(
@@ -69,6 +70,27 @@ class ActionChecker {
     return true;
   }
 
+  static bool isPawnActionAvailable(
+    Board board,
+    Cell from,
+    Cell to,
+    Side side, {
+    bool canDoubleMove = false,
+  }) {
+    final step = (from.isOccupied && from.figure!.side == Side.dark) ? 1 : -1;
+    final isStepCorrect = to.position.row == from.position.row + step;
+    final isTargetOccupied =
+        board.getCellAt(to.position.col, to.position.row).isOccupied;
+
+    if (isStepCorrect &&
+        to.position.col == from.position.col &&
+        !isTargetOccupied) {
+      return true;
+    }
+
+    return false;
+  }
+
   static bool isRookActionAvailable(
       Board board, Cell from, Cell to, Side fromSide) {
     if (isVerticalActionAvailable(board, from, to, fromSide)) return true;
@@ -101,6 +123,17 @@ class ActionChecker {
     if (isDiagonalActionAvailable(board, from, to, fromSide)) return true;
 
     return false;
+  }
+
+  static bool isKingActionAvailable(
+      Board board, Cell from, Cell to, Side fromSide) {
+    if (to.figure?.side != null && fromSide == to.figure!.side) return false;
+
+    final v = Position(
+        row: from.position.row - to.position.row,
+        col: from.position.col - to.position.col);
+
+    return v.magnitude == 1;
   }
 
   static Set<String> getAvailablePositionsHash(Board board, Cell? from) {

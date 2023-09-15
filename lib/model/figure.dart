@@ -9,7 +9,10 @@ abstract class Figure {
 
   Figure({required this.side, required this.cell});
 
-  void moveTo(Cell to);
+  void moveTo(Cell to) {
+    cell = to;
+  }
+
   bool availableForMove(Board board, Cell to) {
     if (!to.isOccupied) {
       return true;

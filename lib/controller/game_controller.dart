@@ -44,6 +44,7 @@ class GameController extends _$GameController {
   }
 
   void showAvailableActions(Cell fromCell) {
+    // Wipe selected cells before follow action
     if (state.selectedFigure != null) {
       state = state.copyWith(selectedFigure: null);
       state.board.removeSelection();

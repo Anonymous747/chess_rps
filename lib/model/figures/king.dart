@@ -2,6 +2,7 @@ import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/model/board.dart';
 import 'package:chess_rps/model/cell.dart';
 import 'package:chess_rps/model/figure.dart';
+import 'package:chess_rps/utils/action_checker.dart';
 
 class King extends Figure {
   King({required Side side, required Cell cell})
@@ -14,6 +15,6 @@ class King extends Figure {
 
   @override
   bool availableForMove(Board board, Cell to) {
-    return true;
+    return ActionChecker.isKingActionAvailable(board, cell, to, side);
   }
 }
