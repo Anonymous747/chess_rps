@@ -22,4 +22,12 @@ class Cell with _$Cell {
 extension CellExtension on Cell {
   String get positionHash => '${position.row}$separatedSign${position.col}';
   bool get isOccupied => figure != null;
+
+  bool isTargetOccupied(Cell target) {
+    if (target.isOccupied) {
+      return figure!.side != target.figure!.side;
+    }
+
+    return false;
+  }
 }

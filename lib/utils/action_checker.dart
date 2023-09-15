@@ -77,14 +77,35 @@ class ActionChecker {
     Side side, {
     bool canDoubleMove = false,
   }) {
-    final step = (from.isOccupied && from.figure!.side == Side.dark) ? 1 : -1;
+    final isDarkSide = from.isOccupied && from.figure!.side == Side.dark;
+    final step = isDarkSide ? 1 : -1;
     final isStepCorrect = to.position.row == from.position.row + step;
     final isTargetOccupied =
         board.getCellAt(to.position.col, to.position.row).isOccupied;
+    final isSameCol = to.position.col == from.position.col;
 
     if (isStepCorrect &&
         to.position.col == from.position.col &&
         !isTargetOccupied) {
+      return true;
+    }
+
+    if (canDoubleMove) {
+      final doubleStep = isDarkSide ? 2 : -2;
+      final isDoubleStepMatch =
+          to.position.row == from.position.row + doubleStep;
+
+      if (isDoubleStepMatch && isSameCol && !isTargetOccupied) {
+        return true;
+      }
+    }
+
+    final canKnockFromRight = to.position.col == from.position.col + 1;
+    final canKnockFromLeft = to.position.col == from.position.col - 1;
+
+    if (isStepCorrect &&
+        (canKnockFromLeft || canKnockFromRight) &&
+        from.isTargetOccupied(to)) {
       return true;
     }
 
