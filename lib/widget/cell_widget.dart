@@ -33,9 +33,7 @@ class CellWidget extends HookConsumerWidget {
         .select((state) => state.board.cells[row][column]));
 
     return GestureDetector(
-      onTap: cell.figure != null
-          ? () => provider.showAvailableActions(cell)
-          : () {},
+      onTap: () => provider.onPressed(cell),
       child: Container(
         decoration: BoxDecoration(boxShadow: [
           BoxShadow(

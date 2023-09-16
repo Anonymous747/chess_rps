@@ -1,16 +1,17 @@
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/model/board.dart';
 import 'package:chess_rps/model/cell.dart';
+import 'package:chess_rps/model/position.dart';
 
 abstract class Figure {
   final Side side;
 
-  Cell cell;
+  Position position;
 
-  Figure({required this.side, required this.cell});
+  Figure({required this.side, required this.position});
 
   void moveTo(Cell to) {
-    cell = to;
+    position = to.position;
   }
 
   bool availableForMove(Board board, Cell to) {

@@ -7,18 +7,18 @@ import 'package:chess_rps/model/position.dart';
 
 class ActionChecker {
   static bool isVerticalActionAvailable(
-      Board board, Cell from, Cell to, Side fromSide) {
+      Board board, Position fromPosition, Cell to, Side fromSide) {
     // Not available if on a different vertical side or in the same cell
-    if (from.position.col != to.position.col ||
-        from.position.row == to.position.row) return false;
+    if (fromPosition.col != to.position.col ||
+        fromPosition.row == to.position.row) return false;
     // If the cell is occupied by a figure of the same side
     if (to.figure?.side != null && fromSide == to.figure!.side) return false;
 
-    final minY = min(from.position.row, to.position.row);
-    final maxY = max(from.position.row, to.position.row);
+    final minY = min(fromPosition.row, to.position.row);
+    final maxY = max(fromPosition.row, to.position.row);
 
     for (int y = minY + 1; y < maxY; y++) {
-      if (board.getCellAt(y, from.position.col).isOccupied) {
+      if (board.getCellAt(y, fromPosition.col).isOccupied) {
         return false;
       }
     }
@@ -27,18 +27,18 @@ class ActionChecker {
   }
 
   static bool isHorizontalActionAvailable(
-      Board board, Cell from, Cell to, Side fromSide) {
+      Board board, Position fromPosition, Cell to, Side fromSide) {
     // Not available if on a different horizontal side or in the same cell
-    if (from.position.row != to.position.row ||
-        from.position.col == to.position.col) return false;
+    if (fromPosition.row != to.position.row ||
+        fromPosition.col == to.position.col) return false;
     // If the cell is occupied by a figure of the same side
     if (to.figure?.side != null && fromSide == to.figure!.side) return false;
 
-    final minX = min(from.position.col, to.position.col);
-    final maxX = max(from.position.col, to.position.col);
+    final minX = min(fromPosition.col, to.position.col);
+    final maxX = max(fromPosition.col, to.position.col);
 
     for (int x = minX + 1; x < maxX; x++) {
-      if (board.getCellAt(from.position.row, x).isOccupied) {
+      if (board.getCellAt(fromPosition.row, x).isOccupied) {
         return false;
       }
     }
@@ -47,21 +47,21 @@ class ActionChecker {
   }
 
   static bool isDiagonalActionAvailable(
-      Board board, Cell from, Cell to, Side fromSide) {
+      Board board, Position fromPosition, Cell to, Side fromSide) {
     if (to.figure?.side != null && fromSide == to.figure!.side) return false;
 
-    final absX = (to.position.col - from.position.col).abs();
-    final absY = (to.position.row - from.position.row).abs();
+    final absX = (to.position.col - fromPosition.col).abs();
+    final absY = (to.position.row - fromPosition.row).abs();
 
     if (absX != absY) return false;
 
-    final originY = from.position.row < to.position.row ? 1 : -1;
-    final originX = from.position.col < to.position.col ? 1 : -1;
+    final originY = fromPosition.row < to.position.row ? 1 : -1;
+    final originX = fromPosition.col < to.position.col ? 1 : -1;
 
     for (int i = 1; i < absY; i++) {
       if (board
           .getCellAt(
-              from.position.row + originY * i, from.position.col + originX * i)
+              fromPosition.row + originY * i, fromPosition.col + originX * i)
           .isOccupied) {
         return false;
       }
@@ -70,100 +70,13 @@ class ActionChecker {
     return true;
   }
 
-  static bool isPawnActionAvailable(
-    Board board,
-    Cell from,
-    Cell to,
-    Side side, {
-    bool canDoubleMove = false,
-  }) {
-    final isDarkSide = from.isOccupied && from.figure!.side == Side.dark;
-    final step = isDarkSide ? 1 : -1;
-    final isStepCorrect = to.position.row == from.position.row + step;
-    final isTargetOccupied =
-        board.getCellAt(to.position.col, to.position.row).isOccupied;
-    final isSameCol = to.position.col == from.position.col;
-
-    if (isStepCorrect &&
-        to.position.col == from.position.col &&
-        !isTargetOccupied) {
-      return true;
-    }
-
-    if (canDoubleMove) {
-      final doubleStep = isDarkSide ? 2 : -2;
-      final isDoubleStepMatch =
-          to.position.row == from.position.row + doubleStep;
-
-      if (isDoubleStepMatch && isSameCol && !isTargetOccupied) {
-        return true;
-      }
-    }
-
-    final canKnockFromRight = to.position.col == from.position.col + 1;
-    final canKnockFromLeft = to.position.col == from.position.col - 1;
-
-    if (isStepCorrect &&
-        (canKnockFromLeft || canKnockFromRight) &&
-        from.isTargetOccupied(to)) {
-      return true;
-    }
-
-    return false;
-  }
-
-  static bool isRookActionAvailable(
-      Board board, Cell from, Cell to, Side fromSide) {
-    if (isVerticalActionAvailable(board, from, to, fromSide)) return true;
-    if (isHorizontalActionAvailable(board, from, to, fromSide)) return true;
-
-    return false;
-  }
-
-  static bool isKnightActionAvailable(
-      Board board, Cell from, Cell to, Side fromSide) {
-    if (to.figure?.side != null && fromSide == to.figure!.side) return false;
-
-    final absX = (from.position.col - to.position.col).abs();
-    final absY = (from.position.row - to.position.row).abs();
-
-    return absX == 2 && absY == 1 || absX == 1 && absY == 2;
-  }
-
-  static bool isBishopActionAvailable(
-      Board board, Cell from, Cell to, Side fromSide) {
-    if (isDiagonalActionAvailable(board, from, to, fromSide)) return true;
-
-    return false;
-  }
-
-  static bool isQueenActionAvailable(
-      Board board, Cell from, Cell to, Side fromSide) {
-    if (isVerticalActionAvailable(board, from, to, fromSide)) return true;
-    if (isHorizontalActionAvailable(board, from, to, fromSide)) return true;
-    if (isDiagonalActionAvailable(board, from, to, fromSide)) return true;
-
-    return false;
-  }
-
-  static bool isKingActionAvailable(
-      Board board, Cell from, Cell to, Side fromSide) {
-    if (to.figure?.side != null && fromSide == to.figure!.side) return false;
-
-    final v = Position(
-        row: from.position.row - to.position.row,
-        col: from.position.col - to.position.col);
-
-    return v.magnitude == 1;
-  }
-
   static Set<String> getAvailablePositionsHash(Board board, Cell? from) {
     final Set<String> availableCells = {};
 
     if (from == null || !from.isOccupied) return availableCells;
 
-    for (int col = 0; col < cellsRowCount; col++) {
-      for (int row = 0; row < cellsRowCount; row++) {
+    for (int row = 0; row < cellsRowCount; row++) {
+      for (int col = 0; col < cellsRowCount; col++) {
         final target = board.getCellAt(row, col);
         if (from.figure!.availableForMove(board, target)) {
           availableCells.add(target.positionHash);

@@ -68,8 +68,8 @@ class Board {
       for (int i = 0; i < cellsRowCount; i++) {
         final cellRowI = cells[row][i];
 
-        cells[row][i] =
-            cellRowI.copyWith(figure: Pawn(side: side, cell: cellRowI));
+        cells[row][i] = cellRowI.copyWith(
+            figure: Pawn(side: side, position: cellRowI.position));
       }
 
       side = Side.light;
@@ -82,14 +82,14 @@ class Board {
     final cell7_0 = getCellAt(7, 0);
     final cell7_7 = getCellAt(7, 7);
 
-    cells[0][0] =
-        cell0_0.copyWith(figure: Rook(side: Side.dark, cell: cell0_0));
-    cells[0][7] =
-        cell0_7.copyWith(figure: Rook(side: Side.dark, cell: cell0_7));
-    cells[7][0] =
-        cell7_0.copyWith(figure: Rook(side: Side.light, cell: cell7_0));
-    cells[7][7] =
-        cell7_7.copyWith(figure: Rook(side: Side.light, cell: cell7_7));
+    cells[0][0] = cell0_0.copyWith(
+        figure: Rook(side: Side.dark, position: cell0_0.position));
+    cells[0][7] = cell0_7.copyWith(
+        figure: Rook(side: Side.dark, position: cell0_7.position));
+    cells[7][0] = cell7_0.copyWith(
+        figure: Rook(side: Side.light, position: cell7_0.position));
+    cells[7][7] = cell7_7.copyWith(
+        figure: Rook(side: Side.light, position: cell7_7.position));
   }
 
   void _fillKnight() {
@@ -98,14 +98,14 @@ class Board {
     final cell7_1 = getCellAt(7, 1);
     final cell7_6 = getCellAt(7, 6);
 
-    cells[0][1] =
-        cell0_1.copyWith(figure: Knight(side: Side.dark, cell: cell0_1));
-    cells[0][6] =
-        cell0_6.copyWith(figure: Knight(side: Side.dark, cell: cell0_6));
-    cells[7][1] =
-        cell7_1.copyWith(figure: Knight(side: Side.light, cell: cell7_1));
-    cells[7][6] =
-        cell7_6.copyWith(figure: Knight(side: Side.light, cell: cell7_6));
+    cells[0][1] = cell0_1.copyWith(
+        figure: Knight(side: Side.dark, position: cell0_1.position));
+    cells[0][6] = cell0_6.copyWith(
+        figure: Knight(side: Side.dark, position: cell0_6.position));
+    cells[7][1] = cell7_1.copyWith(
+        figure: Knight(side: Side.light, position: cell7_1.position));
+    cells[7][6] = cell7_6.copyWith(
+        figure: Knight(side: Side.light, position: cell7_6.position));
   }
 
   void _fillBishops() {
@@ -114,33 +114,33 @@ class Board {
     final cell7_2 = getCellAt(7, 2);
     final cell7_5 = getCellAt(7, 5);
 
-    cells[0][2] =
-        cell0_2.copyWith(figure: Bishop(side: Side.dark, cell: cell0_2));
-    cells[0][5] =
-        cell0_5.copyWith(figure: Bishop(side: Side.dark, cell: cell0_5));
-    cells[7][2] =
-        cell7_2.copyWith(figure: Bishop(side: Side.light, cell: cell7_2));
-    cells[7][5] =
-        cell7_5.copyWith(figure: Bishop(side: Side.light, cell: cell7_5));
+    cells[0][2] = cell0_2.copyWith(
+        figure: Bishop(side: Side.dark, position: cell0_2.position));
+    cells[0][5] = cell0_5.copyWith(
+        figure: Bishop(side: Side.dark, position: cell0_5.position));
+    cells[7][2] = cell7_2.copyWith(
+        figure: Bishop(side: Side.light, position: cell7_2.position));
+    cells[7][5] = cell7_5.copyWith(
+        figure: Bishop(side: Side.light, position: cell7_5.position));
   }
 
   void _fillQueen() {
     final cell0_3 = getCellAt(0, 3);
     final cell7_4 = getCellAt(7, 4);
 
-    cells[0][3] =
-        cell0_3.copyWith(figure: Queen(side: Side.dark, cell: cell0_3));
-    cells[7][4] =
-        cell7_4.copyWith(figure: Queen(side: Side.light, cell: cell7_4));
+    cells[0][3] = cell0_3.copyWith(
+        figure: Queen(side: Side.dark, position: cell0_3.position));
+    cells[7][4] = cell7_4.copyWith(
+        figure: Queen(side: Side.light, position: cell7_4.position));
   }
 
   void _fillKing() {
     final cell0_4 = getCellAt(0, 4);
     final cell7_3 = getCellAt(7, 3);
 
-    cells[0][4] =
-        cell0_4.copyWith(figure: King(side: Side.dark, cell: cell0_4));
-    cells[7][3] =
-        cell7_3.copyWith(figure: King(side: Side.light, cell: cell7_3));
+    cells[0][4] = cell0_4.copyWith(
+        figure: King(side: Side.dark, position: cell0_4.position));
+    cells[7][3] = cell7_3.copyWith(
+        figure: King(side: Side.light, position: cell7_3.position));
   }
 }

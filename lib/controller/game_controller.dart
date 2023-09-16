@@ -17,6 +17,14 @@ class GameController extends _$GameController {
     return state;
   }
 
+  void onPressed(Cell pressedCell) {
+    // final currentOrder = state.currentOrder;
+
+    if (pressedCell.isOccupied) {
+      showAvailableActions(pressedCell);
+    }
+  }
+
   void _displayAvailableCells(Cell fromCell) {
     final availableHashes =
         ActionChecker.getAvailablePositionsHash(state.board, fromCell);

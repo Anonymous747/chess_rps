@@ -2,11 +2,11 @@ import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/model/board.dart';
 import 'package:chess_rps/model/cell.dart';
 import 'package:chess_rps/model/figure.dart';
-import 'package:chess_rps/utils/action_checker.dart';
+import 'package:chess_rps/model/position.dart';
 
 class King extends Figure {
-  King({required Side side, required Cell cell})
-      : super(cell: cell, side: side);
+  King({required Side side, required Position position})
+      : super(position: position, side: side);
 
   @override
   void moveTo(Cell to) {
@@ -15,6 +15,16 @@ class King extends Figure {
 
   @override
   bool availableForMove(Board board, Cell to) {
-    return ActionChecker.isKingActionAvailable(board, cell, to, side);
+    return _isKingActionAvailable(board, to);
+  }
+
+  bool _isKingActionAvailable(Board board, Cell to) {
+    if (to.figure?.side != null && side == to.figure!.side) return false;
+
+    final v = Position(
+        row: position.row - to.position.row,
+        col: position.col - to.position.col);
+
+    return v.magnitude == 1;
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+const _borderWidth = 2.0;
+
 class AnimatedBorder extends StatefulWidget {
   final Color beginColor;
   final Color endColor;
@@ -13,10 +15,10 @@ class AnimatedBorder extends StatefulWidget {
   });
 
   @override
-  _AnimatedBorderState createState() => _AnimatedBorderState();
+  AnimatedBorderState createState() => AnimatedBorderState();
 }
 
-class _AnimatedBorderState extends State<AnimatedBorder>
+class AnimatedBorderState extends State<AnimatedBorder>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     duration: const Duration(milliseconds: 500),
@@ -25,11 +27,11 @@ class _AnimatedBorderState extends State<AnimatedBorder>
 
   late final Animation<Decoration> _animation = DecorationTween(
     begin: BoxDecoration(
-      border: Border.all(color: widget.beginColor, width: 2.0),
+      border: Border.all(color: widget.beginColor, width: _borderWidth),
       borderRadius: BorderRadius.circular(10.0),
     ),
     end: BoxDecoration(
-      border: Border.all(color: widget.endColor, width: 2.0),
+      border: Border.all(color: widget.endColor, width: _borderWidth),
       borderRadius: BorderRadius.circular(10.0),
     ),
   ).animate(_controller);
@@ -40,7 +42,7 @@ class _AnimatedBorderState extends State<AnimatedBorder>
       position: DecorationPosition.background,
       decoration: _animation,
       child: Container(
-        margin: EdgeInsets.all(2),
+        margin: const EdgeInsets.all(_borderWidth),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8.0),
           color: widget.backgroundColor,
