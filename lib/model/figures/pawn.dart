@@ -39,7 +39,7 @@ class Pawn extends Figure {
     final step = isDarkSide ? 1 : -1;
     final isStepCorrect = to.position.row == position.row + step;
     final isTargetOccupied =
-        board.getCellAt(to.position.col, to.position.row).isOccupied;
+        board.getCellAt(to.position.row, to.position.col).isOccupied;
     final isSameCol = to.position.col == position.col;
 
     if (isStepCorrect && to.position.col == position.col && !isTargetOccupied) {

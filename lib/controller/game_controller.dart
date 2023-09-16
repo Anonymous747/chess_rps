@@ -18,9 +18,9 @@ class GameController extends _$GameController {
   }
 
   void onPressed(Cell pressedCell) {
-    // final currentOrder = state.currentOrder;
+    final currentOrder = state.currentOrder;
 
-    if (pressedCell.isOccupied) {
+    if (pressedCell.isOccupied && pressedCell.figureSide == currentOrder) {
       showAvailableActions(pressedCell);
     }
   }
@@ -35,10 +35,7 @@ class GameController extends _$GameController {
       final col = position.col;
       final target = state.board.cells[row][col];
 
-      final canBeKnockedDown = target.isOccupied &&
-          fromCell.figure != null &&
-          target.figure != null &&
-          fromCell.figure?.side != target.figure?.side;
+      final canBeKnockedDown = fromCell.calculateCanBeKnockedDown(target);
 
       // Opposite figure available to knock
       if (canBeKnockedDown) {
@@ -55,6 +52,7 @@ class GameController extends _$GameController {
     // Wipe selected cells before follow action
     if (state.selectedFigure != null) {
       state = state.copyWith(selectedFigure: null);
+      print('========= 1');
       state.board.removeSelection();
     }
 
