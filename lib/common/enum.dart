@@ -9,4 +9,6 @@ enum Side {
   String toString() {
     return this == Side.dark ? _blackSide : _whiteSide;
   }
+
+  Side get opposite => this == Side.dark ? Side.light : Side.dark;
 }

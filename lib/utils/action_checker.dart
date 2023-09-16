@@ -79,8 +79,6 @@ class ActionChecker {
       for (int col = 0; col < cellsRowCount; col++) {
         final target = board.getCellAt(row, col);
 
-        print(
-            '========= getAvailablePositionsHash targer ${target.positionHash}');
         if (from.figure!.availableForMove(board, target)) {
           availableCells.add(target.positionHash);
         }

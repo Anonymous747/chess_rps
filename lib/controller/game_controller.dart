@@ -17,11 +17,41 @@ class GameController extends _$GameController {
     return state;
   }
 
+  void _makeMove(Cell target) {
+    final position = state.selectedFigure!.toPosition();
+    final board = state.board;
+    final selectedCell = board.getCellAt(position.row, position.col);
+
+    final isMoveAvailable = selectedCell.moveFigure(board, target);
+
+    if (isMoveAvailable) {
+      final updatedBoard = board
+        ..setFigure(selectedCell, target)
+        ..removeSelection();
+
+      state = state.copyWith(
+        board: updatedBoard,
+        selectedFigure: null,
+        currentOrder: state.currentOrder.opposite,
+      );
+
+      ref.notifyListeners();
+    }
+  }
+
   void onPressed(Cell pressedCell) {
     final currentOrder = state.currentOrder;
 
+    if (pressedCell.isAvailable || pressedCell.canBeKnockedDown) {
+      assert(state.selectedFigure != null, "Figure should be chosen");
+
+      _makeMove(pressedCell);
+    }
+
     if (pressedCell.isOccupied && pressedCell.figureSide == currentOrder) {
-      showAvailableActions(pressedCell);
+      _showAvailableActions(pressedCell);
+
+      ref.notifyListeners();
     }
   }
 
@@ -48,11 +78,10 @@ class GameController extends _$GameController {
     }
   }
 
-  void showAvailableActions(Cell fromCell) {
+  void _showAvailableActions(Cell fromCell) {
     // Wipe selected cells before follow action
     if (state.selectedFigure != null) {
       state = state.copyWith(selectedFigure: null);
-      print('========= 1');
       state.board.removeSelection();
     }
 
@@ -66,7 +95,5 @@ class GameController extends _$GameController {
     state.board.cells[fromRow][fromCol] =
         fromCell.copyWith(isSelected: !fromCell.isSelected);
     state = state.copyWith(selectedFigure: fromCell.positionHash);
-
-    ref.notifyListeners();
   }
 }

@@ -15,11 +15,6 @@ class Queen extends Figure {
         );
 
   @override
-  void moveTo(Cell to) {
-    // TODO: implement moveTo
-  }
-
-  @override
   bool availableForMove(Board board, Cell to) {
     return _isQueenActionAvailable(board, to);
   }

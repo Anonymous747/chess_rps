@@ -9,11 +9,6 @@ class Knight extends Figure {
       : super(side: side, position: position);
 
   @override
-  void moveTo(Cell to) {
-    // TODO: implement moveTo
-  }
-
-  @override
   bool availableForMove(Board board, Cell to) {
     return _isKnightActionAvailable(board, to);
   }

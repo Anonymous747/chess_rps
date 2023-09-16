@@ -13,14 +13,7 @@ class Bishop extends Figure {
         );
 
   @override
-  void moveTo(Cell to) {
-    // TODO: implement moveTo
-  }
-
-  @override
   bool availableForMove(Board board, Cell to) {
-    // TODO: implement possibleMoves
-
     return _isBishopActionAvailable(board, to);
   }
 

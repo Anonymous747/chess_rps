@@ -1,4 +1,5 @@
 import 'package:chess_rps/common/enum.dart';
+import 'package:chess_rps/model/board.dart';
 import 'package:chess_rps/model/figure.dart';
 import 'package:chess_rps/model/position.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -31,5 +32,23 @@ extension CellExtension on Cell {
         figure != null &&
         target.figure != null &&
         figure?.side != target.figure?.side;
+  }
+
+  bool moveFigure(Board board, Cell to) {
+    if (!isOccupied) return false;
+
+    if (figure!.availableForMove(board, to)) {
+      if (to.isOccupied) {
+        assert(to.figure != null);
+
+        board.pushKnockedFigure(to.figure!);
+      }
+
+      figure!.moveTo(to);
+
+      return true;
+    }
+
+    return false;
   }
 }

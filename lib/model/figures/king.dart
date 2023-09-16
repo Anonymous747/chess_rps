@@ -10,7 +10,7 @@ class King extends Figure {
 
   @override
   void moveTo(Cell to) {
-    // TODO: implement moveTo
+    super.moveTo(to);
   }
 
   @override
