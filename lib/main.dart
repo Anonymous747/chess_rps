@@ -4,7 +4,9 @@ import 'package:chess_rps/presentation/utils/custom_router.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-void main() => runApp(const Root());
+void main() {
+  runApp(const Root());
+}
 
 class Root extends StatelessWidget {
   const Root({Key? key}) : super(key: key);
