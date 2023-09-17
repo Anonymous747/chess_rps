@@ -1,7 +1,7 @@
 import 'package:chess_rps/common/enum.dart';
-import 'package:chess_rps/model/board.dart';
-import 'package:chess_rps/model/figure.dart';
-import 'package:chess_rps/model/position.dart';
+import 'package:chess_rps/domain/model/board.dart';
+import 'package:chess_rps/domain/model/figure.dart';
+import 'package:chess_rps/domain/model/position.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'cell.freezed.dart';

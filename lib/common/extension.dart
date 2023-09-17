@@ -1,5 +1,5 @@
-import 'package:chess_rps/model/cell.dart';
-import 'package:chess_rps/model/position.dart';
+import 'package:chess_rps/domain/model/cell.dart';
+import 'package:chess_rps/domain/model/position.dart';
 
 extension HashDecoderExtension on String {
   Position toPosition() {

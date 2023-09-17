@@ -1,6 +1,6 @@
-import 'package:chess_rps/screen/mode_selector.dart';
-import 'package:chess_rps/utils/app_routes.dart';
-import 'package:chess_rps/utils/custom_router.dart';
+import 'package:chess_rps/presentation/screen/mode_selector.dart';
+import 'package:chess_rps/presentation/utils/app_routes.dart';
+import 'package:chess_rps/presentation/utils/custom_router.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 

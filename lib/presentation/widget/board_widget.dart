@@ -1,8 +1,8 @@
 import 'package:chess_rps/common/palette.dart';
-import 'package:chess_rps/model/board.dart';
-import 'package:chess_rps/widget/cell_widget.dart';
-import 'package:chess_rps/widget/collection/letters_collection.dart';
-import 'package:chess_rps/widget/collection/numbers_column.dart';
+import 'package:chess_rps/domain/model/board.dart';
+import 'package:chess_rps/presentation/widget/cell_widget.dart';
+import 'package:chess_rps/presentation/widget/collection/letters_collection.dart';
+import 'package:chess_rps/presentation/widget/collection/numbers_column.dart';
 import 'package:flutter/material.dart';
 
 const _letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];

@@ -1,5 +1,5 @@
-import 'package:chess_rps/screen/chess_screen.dart';
-import 'package:chess_rps/screen/mode_selector.dart';
+import 'package:chess_rps/presentation/screen/chess_screen.dart';
+import 'package:chess_rps/presentation/screen/mode_selector.dart';
 import 'package:flutter/cupertino.dart';
 
 final appRoutes = <String, Widget Function(BuildContext)>{

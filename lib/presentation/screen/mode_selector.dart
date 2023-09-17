@@ -1,5 +1,5 @@
-import 'package:chess_rps/screen/chess_screen.dart';
-import 'package:chess_rps/utils/custom_router.dart';
+import 'package:chess_rps/presentation/screen/chess_screen.dart';
+import 'package:chess_rps/presentation/utils/custom_router.dart';
 import 'package:flutter/material.dart';
 
 const _normalModeText = 'Normal Mode';

@@ -1,9 +1,9 @@
 import 'package:chess_rps/common/enum.dart';
-import 'package:chess_rps/model/board.dart';
-import 'package:chess_rps/model/cell.dart';
-import 'package:chess_rps/model/figure.dart';
-import 'package:chess_rps/model/position.dart';
-import 'package:chess_rps/utils/action_checker.dart';
+import 'package:chess_rps/domain/model/board.dart';
+import 'package:chess_rps/domain/model/cell.dart';
+import 'package:chess_rps/domain/model/figure.dart';
+import 'package:chess_rps/domain/model/position.dart';
+import 'package:chess_rps/presentation/utils/action_checker.dart';
 
 class Queen extends Figure {
   Queen({

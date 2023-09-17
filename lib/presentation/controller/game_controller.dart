@@ -1,8 +1,8 @@
 import 'package:chess_rps/common/extension.dart';
-import 'package:chess_rps/model/board.dart';
-import 'package:chess_rps/model/cell.dart';
-import 'package:chess_rps/state/game_state.dart';
-import 'package:chess_rps/utils/action_checker.dart';
+import 'package:chess_rps/domain/model/board.dart';
+import 'package:chess_rps/domain/model/cell.dart';
+import 'package:chess_rps/presentation/state/game_state.dart';
+import 'package:chess_rps/presentation/utils/action_checker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'game_controller.g.dart';

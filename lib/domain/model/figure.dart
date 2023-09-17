@@ -1,7 +1,7 @@
 import 'package:chess_rps/common/enum.dart';
-import 'package:chess_rps/model/board.dart';
-import 'package:chess_rps/model/cell.dart';
-import 'package:chess_rps/model/position.dart';
+import 'package:chess_rps/domain/model/board.dart';
+import 'package:chess_rps/domain/model/cell.dart';
+import 'package:chess_rps/domain/model/position.dart';
 
 abstract class Figure {
   final Side side;

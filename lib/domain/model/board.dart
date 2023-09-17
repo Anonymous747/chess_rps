@@ -1,13 +1,13 @@
 import 'package:chess_rps/common/enum.dart';
-import 'package:chess_rps/model/cell.dart';
-import 'package:chess_rps/model/figure.dart';
-import 'package:chess_rps/model/figures/bishop.dart';
-import 'package:chess_rps/model/figures/king.dart';
-import 'package:chess_rps/model/figures/knight.dart';
-import 'package:chess_rps/model/figures/pawn.dart';
-import 'package:chess_rps/model/figures/queen.dart';
-import 'package:chess_rps/model/figures/rook.dart';
-import 'package:chess_rps/model/position.dart';
+import 'package:chess_rps/domain/model/cell.dart';
+import 'package:chess_rps/domain/model/figure.dart';
+import 'package:chess_rps/domain/model/figures/bishop.dart';
+import 'package:chess_rps/domain/model/figures/king.dart';
+import 'package:chess_rps/domain/model/figures/knight.dart';
+import 'package:chess_rps/domain/model/figures/pawn.dart';
+import 'package:chess_rps/domain/model/figures/queen.dart';
+import 'package:chess_rps/domain/model/figures/rook.dart';
+import 'package:chess_rps/domain/model/position.dart';
 
 const cellsRowCount = 8;
 

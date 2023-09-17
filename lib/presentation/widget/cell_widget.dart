@@ -1,9 +1,9 @@
 import 'package:chess_rps/common/palette.dart';
-import 'package:chess_rps/controller/game_controller.dart';
-import 'package:chess_rps/model/cell.dart';
-import 'package:chess_rps/widget/custom/animated_border.dart';
-import 'package:chess_rps/widget/custom/available_move.dart';
-import 'package:chess_rps/widget/custom/custom_gradient.dart';
+import 'package:chess_rps/domain/model/cell.dart';
+import 'package:chess_rps/presentation/controller/game_controller.dart';
+import 'package:chess_rps/presentation/widget/custom/animated_border.dart';
+import 'package:chess_rps/presentation/widget/custom/available_move.dart';
+import 'package:chess_rps/presentation/widget/custom/custom_gradient.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 

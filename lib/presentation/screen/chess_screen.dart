@@ -1,5 +1,5 @@
-import 'package:chess_rps/controller/game_controller.dart';
-import 'package:chess_rps/widget/board_widget.dart';
+import 'package:chess_rps/presentation/controller/game_controller.dart';
+import 'package:chess_rps/presentation/widget/board_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
