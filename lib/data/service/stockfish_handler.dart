@@ -1,22 +1,22 @@
 import 'package:chess_rps/domain/service/ai_handler.dart';
+import 'package:stockfish/stockfish.dart';
 
 class StockfishHandler implements AIHandler {
-  @override
-  @override
-  void disposeEngine() {
-    // TODO: implement disposeEngine
-  }
-
-  @override
-  String getState() {
-    // TODO: implement getState
-    throw UnimplementedError();
-  }
+  late final Stockfish _engine;
 
   @override
   void initEngine() {
-    // TODO: implement initEngine
+    _engine = Stockfish();
   }
+
+  @override
+  void disposeEngine() {
+    _engine.stdin = 'quite';
+    _engine.dispose();
+  }
+
+  @override
+  String getState() => _engine.state.value.name;
 
   @override
   void registerOutputCallback() {

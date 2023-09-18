@@ -3,7 +3,7 @@ import 'package:chess_rps/presentation/widget/board_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ChessScreen extends HookConsumerWidget {
+class ChessScreen extends HookConsumerWidget with WidgetsBindingObserver {
   static const routeName = 'chess';
 
   const ChessScreen({Key? key}) : super(key: key);

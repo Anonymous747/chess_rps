@@ -1,16 +1,33 @@
 import 'package:chess_rps/common/extension.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
+import 'package:chess_rps/domain/service/ai_handler.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
+import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'game_controller.g.dart';
 
 @riverpod
-class GameController extends _$GameController {
+class GameController extends _$GameController with WidgetsBindingObserver {
+  late final AIHandler _stockfishHandler;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print('========= state = $state');
+    if (state == AppLifecycleState.detached) {
+      print('========= didChangeAppLifecycleState dispose');
+      _stockfishHandler.disposeEngine();
+    }
+
+    super.didChangeAppLifecycleState(state);
+  }
+
   @override
   GameState build() {
+    _stockfishHandler = ref.read(createAIHandlerProvider)..initEngine();
+
     final board = Board()..startGame();
     final state = GameState(board: board);
 
@@ -95,5 +112,9 @@ class GameController extends _$GameController {
     state.board.cells[fromRow][fromCol] =
         fromCell.copyWith(isSelected: !fromCell.isSelected);
     state = state.copyWith(selectedFigure: fromCell.positionHash);
+  }
+
+  void dispose() {
+    _stockfishHandler.disposeEngine();
   }
 }
