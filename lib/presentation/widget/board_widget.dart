@@ -5,9 +5,6 @@ import 'package:chess_rps/presentation/widget/collection/letters_collection.dart
 import 'package:chess_rps/presentation/widget/collection/numbers_column.dart';
 import 'package:flutter/material.dart';
 
-const _letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-const _numbers = ['8', '7', '6', '5', '4', '3', '2', '1'];
-
 const double _parentBorderWidth = 20;
 const double _childBorderWidth = 6;
 
@@ -51,7 +48,7 @@ class BoardWidget extends StatelessWidget {
           left: _parentBorderWidth + _childBorderWidth,
           top: 2,
           child: LettersCollection(
-            letters: _letters,
+            letters: boardLetters,
             cellWidth: sideSize,
           ),
         ),
@@ -59,7 +56,7 @@ class BoardWidget extends StatelessWidget {
           left: _parentBorderWidth + _childBorderWidth,
           bottom: 4,
           child: LettersCollection(
-            letters: _letters,
+            letters: boardLetters,
             cellWidth: sideSize,
           ),
         ),
@@ -67,7 +64,7 @@ class BoardWidget extends StatelessWidget {
           top: _parentBorderWidth + _childBorderWidth,
           left: 6,
           child: NumbersColumn(
-            letters: _numbers,
+            letters: boardNumbers,
             cellHeight: sideSize,
           ),
         ),
@@ -75,7 +72,7 @@ class BoardWidget extends StatelessWidget {
           top: _parentBorderWidth + _childBorderWidth,
           right: 6,
           child: NumbersColumn(
-            letters: _numbers,
+            letters: boardNumbers,
             cellHeight: sideSize,
           ),
         ),

@@ -13,6 +13,7 @@ part 'game_controller.g.dart';
 class GameController extends _$GameController with WidgetsBindingObserver {
   late final AIHandler _stockfishHandler;
 
+  /// TODO: Investigate close app event
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     print('========= state = $state');

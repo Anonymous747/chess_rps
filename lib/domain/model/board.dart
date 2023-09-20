@@ -11,6 +11,9 @@ import 'package:chess_rps/domain/model/position.dart';
 
 const cellsRowCount = 8;
 
+const boardLetters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const boardNumbers = ['8', '7', '6', '5', '4', '3', '2', '1'];
+
 class Board {
   List<List<Cell>> cells = [];
 
