@@ -136,7 +136,7 @@ scripts:
 
   test:with-lcov-coverage:
     run: |
-      chmod +x test_with_coverage.sh
+      sh chmod +x test_with_coverage.sh
       MELOS_ROOT_PATH/scripts/test_with_coverage.sh MELOS_ROOT_PATH MELOS_PACKAGE_PATH MELOS_PACKAGE_NAME
     exec:
       concurrency: 6
