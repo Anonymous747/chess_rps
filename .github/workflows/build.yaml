@@ -77,5 +77,5 @@ jobs:
       - name: 🤖🔨 Build Android app
         run: |
           pushd flutter_app/
-          flutter build appbundle --debug --flavor dev -t lib/main.dart
+          flutter build appbundle --debug -t lib/main.dart
           popd
