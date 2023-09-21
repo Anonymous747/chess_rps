@@ -1,0 +1,7 @@
+name: chess_rps
+
+environment:
+  sdk: '>=3.0.6 <4.0.0'
+
+dependencies:
+  melos: ^3.1.1
