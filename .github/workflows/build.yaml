@@ -59,31 +59,31 @@ jobs:
           pull_request_comment: true
           check_unused_files: true
           folders: 'flutter_app'
-    build:
-      name: Build Android
-      runs-on: ubuntu-latest
-      timeout-minutes: 30
-      steps:
-        - name: ⬇️ Checkout repository
-          uses: actions/checkout@v3
-        - name: ⚙️ Setup Flutter
-          uses: subosito/flutter-action@v2
-          with:
-            channel: 'stable'
-            cache: true
-        - name: ⚙️ Setup Java
-          uses: actions/setup-java@v3
-          with:
-            distribution: 'zulu'
-            java-version: "12.x"
-            cache: 'gradle'
-          id: java
-        - name: ⚙️ Setup Melos
-          uses: bluefireteam/melos-action@v2
-        - name: ⚙️ Install dependencies for all packages
-          run: melos build:pub_get:all
-        - name: 🤖🔨 Build Android app
-          run: |
-            pushd flutter_app/
-            flutter build appbundle --debug --flavor dev -t lib/main.dart
-            popd
+  build:
+    name: Build Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v3
+      - name: ⚙️ Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: ⚙️ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: "12.x"
+          cache: 'gradle'
+        id: java
+      - name: ⚙️ Setup Melos
+        uses: bluefireteam/melos-action@v2
+      - name: ⚙️ Install dependencies for all packages
+        run: melos build:pub_get:all
+      - name: 🤖🔨 Build Android app
+        run: |
+          pushd flutter_app/
+          flutter build appbundle --debug --flavor dev -t lib/main.dart
+          popd
