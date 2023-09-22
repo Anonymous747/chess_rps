@@ -151,7 +151,6 @@ scripts:
 
   test:with-html-coverage:
     run: |
-#      sh chmod +x  MELOS_ROOT_PATH/scripts/test-with-coverage.sh
       MELOS_ROOT_PATH/scripts/test-with-coverage.sh MELOS_ROOT_PATH MELOS_PACKAGE_PATH MELOS_PACKAGE_NAME && \
       melos run test:combine-coverage && \
       melos run test:generate-html-coverage
