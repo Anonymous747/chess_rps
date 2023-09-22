@@ -135,9 +135,7 @@ scripts:
     description: Run Flutter tests and update goldens for all packages in this project
 
   test:with-lcov-coverage:
-    run: |
-      sh chmod +x MELOS_ROOT_PATH/scripts/test_with_coverage.sh
-      MELOS_ROOT_PATH/scripts/test_with_coverage.sh MELOS_ROOT_PATH MELOS_PACKAGE_PATH MELOS_PACKAGE_NAME
+    run: MELOS_ROOT_PATH/scripts/test-with-coverage.sh MELOS_ROOT_PATH MELOS_PACKAGE_PATH MELOS_PACKAGE_NAME
     exec:
       concurrency: 6
     select-package:
@@ -153,8 +151,7 @@ scripts:
 
   test:with-html-coverage:
     run: |
-      sh chmod +x  MELOS_ROOT_PATH/scripts/test_with_coverage.sh
-      MELOS_ROOT_PATH/scripts/test_with_coverage.sh MELOS_ROOT_PATH MELOS_PACKAGE_PATH MELOS_PACKAGE_NAME && \
+      MELOS_ROOT_PATH/scripts/test-with-coverage.sh MELOS_ROOT_PATH MELOS_PACKAGE_PATH MELOS_PACKAGE_NAME && \
       melos run test:combine-coverage && \
       melos run test:generate-html-coverage
     exec:
