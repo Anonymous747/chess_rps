@@ -4,26 +4,13 @@ import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/service/ai_handler.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
-import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'game_controller.g.dart';
 
 @riverpod
-class GameController extends _$GameController with WidgetsBindingObserver {
+class GameController extends _$GameController {
   late final AIHandler _stockfishHandler;
-
-  /// TODO: Investigate close app event
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    print('========= state = $state');
-    if (state == AppLifecycleState.detached) {
-      print('========= didChangeAppLifecycleState dispose');
-      _stockfishHandler.disposeEngine();
-    }
-
-    super.didChangeAppLifecycleState(state);
-  }
 
   @override
   GameState build() {
