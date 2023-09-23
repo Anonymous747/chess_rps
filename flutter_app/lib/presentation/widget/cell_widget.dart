@@ -63,7 +63,7 @@ class CellWidget extends HookConsumerWidget {
                     backgroundColor: Palette.blue300,
                   ),
                 if (cell.figure != null)
-                  Image.asset(_getAppropriateImage(cell)),
+                  Image(image: AssetImage(_getAppropriateImage(cell))),
                 if (cell.isAvailable)
                   AvailableMove(isAvailable: cell.isAvailable),
               ],
