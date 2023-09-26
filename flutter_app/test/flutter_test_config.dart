@@ -4,8 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'utils/custom_local_file_comparator.dart';
 
-/// Customise your threshold here
-/// For example, the error threshold here is 0.5%
+/// The error threshold here is 0.5%
 /// Golden tests will pass if the pixel difference is equal to or below 0.5%
 const _kGoldenTestsThreshold = 0.5 / 100;
 
