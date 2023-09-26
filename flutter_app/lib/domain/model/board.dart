@@ -46,7 +46,7 @@ class Board {
         : lostLightFigures.add(knockedFigure);
   }
 
-  void setFigure(Cell from, Cell to) {
+  void makeMove(Cell from, Cell to) {
     final fromRow = from.position.row;
     final fromCol = from.position.col;
     final toRow = to.position.row;

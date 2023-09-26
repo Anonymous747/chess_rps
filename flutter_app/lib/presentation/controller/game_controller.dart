@@ -4,6 +4,7 @@ import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/service/ai_handler.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
+import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'game_controller.g.dart';
@@ -22,16 +23,18 @@ class GameController extends _$GameController {
     return state;
   }
 
-  void _makeMove(Cell target) {
-    final position = state.selectedFigure!.toPosition();
+  @protected
+  void makeMove(Cell target) {
+    final selectedPosition = state.selectedFigure!.toPosition();
     final board = state.board;
-    final selectedCell = board.getCellAt(position.row, position.col);
+    final selectedCell =
+        board.getCellAt(selectedPosition.row, selectedPosition.col);
 
     final isMoveAvailable = selectedCell.moveFigure(board, target);
 
     if (isMoveAvailable) {
       final updatedBoard = board
-        ..setFigure(selectedCell, target)
+        ..makeMove(selectedCell, target)
         ..removeSelection();
 
       state = state.copyWith(
@@ -50,11 +53,11 @@ class GameController extends _$GameController {
     if (pressedCell.isAvailable || pressedCell.canBeKnockedDown) {
       assert(state.selectedFigure != null, "Figure should be chosen");
 
-      _makeMove(pressedCell);
+      makeMove(pressedCell);
     }
 
     if (pressedCell.isOccupied && pressedCell.figureSide == currentOrder) {
-      _showAvailableActions(pressedCell);
+      showAvailableActions(pressedCell);
 
       ref.notifyListeners();
     }
@@ -83,7 +86,9 @@ class GameController extends _$GameController {
     }
   }
 
-  void _showAvailableActions(Cell fromCell) {
+  @protected
+  @visibleForTesting
+  void showAvailableActions(Cell fromCell) {
     // Wipe selected cells before follow action
     if (state.selectedFigure != null) {
       state = state.copyWith(selectedFigure: null);
