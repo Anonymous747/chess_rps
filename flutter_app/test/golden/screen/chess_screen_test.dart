@@ -56,7 +56,7 @@ void main() {
           final imageContainer = element.widget as Container;
           final decoration = imageContainer.decoration as BoxDecoration;
 
-          // await precacheImage(decoration.image!.image, element);
+          await precacheImage(decoration.image!.image, element);
         }
         await tester.pumpAndSettle();
       });
