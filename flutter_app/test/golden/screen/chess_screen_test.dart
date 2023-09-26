@@ -43,8 +43,6 @@ void main() {
 
   group('Chess screen', () {
     testGoldens('Board golden test', (tester) async {
-      TestWidgetsFlutterBinding.ensureInitialized();
-
       await tester.binding.setSurfaceSize(const Size(820, 1230));
 
       await tester.runAsync(() async {
