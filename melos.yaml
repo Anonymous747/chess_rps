@@ -126,7 +126,6 @@ scripts:
       dir-exists:
         - test
       scope:
-        - "design_system"
         - "flutter_ci_cd_demo"
     description: Run `flutter test` and update goldens for a specific package.
 
