@@ -6,7 +6,6 @@ import 'package:chess_rps/presentation/state/game_state.dart';
 class GameControllerMock extends GameController {
   @override
   GameState build() {
-    print('========= build');
     final board = Board()..startGame();
     final state = GameState(board: board);
 
