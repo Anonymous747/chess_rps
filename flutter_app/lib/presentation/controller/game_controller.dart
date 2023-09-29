@@ -1,26 +1,40 @@
+import 'dart:async';
+
 import 'package:chess_rps/common/extension.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
-import 'package:chess_rps/domain/service/ai_handler.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:stockfish_interpreter/stockfish_interpreter.dart';
 
 part 'game_controller.g.dart';
 
 @riverpod
 class GameController extends _$GameController {
-  late final AIHandler _stockfishHandler;
+  // late final AIHandler _stockfishHandler;
+  late final StockfishInterpreter _stockfishInterpreter;
 
   @override
   GameState build() {
-    _stockfishHandler = ref.read(createAIHandlerProvider)..initEngine();
+    // _stockfishHandler = ref.read(createAIHandlerProvider)..initEngine();
+    _stockfishInterpreter = StockfishInterpreter(parameters: {});
 
     final board = Board()..startGame();
     final state = GameState(board: board);
 
+    _stockfishInterpreter.outoutStreamListener;
     return state;
+  }
+
+  Future<void> executeCommand(String command) async {
+    // _stockfishHandler.setCommand(command);
+    _stockfishInterpreter.applyCommand(command);
+
+    // final a = await _stockfishInterpreter.getFenPosition();
+    // print('========= a = $a');
+    // _stockfishInterpreter.isMoveCorrect('e2e4');
   }
 
   @protected
@@ -108,6 +122,7 @@ class GameController extends _$GameController {
   }
 
   void dispose() {
-    _stockfishHandler.disposeEngine();
+    _stockfishInterpreter.disposeEngine();
+    // _stockfishHandler.disposeEngine();
   }
 }
