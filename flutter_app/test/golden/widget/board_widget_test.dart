@@ -7,14 +7,13 @@ import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../mocks/controller.dart';
-import '../../mocks/widget.dart';
 
 void main() {
   group('Board widget', () {
     late Board board;
     late GameControllerMock gameController;
 
-    setUpAll(() {
+    setUp(() {
       board = Board()..startGame();
       gameController = GameControllerMock();
     });
@@ -23,7 +22,10 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(820, 800));
 
       await tester.runAsync(() async {
-        await tester.pumpWidget(TestWrapper(child: BoardWidget(board: board)));
+        await tester.pumpWidget(MaterialApp(
+            home: ProviderScope(overrides: [
+          gameControllerProvider.overrideWith(() => gameController)
+        ], child: BoardWidget(board: board))));
 
         final elements = find.byKey(const ValueKey('figureKey')).evaluate();
 
