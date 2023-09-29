@@ -9,14 +9,19 @@ const _readyStatus = 'ready';
 class StockfishInterpreter {
   final int depth;
   final Map parameters;
+  final bool isTestFlow;
 
   StockfishInterpreter({
     required this.parameters,
     this.depth = 15,
     bool isImmediatelyStart = true,
+    this.isTestFlow = false,
   }) {
+    if (isTestFlow) return;
+
     _stockfishHandler = StockfishHandler();
 
+    print('========= a');
     if (isImmediatelyStart) {
       initEngine();
     }
@@ -65,7 +70,6 @@ class StockfishInterpreter {
   void updateEngineParameters(Map params) async {
     if (params.isEmpty) return;
 
-    print('========= updateEngineParameters');
     Map newParams = params.copy();
 
     if (_parametrs.isNotEmpty) {
@@ -100,7 +104,6 @@ class StockfishInterpreter {
 
       newParams[threads] = threadValue;
       newParams[hash] = hashValue;
-      print('========= newParams = $newParams');
     }
 
     newParams.forEach((key, value) {

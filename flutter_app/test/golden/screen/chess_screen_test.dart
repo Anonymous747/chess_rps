@@ -1,10 +1,12 @@
 import 'package:chess_rps/common/assets.dart';
+import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/screen/chess_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../mocks/widget.dart';
+import '../../mocks/controller.dart';
 
 void main() {
   testGoldens('Check image load', (tester) async {
@@ -42,11 +44,20 @@ void main() {
   });
 
   group('Chess screen', () {
+    late GameControllerMock gameController;
+
+    setUpAll(() {
+      gameController = GameControllerMock();
+    });
+
     testGoldens('Board golden test', (tester) async {
       await tester.binding.setSurfaceSize(const Size(820, 1230));
 
       await tester.runAsync(() async {
-        await tester.pumpWidget(const TestWrapper(child: ChessScreen()));
+        await tester.pumpWidget(MaterialApp(
+            home: ProviderScope(overrides: [
+          gameControllerProvider.overrideWith(() => gameController)
+        ], child: ChessScreen())));
 
         final elements = find.byKey(const ValueKey('figureKey')).evaluate();
 
