@@ -33,7 +33,7 @@ class StockfishInterpreter {
 
   /// Settings parameters
   ///
-  Map _parametrs = {};
+  final _parameters = {};
 
   bool get _isReady => _stockfishHandler.getState() == _readyStatus;
   StreamSubscription<String> get outoutStreamListener =>
@@ -57,8 +57,6 @@ class StockfishInterpreter {
     }
 
     _prepareForNewPosition(sendUcinewgameToken: true);
-
-    print('========= paramaters = $_parametrs');
   }
 
   /// Connector to input of stockfish engine
@@ -77,9 +75,9 @@ class StockfishInterpreter {
 
     Map newParams = params.copy();
 
-    if (_parametrs.isNotEmpty) {
+    if (_parameters.isNotEmpty) {
       for (final key in newParams.keys) {
-        if (!_parametrs.containsKey(key)) {
+        if (!_parameters.containsKey(key)) {
           throw Exception('$key is not a key that exist');
         }
       }
@@ -104,7 +102,7 @@ class StockfishInterpreter {
       if (newParams.containsKey(hash)) {
         hashValue = newParams.remove(hash);
       } else {
-        hashValue = _parametrs[hash];
+        hashValue = _parameters[hash];
       }
 
       newParams[threads] = threadValue;
@@ -131,10 +129,10 @@ class StockfishInterpreter {
   }) {
     applyCommand('setoption name $name value $value');
     if (updateParameters) {
-      if (_parametrs.containsKey(name)) {
-        _parametrs.update(name, (_) => value);
+      if (_parameters.containsKey(name)) {
+        _parameters.update(name, (_) => value);
       } else {
-        _parametrs.addAll({name: value});
+        _parameters.addAll({name: value});
       }
     }
     _isReady;
@@ -235,25 +233,15 @@ class StockfishInterpreter {
   /// Returns string with current position on Forsyth-Edwards notation (FEN).
   ///
   Future<String> getFenPosition() async {
-    print('========= getFenPosition');
     applyCommand('d');
 
-    // StreamSubscription<String>? subscriber;
-    // subscriber ??= _stockfishHandler.outputStream.distinct().listen((output) {
-    //   print('========= fen output = $output');
-    //   if (output.startsWith('Fen:')) {
-    //     fen = output;
-    //   } else if (output.startsWith('Checker')) {
-    //     subscriber?.cancel();
-    //   }
-    // });
     String fen = await _stockfishHandler.outputStream
         .firstWhere((output) => output.startsWith('Fen:'));
     await _stockfishHandler.outputStream
         .firstWhere((output) => output.startsWith('Checker'));
-    final cuttedFen = fen.replaceFirst('Fen: ', '');
+    final cutFen = fen.replaceFirst('Fen: ', '');
 
-    return cuttedFen;
+    return cutFen;
   }
 
   void _prepareForNewPosition({bool sendUcinewgameToken = true}) {
