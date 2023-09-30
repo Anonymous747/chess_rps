@@ -27,7 +27,12 @@ class StockfishInterpreter {
     }
   }
 
+  /// Wrapper around StockFish plugin
+  ///
   late final StockfishHandler _stockfishHandler;
+
+  /// Settings parameters
+  ///
   Map _parametrs = {};
 
   bool get _isReady => _stockfishHandler.getState() == _readyStatus;
@@ -39,13 +44,13 @@ class StockfishInterpreter {
   /// Initialize connection to stockfish engine
   /// Need to execute if you pass [isImmediatelyStart] as false
   ///
-  void initEngine() async {
+  Future<void> initEngine() async {
     _stockfishHandler.initEngine();
 
     applyCommand('uci');
 
-    updateEngineParameters(defaultStockfishParams);
-    updateEngineParameters(parameters);
+    await updateEngineParameters(defaultStockfishParams);
+    await updateEngineParameters(parameters);
 
     if (await doesCurrentEngineVersionHaveWDLOption()) {
       _setOption(uciShowWDL, true, updateParameters: false);
@@ -67,7 +72,7 @@ class StockfishInterpreter {
   /// Update StockFish parameters
   /// Contains (key, value) pairs which will be used to update
   /// the _parameters dictionary.
-  void updateEngineParameters(Map params) async {
+  Future<void> updateEngineParameters(Map params) async {
     if (params.isEmpty) return;
 
     Map newParams = params.copy();
@@ -192,7 +197,7 @@ class StockfishInterpreter {
       fenPosition: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
       sendUcinewgameToken: true,
     );
-    makeMovesFromCurrentPosition(moves: moves);
+    makeMovesFromCurrentPosition(moves);
   }
 
   /// Sets current skill level of stockfish engine
@@ -212,7 +217,7 @@ class StockfishInterpreter {
   /// to reach a new position. Must be in full algebraic notation.
   /// Example: ["g4d7", "a8b8", "f1d1"]
   ///
-  void makeMovesFromCurrentPosition({List<String> moves = const []}) async {
+  void makeMovesFromCurrentPosition([List<String> moves = const []]) async {
     if (moves.isEmpty) return;
 
     for (final move in moves) {
@@ -221,6 +226,7 @@ class StockfishInterpreter {
       }
 
       final fenPosition = await getFenPosition();
+      print('========= fenPosition = $fenPosition');
       applyCommand('position fen $fenPosition moves $move');
     }
   }
@@ -229,19 +235,25 @@ class StockfishInterpreter {
   /// Returns string with current position on Forsyth-Edwards notation (FEN).
   ///
   Future<String> getFenPosition() async {
+    print('========= getFenPosition');
     applyCommand('d');
 
-    String fen = '';
-    StreamSubscription<String>? subscriber;
-    subscriber = _stockfishHandler.outputStream.distinct().listen((output) {
-      if (output.startsWith('Fen:')) {
-        fen = output;
-      } else if (output.startsWith('Checker')) {
-        subscriber?.cancel();
-      }
-    });
+    // StreamSubscription<String>? subscriber;
+    // subscriber ??= _stockfishHandler.outputStream.distinct().listen((output) {
+    //   print('========= fen output = $output');
+    //   if (output.startsWith('Fen:')) {
+    //     fen = output;
+    //   } else if (output.startsWith('Checker')) {
+    //     subscriber?.cancel();
+    //   }
+    // });
+    String fen = await _stockfishHandler.outputStream
+        .firstWhere((output) => output.startsWith('Fen:'));
+    await _stockfishHandler.outputStream
+        .firstWhere((output) => output.startsWith('Checker'));
+    final cuttedFen = fen.replaceFirst('Fen: ', '');
 
-    return fen;
+    return cuttedFen;
   }
 
   void _prepareForNewPosition({bool sendUcinewgameToken = true}) {

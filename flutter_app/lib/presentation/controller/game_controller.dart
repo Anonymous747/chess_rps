@@ -26,7 +26,7 @@ class GameController extends _$GameController {
     final board = Board()..startGame();
     final state = GameState(board: board);
 
-    stockfishInterpreter.outoutStreamListener;
+    // stockfishInterpreter.outoutStreamListener;
     return state;
   }
 
@@ -34,7 +34,8 @@ class GameController extends _$GameController {
     // _stockfishHandler.setCommand(command);
     stockfishInterpreter.applyCommand(command);
 
-    stockfishInterpreter.getBestMove();
+    // await stockfishInterpreter.getBestMove();
+    stockfishInterpreter.makeMovesFromCurrentPosition(['d2d4']);
 
     // final a = await stockfishInterpreter.getFenPosition();
     // print('========= a = $a');
