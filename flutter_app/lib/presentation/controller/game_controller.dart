@@ -13,30 +13,24 @@ part 'game_controller.g.dart';
 
 @riverpod
 class GameController extends _$GameController {
-  // late final AIHandler _stockfishHandler;
   @protected
   @visibleForTesting
   late final StockfishInterpreter stockfishInterpreter;
 
   @override
   GameState build() {
-    // _stockfishHandler = ref.read(createAIHandlerProvider)..initEngine();
     stockfishInterpreter = StockfishInterpreter(parameters: {});
 
     final board = Board()..startGame();
     final state = GameState(board: board);
 
-    // stockfishInterpreter.outoutStreamListener;
     return state;
   }
 
   Future<void> executeCommand(String command) async {
-    // _stockfishHandler.setCommand(command);
     stockfishInterpreter.applyCommand(command);
 
-    // final a = await stockfishInterpreter.getFenPosition();
-    // print('========= a = $a');
-    // stockfishInterpreter.isMoveCorrect('e2e4');
+    stockfishInterpreter.makeMovesFromCurrentPosition(['d2d4']);
   }
 
   @protected
@@ -125,6 +119,5 @@ class GameController extends _$GameController {
 
   void dispose() {
     stockfishInterpreter.disposeEngine();
-    // _stockfishHandler.disposeEngine();
   }
 }

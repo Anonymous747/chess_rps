@@ -27,8 +27,13 @@ class StockfishInterpreter {
     }
   }
 
+  /// Wrapper around StockFish plugin
+  ///
   late final StockfishHandler _stockfishHandler;
-  Map _parametrs = {};
+
+  /// Settings parameters
+  ///
+  final _parameters = {};
 
   bool get _isReady => _stockfishHandler.getState() == _readyStatus;
   StreamSubscription<String> get outoutStreamListener =>
@@ -39,21 +44,19 @@ class StockfishInterpreter {
   /// Initialize connection to stockfish engine
   /// Need to execute if you pass [isImmediatelyStart] as false
   ///
-  void initEngine() async {
+  Future<void> initEngine() async {
     _stockfishHandler.initEngine();
 
     applyCommand('uci');
 
-    updateEngineParameters(defaultStockfishParams);
-    updateEngineParameters(parameters);
+    await updateEngineParameters(defaultStockfishParams);
+    await updateEngineParameters(parameters);
 
     if (await doesCurrentEngineVersionHaveWDLOption()) {
       _setOption(uciShowWDL, true, updateParameters: false);
     }
 
     _prepareForNewPosition(sendUcinewgameToken: true);
-
-    print('========= paramaters = $_parametrs');
   }
 
   /// Connector to input of stockfish engine
@@ -67,14 +70,14 @@ class StockfishInterpreter {
   /// Update StockFish parameters
   /// Contains (key, value) pairs which will be used to update
   /// the _parameters dictionary.
-  void updateEngineParameters(Map params) async {
+  Future<void> updateEngineParameters(Map params) async {
     if (params.isEmpty) return;
 
     Map newParams = params.copy();
 
-    if (_parametrs.isNotEmpty) {
+    if (_parameters.isNotEmpty) {
       for (final key in newParams.keys) {
-        if (!_parametrs.containsKey(key)) {
+        if (!_parameters.containsKey(key)) {
           throw Exception('$key is not a key that exist');
         }
       }
@@ -99,7 +102,7 @@ class StockfishInterpreter {
       if (newParams.containsKey(hash)) {
         hashValue = newParams.remove(hash);
       } else {
-        hashValue = _parametrs[hash];
+        hashValue = _parameters[hash];
       }
 
       newParams[threads] = threadValue;
@@ -113,6 +116,12 @@ class StockfishInterpreter {
         fenPosition: await getFenPosition(), sendUcinewgameToken: false);
   }
 
+  /// Reset the stockfish parameters
+  ///
+  void resetEngineParameters() {
+    updateEngineParameters(defaultStockfishParams);
+  }
+
   void _setOption(
     String name,
     dynamic value, {
@@ -120,10 +129,10 @@ class StockfishInterpreter {
   }) {
     applyCommand('setoption name $name value $value');
     if (updateParameters) {
-      if (_parametrs.containsKey(name)) {
-        _parametrs.update(name, (_) => value);
+      if (_parameters.containsKey(name)) {
+        _parameters.update(name, (_) => value);
       } else {
-        _parametrs.addAll({name: value});
+        _parameters.addAll({name: value});
       }
     }
     _isReady;
@@ -186,7 +195,7 @@ class StockfishInterpreter {
       fenPosition: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
       sendUcinewgameToken: true,
     );
-    makeMovesFromCurrentPosition(moves: moves);
+    makeMovesFromCurrentPosition(moves);
   }
 
   /// Sets current skill level of stockfish engine
@@ -206,7 +215,7 @@ class StockfishInterpreter {
   /// to reach a new position. Must be in full algebraic notation.
   /// Example: ["g4d7", "a8b8", "f1d1"]
   ///
-  void makeMovesFromCurrentPosition({List<String> moves = const []}) async {
+  void makeMovesFromCurrentPosition([List<String> moves = const []]) async {
     if (moves.isEmpty) return;
 
     for (final move in moves) {
@@ -215,6 +224,7 @@ class StockfishInterpreter {
       }
 
       final fenPosition = await getFenPosition();
+      print('========= fenPosition = $fenPosition');
       applyCommand('position fen $fenPosition moves $move');
     }
   }
@@ -225,27 +235,34 @@ class StockfishInterpreter {
   Future<String> getFenPosition() async {
     applyCommand('d');
 
-    String fen = '';
-    StreamSubscription<String>? subscriber;
-    subscriber = _stockfishHandler.outputStream.distinct().listen((output) {
-      if (output.startsWith('Fen:')) {
-        fen = output;
-      } else if (output.startsWith('Checker')) {
-        subscriber?.cancel();
-      }
-    });
+    String fen = await _stockfishHandler.outputStream
+        .firstWhere((output) => output.startsWith('Fen:'));
+    await _stockfishHandler.outputStream
+        .firstWhere((output) => output.startsWith('Checker'));
+    final cutFen = fen.replaceFirst('Fen: ', '');
 
-    // .firstWhere((output) => output.startsWith('Fen:'));
-
-    return fen;
+    return cutFen;
   }
 
   void _prepareForNewPosition({bool sendUcinewgameToken = true}) {
     if (sendUcinewgameToken) {
       applyCommand('ucinewgame');
-      // _isReady;
-      // info = "";
     }
+  }
+
+  /// Code for this function taken from: https://gist.github.com/Dani4kor/e1e8b439115878f8c6dcf127a4ed5d3e
+  /// Some small changes have been made to the code.
+  ///
+  bool _isFenSyntaxValide(String fen) {
+    bool isRegexMatch = RegExp(
+      r"\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s(-|[K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$",
+    ).hasMatch(fen);
+
+    if (!isRegexMatch) return false;
+
+    // TODO: Finish fen check impl
+
+    return true;
   }
 
   /// Checks new move
@@ -262,13 +279,21 @@ class StockfishInterpreter {
   /// Returns best move with current position on the board.
   /// [wtime] and [btime] arguments influence the search only if provided.
   ///
-  Future<String?> getBestMove(int? wtime, int? btime) async {
+  Future<String?> getBestMove({int? wtime, int? btime}) async {
     if (wtime != null && btime != null) {
       _goRemainingTime(wtime, btime);
     } else {
       _go();
     }
 
+    return _getBestMoveFromSfPopenProcess();
+  }
+
+  /// Returns best move with current position on the board after a determined time
+  /// Time for stockfish to determine best move in milliseconds
+  ///
+  Future<String?> getBestMoveTime({int time = 1000}) async {
+    _goTime(time);
     return _getBestMoveFromSfPopenProcess();
   }
 
