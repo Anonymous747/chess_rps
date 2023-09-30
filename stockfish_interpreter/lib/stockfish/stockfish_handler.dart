@@ -21,7 +21,7 @@ class StockfishHandler {
   void disposeEngine() {
     _outputListener.cancel();
 
-    _engine.stdin = 'quite';
+    _engine.stdin = 'quit';
     _engine.dispose();
   }
 

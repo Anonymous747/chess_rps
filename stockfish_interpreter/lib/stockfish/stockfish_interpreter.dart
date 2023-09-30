@@ -113,6 +113,12 @@ class StockfishInterpreter {
         fenPosition: await getFenPosition(), sendUcinewgameToken: false);
   }
 
+  /// Reset the stockfish parameters
+  ///
+  void resetEngineParameters() {
+    updateEngineParameters(defaultStockfishParams);
+  }
+
   void _setOption(
     String name,
     dynamic value, {
@@ -235,17 +241,28 @@ class StockfishInterpreter {
       }
     });
 
-    // .firstWhere((output) => output.startsWith('Fen:'));
-
     return fen;
   }
 
   void _prepareForNewPosition({bool sendUcinewgameToken = true}) {
     if (sendUcinewgameToken) {
       applyCommand('ucinewgame');
-      // _isReady;
-      // info = "";
     }
+  }
+
+  /// Code for this function taken from: https://gist.github.com/Dani4kor/e1e8b439115878f8c6dcf127a4ed5d3e
+  /// Some small changes have been made to the code.
+  ///
+  bool _isFenSyntaxValide(String fen) {
+    bool isRegexMatch = RegExp(
+      r"\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s(-|[K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$",
+    ).hasMatch(fen);
+
+    if (!isRegexMatch) return false;
+
+    // TODO: Finish fen check impl
+
+    return true;
   }
 
   /// Checks new move
@@ -262,13 +279,21 @@ class StockfishInterpreter {
   /// Returns best move with current position on the board.
   /// [wtime] and [btime] arguments influence the search only if provided.
   ///
-  Future<String?> getBestMove(int? wtime, int? btime) async {
+  Future<String?> getBestMove({int? wtime, int? btime}) async {
     if (wtime != null && btime != null) {
       _goRemainingTime(wtime, btime);
     } else {
       _go();
     }
 
+    return _getBestMoveFromSfPopenProcess();
+  }
+
+  /// Returns best move with current position on the board after a determined time
+  /// Time for stockfish to determine best move in milliseconds
+  ///
+  Future<String?> getBestMoveTime({int time = 1000}) async {
+    _goTime(time);
     return _getBestMoveFromSfPopenProcess();
   }
 

@@ -26,13 +26,15 @@ class GameController extends _$GameController {
     final board = Board()..startGame();
     final state = GameState(board: board);
 
-    // stockfishInterpreter.outoutStreamListener;
+    stockfishInterpreter.outoutStreamListener;
     return state;
   }
 
   Future<void> executeCommand(String command) async {
     // _stockfishHandler.setCommand(command);
     stockfishInterpreter.applyCommand(command);
+
+    stockfishInterpreter.getBestMove();
 
     // final a = await stockfishInterpreter.getFenPosition();
     // print('========= a = $a');
