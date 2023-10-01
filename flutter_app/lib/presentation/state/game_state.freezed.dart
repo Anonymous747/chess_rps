@@ -19,6 +19,7 @@ mixin _$GameState {
   Board get board => throw _privateConstructorUsedError;
   Side get currentOrder => throw _privateConstructorUsedError;
   String? get selectedFigure => throw _privateConstructorUsedError;
+  dynamic get playerSide => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $GameStateCopyWith<GameState> get copyWith =>
@@ -30,7 +31,11 @@ abstract class $GameStateCopyWith<$Res> {
   factory $GameStateCopyWith(GameState value, $Res Function(GameState) then) =
       _$GameStateCopyWithImpl<$Res, GameState>;
   @useResult
-  $Res call({Board board, Side currentOrder, String? selectedFigure});
+  $Res call(
+      {Board board,
+      Side currentOrder,
+      String? selectedFigure,
+      dynamic playerSide});
 }
 
 /// @nodoc
@@ -49,6 +54,7 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
     Object? board = null,
     Object? currentOrder = null,
     Object? selectedFigure = freezed,
+    Object? playerSide = freezed,
   }) {
     return _then(_value.copyWith(
       board: null == board
@@ -63,6 +69,10 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
           ? _value.selectedFigure
           : selectedFigure // ignore: cast_nullable_to_non_nullable
               as String?,
+      playerSide: freezed == playerSide
+          ? _value.playerSide
+          : playerSide // ignore: cast_nullable_to_non_nullable
+              as dynamic,
     ) as $Val);
   }
 }
@@ -74,7 +84,11 @@ abstract class _$$_GameStateCopyWith<$Res> implements $GameStateCopyWith<$Res> {
       __$$_GameStateCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Board board, Side currentOrder, String? selectedFigure});
+  $Res call(
+      {Board board,
+      Side currentOrder,
+      String? selectedFigure,
+      dynamic playerSide});
 }
 
 /// @nodoc
@@ -91,6 +105,7 @@ class __$$_GameStateCopyWithImpl<$Res>
     Object? board = null,
     Object? currentOrder = null,
     Object? selectedFigure = freezed,
+    Object? playerSide = freezed,
   }) {
     return _then(_$_GameState(
       board: null == board
@@ -105,6 +120,7 @@ class __$$_GameStateCopyWithImpl<$Res>
           ? _value.selectedFigure
           : selectedFigure // ignore: cast_nullable_to_non_nullable
               as String?,
+      playerSide: freezed == playerSide ? _value.playerSide! : playerSide,
     ));
   }
 }
@@ -115,7 +131,8 @@ class _$_GameState implements _GameState {
   const _$_GameState(
       {required this.board,
       this.currentOrder = Side.light,
-      this.selectedFigure = null});
+      this.selectedFigure = null,
+      this.playerSide = Side.light});
 
   @override
   final Board board;
@@ -125,10 +142,13 @@ class _$_GameState implements _GameState {
   @override
   @JsonKey()
   final String? selectedFigure;
+  @override
+  @JsonKey()
+  final dynamic playerSide;
 
   @override
   String toString() {
-    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure)';
+    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure, playerSide: $playerSide)';
   }
 
   @override
@@ -140,12 +160,14 @@ class _$_GameState implements _GameState {
             (identical(other.currentOrder, currentOrder) ||
                 other.currentOrder == currentOrder) &&
             (identical(other.selectedFigure, selectedFigure) ||
-                other.selectedFigure == selectedFigure));
+                other.selectedFigure == selectedFigure) &&
+            const DeepCollectionEquality()
+                .equals(other.playerSide, playerSide));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, board, currentOrder, selectedFigure);
+  int get hashCode => Object.hash(runtimeType, board, currentOrder,
+      selectedFigure, const DeepCollectionEquality().hash(playerSide));
 
   @JsonKey(ignore: true)
   @override
@@ -158,7 +180,8 @@ abstract class _GameState implements GameState {
   const factory _GameState(
       {required final Board board,
       final Side currentOrder,
-      final String? selectedFigure}) = _$_GameState;
+      final String? selectedFigure,
+      final dynamic playerSide}) = _$_GameState;
 
   @override
   Board get board;
@@ -166,6 +189,8 @@ abstract class _GameState implements GameState {
   Side get currentOrder;
   @override
   String? get selectedFigure;
+  @override
+  dynamic get playerSide;
   @override
   @JsonKey(ignore: true)
   _$$_GameStateCopyWith<_$_GameState> get copyWith =>

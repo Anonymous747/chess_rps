@@ -30,7 +30,7 @@ class CellWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = ref.watch(gameControllerProvider.notifier);
     final cell = ref.watch(gameControllerProvider
-        .select((state) => state.board.cells[row][column]));
+        .select((state) => state.board.getCellAt(row, column)));
 
     return GestureDetector(
       onTap: () => provider.onPressed(cell),

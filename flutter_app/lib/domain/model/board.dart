@@ -85,6 +85,12 @@ class Board {
     cells[row][col] = cells[row][col].copyWith(figure: figure);
   }
 
+  /// Update needed to you cell on board more convenient
+  ///
+  void updateCell(int row, int col, Cell Function(Cell) updatedCell) {
+    cells[row][col] = updatedCell(cells[row][col]);
+  }
+
   void _fillPawns() {
     final rows = [1, 6];
 
