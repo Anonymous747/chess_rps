@@ -22,9 +22,7 @@ class Cell with _$Cell {
 
 extension CellExtension on Cell {
   String get positionHash => '${position.row}$separatedSign${position.col}';
-
   bool get isOccupied => figure != null;
-
   Side? get figureSide => figure?.side;
 
   bool calculateCanBeKnockedDown(Cell target) {

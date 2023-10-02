@@ -21,7 +21,6 @@ class StockfishInterpreter {
 
     _stockfishHandler = StockfishHandler();
 
-    print('========= a');
     if (isImmediatelyStart) {
       initEngine();
     }
@@ -31,32 +30,42 @@ class StockfishInterpreter {
   ///
   late final StockfishHandler _stockfishHandler;
 
+  get state => _stockfishHandler.getState();
+
   /// Settings parameters
   ///
   final _parameters = {};
 
   bool get _isReady => _stockfishHandler.getState() == _readyStatus;
-  StreamSubscription<String> get outoutStreamListener =>
-      _stockfishHandler.outputStream.listen((event) {
-        print('========= output = $event');
-      });
+
+  Future<void> _stateListener() async {
+    if (_stockfishHandler.getState() == _readyStatus) {
+      await setupSettings();
+    }
+  }
 
   /// Initialize connection to stockfish engine
   /// Need to execute if you pass [isImmediatelyStart] as false
   ///
-  Future<void> initEngine() async {
+  void initEngine() {
     _stockfishHandler.initEngine();
+    _stockfishHandler.stateListenable.addListener(_stateListener);
+  }
 
+  Future<void> setupSettings() async {
     applyCommand('uci');
 
     await updateEngineParameters(defaultStockfishParams);
     await updateEngineParameters(parameters);
 
     if (await doesCurrentEngineVersionHaveWDLOption()) {
-      _setOption(uciShowWDL, true, updateParameters: false);
+      _setOption(uciShowWDL, true, updateParameters: true);
     }
 
-    _prepareForNewPosition(sendUcinewgameToken: true);
+    await setPosition();
+    await visualizeBoard();
+    await _prepareForNewPosition(sendUcinewgameToken: true);
+    // await _go();
   }
 
   /// Connector to input of stockfish engine
@@ -98,7 +107,7 @@ class StockfishInterpreter {
     if (newParams.containsKey(threads)) {
       final threadValue = newParams[threads];
       newParams.remove(threads);
-      var hashValue;
+      dynamic hashValue;
       if (newParams.containsKey(hash)) {
         hashValue = newParams.remove(hash);
       } else {
@@ -138,8 +147,11 @@ class StockfishInterpreter {
     _isReady;
   }
 
-  void _go() {
+  Future<void> _go() async {
     applyCommand('go depth $depth');
+
+    await _stockfishHandler.outputStream
+        .firstWhere((output) => !output.startsWith('info'));
   }
 
   void _goTime(int time) {
@@ -167,7 +179,6 @@ class StockfishInterpreter {
     applyCommand('uci');
 
     final text = await _stockfishHandler.outputStream.firstWhere((output) {
-      // final isEnd = output.startsWith(uckiok);
       final splittedText = output.split(" ");
       return splittedText[0] == uciok || splittedText.contains(uciShowWDL);
     });
@@ -182,32 +193,33 @@ class StockfishInterpreter {
   /// The most prominent effect this will have is clearing Stockfish's transporation table,
   /// which should be done if the new position is unrelated to current position
   ///
-  void setFenPosition(
-      {required String fenPosition, bool sendUcinewgameToken = true}) {
-    _prepareForNewPosition(sendUcinewgameToken: sendUcinewgameToken);
+  Future<void> setFenPosition(
+      {required String fenPosition, bool sendUcinewgameToken = true}) async {
+    await _prepareForNewPosition(sendUcinewgameToken: sendUcinewgameToken);
     applyCommand('position fen $fenPosition');
   }
 
   /// Sets current board position
   ///
-  void setPosition(List<String> moves) {
-    setFenPosition(
+  Future<void> setPosition([List<String> moves = const []]) async {
+    await setFenPosition(
       fenPosition: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
       sendUcinewgameToken: true,
     );
-    makeMovesFromCurrentPosition(moves);
+    await makeMovesFromCurrentPosition(moves);
   }
 
   /// Sets current skill level of stockfish engine
   ///
-  void setSkillLevel({int skillLevel = 20}) {
-    updateEngineParameters({uciLimitStrength: false, skillLevel: skillLevel});
+  Future<void> setSkillLevel({int skillLevel = 20}) async {
+    await updateEngineParameters(
+        {uciLimitStrength: false, skillLevel: skillLevel});
   }
 
   /// Sets current elo rating of stockfish engine, ignoring skill level
   ///
-  void setEloRating({int eloRating = 1350}) {
-    updateEngineParameters({uciLimitStrength: true, uciElo: eloRating});
+  Future<void> setEloRating({int eloRating = 1350}) async {
+    await updateEngineParameters({uciLimitStrength: true, uciElo: eloRating});
   }
 
   /// Sets a new position by playing the moves from the current position
@@ -215,12 +227,22 @@ class StockfishInterpreter {
   /// to reach a new position. Must be in full algebraic notation.
   /// Example: ["g4d7", "a8b8", "f1d1"]
   ///
-  void makeMovesFromCurrentPosition([List<String> moves = const []]) async {
-    if (moves.isEmpty) return;
+  Future<void> makeMovesFromCurrentPosition(
+      [List<String> moves = const []]) async {
+    if (moves.isEmpty) {
+      await _prepareForNewPosition(sendUcinewgameToken: false);
+      return;
+    }
 
     for (final move in moves) {
-      if (!await isMoveCorrect(move)) {
-        throw Exception('Can\'t make move: $move');
+      try {
+        final isCorrect = await isMoveCorrect(move);
+
+        if (!isCorrect) {
+          throw Exception('Can\'t make move: $move');
+        }
+      } catch (e) {
+        rethrow;
       }
 
       final fenPosition = await getFenPosition();
@@ -244,16 +266,19 @@ class StockfishInterpreter {
     return cutFen;
   }
 
-  void _prepareForNewPosition({bool sendUcinewgameToken = true}) {
+  Future<void> _prepareForNewPosition({bool sendUcinewgameToken = true}) async {
     if (sendUcinewgameToken) {
       applyCommand('ucinewgame');
+
+      await _stockfishHandler.outputStream
+          .firstWhere((output) => output.startsWith(uciok));
     }
   }
 
   /// Code for this function taken from: https://gist.github.com/Dani4kor/e1e8b439115878f8c6dcf127a4ed5d3e
   /// Some small changes have been made to the code.
   ///
-  bool _isFenSyntaxValide(String fen) {
+  bool _isFenSyntaxValid(String fen) {
     bool isRegexMatch = RegExp(
       r"\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s(-|[K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$",
     ).hasMatch(fen);
@@ -283,7 +308,7 @@ class StockfishInterpreter {
     if (wtime != null && btime != null) {
       _goRemainingTime(wtime, btime);
     } else {
-      _go();
+      await _go();
     }
 
     return _getBestMoveFromSfPopenProcess();
@@ -301,8 +326,10 @@ class StockfishInterpreter {
   /// This function needs existing output to read from the SF popen process.
   ///
   Future<String?> _getBestMoveFromSfPopenProcess() async {
-    final fen = await _stockfishHandler.outputStream
-        .firstWhere((output) => output.startsWith('bestmove'));
+    final fen = await _stockfishHandler.outputStream.firstWhere((output) {
+      print('========= bestMove ouput = $output');
+      return output.startsWith('bestmove');
+    });
 
     // In case of unavailable move we'll get
     // bestmove (none)
@@ -313,10 +340,23 @@ class StockfishInterpreter {
     return fen;
   }
 
+  /// Returns a visual representation of the current board position
+  /// [isPerspectiveWhite] is a bool that indecateds whether the board should
+  /// be displayed from the perspective of white (true: white, false: black)
+  ///
+  Future<void> visualizeBoard([bool isPerspectiveWhite = true]) async {
+    applyCommand("d");
+
+    await _stockfishHandler.outputStream.take(20).forEach((output) {
+      print('========= board output = $output');
+    });
+  }
+
   /// Close connection to stockfish engine
   ///
   void disposeEngine() {
-    outoutStreamListener.cancel();
+    _stockfishHandler.stateListenable.removeListener(_stateListener);
+
     _stockfishHandler.disposeEngine();
   }
 }

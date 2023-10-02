@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/extension.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
+import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
+import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:stockfish_interpreter/stockfish_interpreter.dart';
@@ -22,39 +25,15 @@ class GameController extends _$GameController {
     stockfishInterpreter = StockfishInterpreter(parameters: {});
 
     final board = Board()..startGame();
-    final state = GameState(board: board);
+    // TODO: Correct define player side
+    final state = GameState(board: board, playerSide: Side.light);
+    PlayerSideMediator.changePlayerSide(state.playerSide);
 
     return state;
   }
 
-  Future<void> executeCommand(String command) async {
-    stockfishInterpreter.applyCommand(command);
-
-    stockfishInterpreter.makeMovesFromCurrentPosition(['d2d4']);
-  }
-
-  @protected
-  void makeMove(Cell target) {
-    final selectedPosition = state.selectedFigure!.toPosition();
-    final board = state.board;
-    final selectedCell =
-        board.getCellAt(selectedPosition.row, selectedPosition.col);
-
-    final isMoveAvailable = selectedCell.moveFigure(board, target);
-
-    if (isMoveAvailable) {
-      final updatedBoard = board
-        ..makeMove(selectedCell, target)
-        ..removeSelection();
-
-      state = state.copyWith(
-        board: updatedBoard,
-        selectedFigure: null,
-        currentOrder: state.currentOrder.opposite,
-      );
-
-      ref.notifyListeners();
-    }
+  Future<void> executeCommand() async {
+    await stockfishInterpreter.visualizeBoard();
   }
 
   void onPressed(Cell pressedCell) {
@@ -62,13 +41,11 @@ class GameController extends _$GameController {
 
     if (pressedCell.isAvailable || pressedCell.canBeKnockedDown) {
       assert(state.selectedFigure != null, "Figure should be chosen");
-
       makeMove(pressedCell);
     }
 
     if (pressedCell.isOccupied && pressedCell.figureSide == currentOrder) {
       showAvailableActions(pressedCell);
-
       ref.notifyListeners();
     }
   }
@@ -87,11 +64,11 @@ class GameController extends _$GameController {
 
       // Opposite figure available to knock
       if (canBeKnockedDown) {
-        state.board.cells[row][col] =
-            state.board.cells[row][col].copyWith(canBeKnockedDown: true);
+        state.board.updateCell(
+            row, col, (cell) => cell.copyWith(canBeKnockedDown: true));
       } else {
-        state.board.cells[row][col] =
-            state.board.cells[row][col].copyWith(isAvailable: true);
+        state.board
+            .updateCell(row, col, (cell) => cell.copyWith(isAvailable: true));
       }
     }
   }
@@ -112,12 +89,86 @@ class GameController extends _$GameController {
     final fromRow = fromCell.position.row;
     final fromCol = fromCell.position.col;
 
-    state.board.cells[fromRow][fromCol] =
-        fromCell.copyWith(isSelected: !fromCell.isSelected);
+    state.board.updateCell(fromRow, fromCol,
+        (cell) => cell.copyWith(isSelected: !fromCell.isSelected));
     state = state.copyWith(selectedFigure: fromCell.positionHash);
   }
 
+  Future<void> _makeAIMove() async {
+    await stockfishInterpreter.visualizeBoard();
+    final bestMove = await stockfishInterpreter.getBestMove();
+    print('========= move = $bestMove');
+    if (bestMove.isNotNullOrEmpty) {
+      final bestAction = bestMove!.split(" ")[1];
+
+      assert(bestAction.length == 4);
+
+      final fromPosition = bestAction.substring(0, 2).convertToPosition();
+      final targetPosition = bestAction.substring(2, 4).convertToPosition();
+
+      final fromCell =
+          state.board.getCellAt(fromPosition.row, fromPosition.col);
+      final targetCell =
+          state.board.getCellAt(targetPosition.row, targetPosition.col);
+
+      makeMoveViaAction(bestAction, fromCell, targetCell);
+    }
+  }
+
+  @protected
+  void makeMove(Cell target, {Cell? from}) async {
+    final board = state.board;
+
+    Cell selectedCell;
+    if (from == null) {
+      final selectedPosition =
+          from == null ? state.selectedFigure!.toPosition() : from.position;
+      selectedCell =
+          board.getCellAt(selectedPosition.row, selectedPosition.col);
+    } else {
+      selectedCell = from;
+    }
+
+    final isMoveAvailable = selectedCell.moveFigure(board, target);
+
+    if (isMoveAvailable) {
+      final action =
+          '${selectedCell.position.algebraicPosition}${target.position.algebraicPosition}';
+
+      await makeMoveViaAction(action, selectedCell, target);
+    }
+  }
+
+  Future<void> makeMoveViaAction(
+      String action, Cell selectedCell, Cell targetCell) async {
+    bool isAvailableForSF = true;
+    try {
+      await stockfishInterpreter.makeMovesFromCurrentPosition([action]);
+    } catch (e) {
+      isAvailableForSF = false;
+    }
+
+    if (isAvailableForSF) {
+      final updatedBoard = state.board
+        ..makeMove(selectedCell, targetCell)
+        ..removeSelection();
+
+      state = state.copyWith(
+        board: updatedBoard,
+        selectedFigure: null,
+        currentOrder: state.currentOrder.opposite,
+      );
+
+      if (state.currentOrder != PlayerSideMediator.playerSide) {
+        await _makeAIMove();
+      }
+
+      ref.notifyListeners();
+    }
+  }
+
   void dispose() {
+    PlayerSideMediator.makeByDefault();
     stockfishInterpreter.disposeEngine();
   }
 }

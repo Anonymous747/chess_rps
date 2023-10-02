@@ -10,5 +10,6 @@ class GameState with _$GameState {
     required Board board,
     @Default(Side.light) Side currentOrder,
     @Default(null) String? selectedFigure,
+    @Default(Side.light) playerSide,
   }) = _GameState;
 }
