@@ -71,8 +71,8 @@ class Board {
       var row = <Cell>[];
 
       for (int j = 0; j < cellsRowCount; j++) {
-        final isEven = (i + j + 1) % 2 == 0;
-        final side = isEven ? Side.light : Side.dark;
+        final isOdd = (i + j + 1) % 2 != 0;
+        final side = isOdd ? Side.light : Side.dark;
 
         row.add(Cell(side: side, position: Position(row: i, col: j)));
       }
@@ -153,18 +153,18 @@ class Board {
 
   void _fillQueen() {
     final cell0_3 = getCellAt(0, 3);
-    final cell7_4 = getCellAt(7, 4);
+    final cell7_3 = getCellAt(7, 3);
 
     _updateCellFigure(0, 3, Queen(side: Side.dark, position: cell0_3.position));
     _updateCellFigure(
-        7, 4, Queen(side: Side.light, position: cell7_4.position));
+        7, 3, Queen(side: Side.light, position: cell7_3.position));
   }
 
   void _fillKing() {
     final cell0_4 = getCellAt(0, 4);
-    final cell7_3 = getCellAt(7, 3);
+    final cell7_4 = getCellAt(7, 4);
 
     _updateCellFigure(0, 4, King(side: Side.dark, position: cell0_4.position));
-    _updateCellFigure(7, 3, King(side: Side.light, position: cell7_3.position));
+    _updateCellFigure(7, 4, King(side: Side.light, position: cell7_4.position));
   }
 }

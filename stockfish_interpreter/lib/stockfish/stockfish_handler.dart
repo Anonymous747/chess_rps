@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:stockfish/stockfish.dart';
 
 class StockfishHandler {
@@ -12,10 +13,6 @@ class StockfishHandler {
 
   void initEngine() {
     _engine = Stockfish();
-    _outputListener = _engine.stdout.listen((output) {
-      // print('========= output = $output');
-      // print('========= ${_engine.state.value}');
-    });
   }
 
   void disposeEngine() {
@@ -26,6 +23,7 @@ class StockfishHandler {
   }
 
   String getState() => _engine.state.value.name;
+  ValueListenable<StockfishState> get stateListenable => _engine.state;
 
   void registerOutputCallback() {}
 

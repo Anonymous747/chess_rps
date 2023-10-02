@@ -1,9 +1,7 @@
 import 'package:chess_rps/common/enum.dart';
-import 'package:chess_rps/common/extension.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/figure.dart';
 import 'package:chess_rps/domain/model/position.dart';
-import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'cell.freezed.dart';
@@ -26,17 +24,6 @@ extension CellExtension on Cell {
   String get positionHash => '${position.row}$separatedSign${position.col}';
   bool get isOccupied => figure != null;
   Side? get figureSide => figure?.side;
-
-  /// Position represented in algebraic notation
-  ///
-  String get algebraicPosition {
-    final row = position.row;
-    final col = position.col;
-
-    return PlayerSideMediator.playerSide == Side.light
-        ? "${boardLetters[col]}${row.reversed}"
-        : "${boardLetters[col.reversed + 1]}$row";
-  }
 
   bool calculateCanBeKnockedDown(Cell target) {
     return target.isOccupied &&

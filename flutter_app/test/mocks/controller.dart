@@ -19,7 +19,7 @@ class GameControllerMock extends GameController {
   }
 
   @override
-  void makeMove(Cell target) {
+  void makeMove(Cell target, {Cell? from}) {
     state = state.copyWith(selectedFigure: '6-4');
 
     super.makeMove(target);

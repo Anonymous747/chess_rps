@@ -4,6 +4,7 @@ import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/extension.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
+import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
 import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
@@ -32,39 +33,16 @@ class GameController extends _$GameController {
   }
 
   Future<void> executeCommand(String command) async {
-    stockfishInterpreter.applyCommand(command);
+    // stockfishInterpreter.applyCommand(command);
 
-    stockfishInterpreter.makeMovesFromCurrentPosition(['d2d4']);
-  }
-
-  @protected
-  void makeMove(Cell target) {
-    final selectedPosition = state.selectedFigure!.toPosition();
-    final board = state.board;
-    final selectedCell =
-        board.getCellAt(selectedPosition.row, selectedPosition.col);
-
-    final isMoveAvailable = selectedCell.moveFigure(board, target);
-
-    if (isMoveAvailable) {
-      final updatedBoard = board
-        ..makeMove(selectedCell, target)
-        ..removeSelection();
-
-      state = state.copyWith(
-        board: updatedBoard,
-        selectedFigure: null,
-        currentOrder: state.currentOrder.opposite,
-      );
-
-      ref.notifyListeners();
-    }
+    await stockfishInterpreter.getBestMove();
+    await stockfishInterpreter.visualizeBoard();
   }
 
   void onPressed(Cell pressedCell) {
     final currentOrder = state.currentOrder;
 
-    print('========= position = ${pressedCell.algebraicPosition}');
+    print('========= position = ${pressedCell.position.algebraicPosition}');
 
     if (pressedCell.isAvailable || pressedCell.canBeKnockedDown) {
       assert(state.selectedFigure != null, "Figure should be chosen");
@@ -119,6 +97,65 @@ class GameController extends _$GameController {
     state.board.updateCell(fromRow, fromCol,
         (cell) => cell.copyWith(isSelected: !fromCell.isSelected));
     state = state.copyWith(selectedFigure: fromCell.positionHash);
+  }
+
+  Future<void> _makeAIMove() async {
+    await stockfishInterpreter.visualizeBoard();
+    final bestMove = await stockfishInterpreter.getBestMove();
+    print('========= move = $bestMove');
+    if (bestMove.isNotNullOrEmpty) {
+      final nextMove = bestMove!.split(" ")[1];
+
+      assert(nextMove.length == 4);
+
+      final fromPosition = nextMove.substring(0, 2);
+      final targetPosition = nextMove.substring(2, 4);
+
+      print('========= $fromPosition $targetPosition');
+
+      // makeMove();
+    }
+  }
+
+  @protected
+  void makeMove(Cell target, {Cell? from}) async {
+    final selectedPosition =
+        from == null ? state.selectedFigure!.toPosition() : from.position;
+    final board = state.board;
+    final selectedCell =
+        board.getCellAt(selectedPosition.row, selectedPosition.col);
+
+    final isMoveAvailable = selectedCell.moveFigure(board, target);
+
+    if (isMoveAvailable) {
+      bool isAvailableForSF = true;
+      final action =
+          '${selectedPosition.algebraicPosition}${target.position.algebraicPosition}';
+      try {
+        await stockfishInterpreter.makeMovesFromCurrentPosition([action]);
+      } catch (e) {
+        print('========= This move is forbidden');
+        isAvailableForSF = false;
+      }
+
+      if (isAvailableForSF) {
+        final updatedBoard = board
+          ..makeMove(selectedCell, target)
+          ..removeSelection();
+
+        state = state.copyWith(
+          board: updatedBoard,
+          selectedFigure: null,
+          currentOrder: state.currentOrder.opposite,
+        );
+
+        if (state.currentOrder != PlayerSideMediator.playerSide) {
+          await _makeAIMove();
+        }
+
+        ref.notifyListeners();
+      }
+    }
   }
 
   void dispose() {
