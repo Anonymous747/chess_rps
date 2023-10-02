@@ -23,3 +23,18 @@ extension PositionExtension on Position {
         : "${boardLetters[col.reversed + 1]}$row";
   }
 }
+
+extension ToPositionExtension on String {
+  Position convertToPosition() {
+    print('========= this = $this');
+    assert(
+        length == 2, "Position in algebraic notation should include 2 signs");
+
+    final col = boardLetters.indexOf(this[0]);
+    final row = int.parse(this[1]);
+
+    final isLightSidePlayer = PlayerSideMediator.playerSide == Side.light;
+
+    return Position(row: isLightSidePlayer ? row.reversed : row - 1, col: col);
+  }
+}
