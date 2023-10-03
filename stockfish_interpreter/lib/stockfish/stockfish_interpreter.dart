@@ -4,18 +4,18 @@ import 'package:stockfish_interpreter/stockfish/constants.dart';
 import 'package:stockfish_interpreter/stockfish/extensions.dart';
 import 'package:stockfish_interpreter/stockfish/stockfish_handler.dart';
 
-const _readyStatus = 'ready';
-
 class StockfishInterpreter {
   final int depth;
   final Map parameters;
   final bool isTestFlow;
+  final bool isLoggerSwitchOn;
 
   StockfishInterpreter({
     required this.parameters,
     this.depth = 15,
     bool isImmediatelyStart = true,
     this.isTestFlow = false,
+    this.isLoggerSwitchOn = false,
   }) {
     if (isTestFlow) return;
 
@@ -30,16 +30,15 @@ class StockfishInterpreter {
   ///
   late final StockfishHandler _stockfishHandler;
 
-  get state => _stockfishHandler.getState();
-
   /// Settings parameters
   ///
   final _parameters = {};
 
-  bool get _isReady => _stockfishHandler.getState() == _readyStatus;
+  bool get _isReady => _stockfishHandler.getState() == readyStatus;
+  String get state => _stockfishHandler.getState();
 
   Future<void> _stateListener() async {
-    if (_stockfishHandler.getState() == _readyStatus) {
+    if (_stockfishHandler.getState() == readyStatus) {
       await setupSettings();
     }
   }
@@ -52,6 +51,8 @@ class StockfishInterpreter {
     _stockfishHandler.stateListenable.addListener(_stateListener);
   }
 
+  /// Initialize base settings
+  ///
   Future<void> setupSettings() async {
     applyCommand('uci');
 
@@ -63,9 +64,7 @@ class StockfishInterpreter {
     }
 
     await setPosition();
-    await visualizeBoard();
     await _prepareForNewPosition(sendUcinewgameToken: true);
-    // await _go();
   }
 
   /// Connector to input of stockfish engine
@@ -73,6 +72,12 @@ class StockfishInterpreter {
   void applyCommand(String command) {
     if (_isReady) {
       _stockfishHandler.setCommand(command);
+    }
+  }
+
+  void _log(String message) {
+    if (isLoggerSwitchOn) {
+      print('========= $message');
     }
   }
 
@@ -150,8 +155,10 @@ class StockfishInterpreter {
   Future<void> _go() async {
     applyCommand('go depth $depth');
 
-    await _stockfishHandler.outputStream
-        .firstWhere((output) => !output.startsWith('info'));
+    await _stockfishHandler.outputStream.firstWhere((output) {
+      _log('_go outout = $output');
+      return !output.startsWith('info');
+    });
   }
 
   void _goTime(int time) {
@@ -246,7 +253,6 @@ class StockfishInterpreter {
       }
 
       final fenPosition = await getFenPosition();
-      print('========= fenPosition = $fenPosition');
       applyCommand('position fen $fenPosition moves $move');
     }
   }
@@ -257,10 +263,14 @@ class StockfishInterpreter {
   Future<String> getFenPosition() async {
     applyCommand('d');
 
-    String fen = await _stockfishHandler.outputStream
-        .firstWhere((output) => output.startsWith('Fen:'));
-    await _stockfishHandler.outputStream
-        .firstWhere((output) => output.startsWith('Checker'));
+    String fen = await _stockfishHandler.outputStream.firstWhere((output) {
+      _log('fenPosition output = $output');
+      return output.startsWith('Fen:');
+    });
+    await _stockfishHandler.outputStream.firstWhere((output) {
+      _log('fenPosition output = $output');
+      return output.startsWith('Checker');
+    });
     final cutFen = fen.replaceFirst('Fen: ', '');
 
     return cutFen;
@@ -327,7 +337,7 @@ class StockfishInterpreter {
   ///
   Future<String?> _getBestMoveFromSfPopenProcess() async {
     final fen = await _stockfishHandler.outputStream.firstWhere((output) {
-      print('========= bestMove ouput = $output');
+      _log('bestmove output = $output');
       return output.startsWith('bestmove');
     });
 
@@ -348,7 +358,7 @@ class StockfishInterpreter {
     applyCommand("d");
 
     await _stockfishHandler.outputStream.take(20).forEach((output) {
-      print('========= board output = $output');
+      _log('visualizeBoard output = $output');
     });
   }
 

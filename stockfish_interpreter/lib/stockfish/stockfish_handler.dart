@@ -7,8 +7,6 @@ class StockfishHandler {
   late final Stockfish _engine;
   late StreamSubscription _outputListener;
 
-  List<List<String>> outputs = [];
-
   Stream<String> get outputStream => _engine.stdout;
 
   void initEngine() {
@@ -28,7 +26,6 @@ class StockfishHandler {
   void registerOutputCallback() {}
 
   void setCommand(String uniCommand) {
-    print('========= inner command = $uniCommand');
     _engine.stdin = uniCommand;
   }
 }

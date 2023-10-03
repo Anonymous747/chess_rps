@@ -5,6 +5,7 @@ import 'package:chess_rps/common/extension.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/position.dart';
+import 'package:chess_rps/domain/service/logger.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
 import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
@@ -19,10 +20,15 @@ class GameController extends _$GameController {
   @protected
   @visibleForTesting
   late final StockfishInterpreter stockfishInterpreter;
+  late final Logger actionLogger;
 
   @override
   GameState build() {
-    stockfishInterpreter = StockfishInterpreter(parameters: {});
+    stockfishInterpreter = StockfishInterpreter(
+      parameters: {},
+      isLoggerSwitchOn: true,
+    );
+    actionLogger = ref.read(loggerProvider);
 
     final board = Board()..startGame();
     // TODO: Correct define player side
@@ -96,8 +102,9 @@ class GameController extends _$GameController {
 
   Future<void> _makeAIMove() async {
     await stockfishInterpreter.visualizeBoard();
+
     final bestMove = await stockfishInterpreter.getBestMove();
-    print('========= move = $bestMove');
+
     if (bestMove.isNotNullOrEmpty) {
       final bestAction = bestMove!.split(" ")[1];
 
@@ -158,6 +165,8 @@ class GameController extends _$GameController {
         selectedFigure: null,
         currentOrder: state.currentOrder.opposite,
       );
+
+      actionLogger.add(action);
 
       if (state.currentOrder != PlayerSideMediator.playerSide) {
         await _makeAIMove();
