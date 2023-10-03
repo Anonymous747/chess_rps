@@ -26,7 +26,6 @@ extension PositionExtension on Position {
 
 extension ToPositionExtension on String {
   Position convertToPosition() {
-    print('========= this = $this');
     assert(
         length == 2, "Position in algebraic notation should include 2 signs");
 

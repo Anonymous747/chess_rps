@@ -55,9 +55,10 @@ void main() {
 
       await tester.runAsync(() async {
         await tester.pumpWidget(MaterialApp(
-            home: ProviderScope(overrides: [
-          gameControllerProvider.overrideWith(() => gameController)
-        ], child: ChessScreen())));
+          home: ProviderScope(overrides: [
+            gameControllerProvider.overrideWith(() => gameController)
+          ], child: const ChessScreen()),
+        ));
 
         final elements = find.byKey(const ValueKey('figureKey')).evaluate();
 
