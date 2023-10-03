@@ -1,19 +1,22 @@
+// Statuses
 const uciok = 'uciok';
+const readyStatus = 'ready';
 
-const debugLogFile = "debug_log_file";
-const contempt = "contempt";
-const minSplitDepth = "min_split_depth";
-const threads = "threads";
-const ponder = "ponder";
-const hash = "hash";
-const multiPV = "multipv";
-const skillLevel = "skill_level";
-const moveOverhead = "move_overhead";
-const minimumThinkingTime = "minimum_thinking_time";
-const slowMover = "slow_mover";
-const uciChess960 = "uci_chess960";
-const uciLimitStrength = "uci_limit_strength";
-const uciElo = "uci_elo";
+// Params
+const debugLogFile = "Debug Log File";
+const contempt = "Contempt";
+const minSplitDepth = "Min Split Depth";
+const threads = "Threads";
+const ponder = "Ponder";
+const hash = "Hash";
+const multiPV = "MultiPV";
+const skillLevel = "Skill Level";
+const moveOverhead = "Move Overhead";
+const minimumThinkingTime = "Minimum Thinking Time";
+const slowMover = "Slow Mover";
+const uciChess960 = "UCI_Chess960";
+const uciLimitStrength = "UCI_LimitStrength";
+const uciElo = "UCI_Elo";
 const uciShowWDL = "UCI_ShowWDL";
 
 const defaultStockfishParams = {
