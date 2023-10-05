@@ -10,7 +10,7 @@ class Pawn extends Figure {
   Pawn({
     required Side side,
     required Position position,
-  }) : super(position: position, side: side);
+  }) : super(position: position, side: side, role: Role.pawn);
 
   @override
   void moveTo(Cell to) {
@@ -61,5 +61,13 @@ class Pawn extends Figure {
     return isStepCorrect &&
         (canKnockFromLeft || canKnockFromRight) &&
         _isTargetOccupied(to);
+  }
+
+  @override
+  Figure copyWith({Side? side, Position? position}) {
+    return Pawn(
+      side: side ?? this.side,
+      position: position ?? this.position,
+    );
   }
 }

@@ -26,7 +26,7 @@ class GameController extends _$GameController {
   GameState build() {
     stockfishInterpreter = StockfishInterpreter(
       parameters: {},
-      isLoggerSwitchOn: true,
+      isLoggerSwitchOn: false,
     );
     actionLogger = ref.read(loggerProvider);
 
@@ -154,8 +154,11 @@ class GameController extends _$GameController {
     } catch (e) {
       isAvailableForSF = false;
     }
+    print('========= action = $action');
 
     if (isAvailableForSF) {
+      print(
+          '========= action = $action selectedCell = ${selectedCell.position.col} targetCell = ${targetCell.position.col}');
       final updatedBoard = state.board
         ..makeMove(selectedCell, targetCell)
         ..removeSelection();

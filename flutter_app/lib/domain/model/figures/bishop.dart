@@ -10,6 +10,7 @@ class Bishop extends Figure {
       : super(
           position: position,
           side: side,
+          role: Role.bishop,
         );
 
   @override
@@ -19,5 +20,13 @@ class Bishop extends Figure {
 
   bool _isBishopActionAvailable(Board board, Cell to) {
     return ActionChecker.isDiagonalActionAvailable(board, position, to, side);
+  }
+
+  @override
+  Figure copyWith({Side? side, Position? position}) {
+    return Bishop(
+      side: side ?? this.side,
+      position: position ?? this.position,
+    );
   }
 }

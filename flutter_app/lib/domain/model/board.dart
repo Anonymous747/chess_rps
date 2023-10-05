@@ -47,13 +47,34 @@ class Board {
   }
 
   void makeMove(Cell from, Cell to) {
+    if (from.figure == null) throw Exception("From cell figure can't be null");
+
     final fromRow = from.position.row;
     final fromCol = from.position.col;
     final toRow = to.position.row;
     final toCol = to.position.col;
 
-    _updateCellFigure(toRow, toCol, from.figure);
+    _updateCellFigure(
+        toRow, toCol, from.figure!.copyWith(position: to.position));
     _updateCellFigure(fromRow, fromCol, null);
+
+    print(
+        '========= 1 from.figure!.role = ${from.position.row} ${from.position.col}');
+    print(
+        '========= 1 to.figure!.role = ${to.position.row} ${to.position.col}');
+    if (from.figure!.role == Role.king && (fromCol - toCol).abs() > 1) {
+      // print('========= from.figure = ${from.figure}');
+      final nearestRookX = to.getNearestRook();
+      final mediumX = fromCol.compareTo(toCol) + toCol;
+      final rook = getCellAt(fromRow, nearestRookX)
+          .figure!
+          .copyWith(position: Position(row: fromRow, col: mediumX));
+
+      print('========= nearestRook = $nearestRookX');
+      print('========= mediumX = $mediumX');
+      _updateCellFigure(fromRow, mediumX, rook);
+      _updateCellFigure(fromRow, nearestRookX, null);
+    }
   }
 
   void startGame() {
