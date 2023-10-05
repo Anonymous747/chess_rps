@@ -12,6 +12,7 @@ class Queen extends Figure {
   }) : super(
           position: position,
           side: side,
+          role: Role.queen,
         );
 
   @override
@@ -31,5 +32,13 @@ class Queen extends Figure {
     }
 
     return false;
+  }
+
+  @override
+  Figure copyWith({Side? side, Position? position}) {
+    return Queen(
+      side: side ?? this.side,
+      position: position ?? this.position,
+    );
   }
 }

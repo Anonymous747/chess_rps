@@ -50,3 +50,20 @@ extension CellExtension on Cell {
     return false;
   }
 }
+
+extension NearestRookExtension on Cell {
+  /// Help to find the nearest rook for king
+  /// They should be on the same horizontal
+  ///
+  int getNearestRook() {
+    final rooksX = [0, 7];
+    final toX = position.col;
+    print('========= toX = $toX');
+    print('========= rooksX[1] - toX = ${rooksX[1] - toX}');
+    print('========= toX - rooksX[0] = ${toX - rooksX[0]}');
+    final nearestRookX =
+        rooksX[1] - toX > toX - rooksX[0] ? rooksX[0] : rooksX[1];
+
+    return nearestRookX;
+  }
+}

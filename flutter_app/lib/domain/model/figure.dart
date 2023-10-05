@@ -5,10 +5,15 @@ import 'package:chess_rps/domain/model/position.dart';
 
 abstract class Figure {
   final Side side;
+  final Role role;
 
   Position position;
 
-  Figure({required this.side, required this.position});
+  Figure({
+    required this.side,
+    required this.position,
+    required this.role,
+  });
 
   void moveTo(Cell to) {
     position = to.position;
@@ -27,4 +32,6 @@ abstract class Figure {
 
     return true;
   }
+
+  Figure copyWith({Side? side, Position? position});
 }

@@ -12,3 +12,12 @@ enum Side {
 
   Side get opposite => this == Side.dark ? Side.light : Side.dark;
 }
+
+enum Role {
+  pawn,
+  rook,
+  knight,
+  bishop,
+  queen,
+  king,
+}

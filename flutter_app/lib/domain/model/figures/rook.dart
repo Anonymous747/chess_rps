@@ -12,6 +12,7 @@ class Rook extends Figure {
   }) : super(
           side: side,
           position: position,
+          role: Role.rook,
         );
 
   @override
@@ -28,5 +29,13 @@ class Rook extends Figure {
     }
 
     return false;
+  }
+
+  @override
+  Figure copyWith({Side? side, Position? position}) {
+    return Rook(
+      side: side ?? this.side,
+      position: position ?? this.position,
+    );
   }
 }
