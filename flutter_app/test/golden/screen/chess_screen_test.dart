@@ -1,6 +1,8 @@
 import 'package:chess_rps/common/assets.dart';
+import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/screen/chess_screen.dart';
+import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
 import 'package:flutter/material.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,10 +46,8 @@ void main() {
   });
 
   group('Chess screen', () {
-    late GameControllerMock gameController;
-
-    setUpAll(() {
-      gameController = GameControllerMock();
+    tearDownAll(() {
+      PlayerSideMediator.makeByDefault();
     });
 
     testGoldens('Board golden test', (tester) async {
@@ -56,7 +56,7 @@ void main() {
       await tester.runAsync(() async {
         await tester.pumpWidget(MaterialApp(
           home: ProviderScope(overrides: [
-            gameControllerProvider.overrideWith(() => gameController)
+            gameControllerProvider.overrideWith(() => GameControllerMock())
           ], child: const ChessScreen()),
         ));
 
@@ -73,6 +73,24 @@ void main() {
 
       await expectLater(find.byType(MaterialApp),
           matchesGoldenFile('snapshots/chess_screen_board.png'));
+    });
+
+    testGoldens('Board from dark side golden test', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(820, 1230));
+
+      PlayerSideMediator.changePlayerSide(Side.dark);
+      // await tester.runAsync(() async {
+      await tester.pumpWidget(MaterialApp(
+        home: ProviderScope(overrides: [
+          gameControllerProvider.overrideWith(() => GameControllerMock())
+        ], child: const ChessScreen()),
+      ));
+
+      await tester.pump();
+      // });
+
+      await expectLater(find.byType(MaterialApp),
+          matchesGoldenFile('snapshots/chess_screen_board_from_dark_side.png'));
     });
   });
 }
