@@ -3,6 +3,7 @@ import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/figure.dart';
 import 'package:chess_rps/domain/model/position.dart';
+import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
 
 class Pawn extends Figure {
   bool _canDoubleMove = true;
@@ -35,8 +36,8 @@ class Pawn extends Figure {
   bool _isPawnActionAvailable(Board board, Cell to) {
     if (to.figure?.side != null && side == to.figure!.side) return false;
 
-    final isDarkSide = side == Side.dark;
-    final step = isDarkSide ? 1 : -1;
+    final isOpponent = side != PlayerSideMediator.playerSide;
+    final step = isOpponent ? 1 : -1;
     final isStepCorrect = to.position.row == position.row + step;
     final isTargetOccupied =
         board.getCellAt(to.position.row, to.position.col).isOccupied;
@@ -47,7 +48,7 @@ class Pawn extends Figure {
     }
 
     if (_canDoubleMove) {
-      final doubleStep = isDarkSide ? 2 : -2;
+      final doubleStep = isOpponent ? 2 : -2;
       final isDoubleStepMatch = to.position.row == position.row + doubleStep;
 
       if (isDoubleStepMatch && isSameCol && !isTargetOccupied) {

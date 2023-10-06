@@ -20,7 +20,7 @@ extension PositionExtension on Position {
   String get algebraicPosition {
     return PlayerSideMediator.playerSide == Side.light
         ? "${boardLetters[col]}${row.reversed}"
-        : "${boardLetters[col.reversed + 1]}$row";
+        : "${boardLetters[col.reversed - 1]}${row + 1}";
   }
 }
 
@@ -29,11 +29,20 @@ extension ToPositionExtension on String {
     assert(
         length == 2, "Position in algebraic notation should include 2 signs");
 
-    final col = boardLetters.indexOf(this[0]);
-    final row = int.parse(this[1]);
-
     final isLightSidePlayer = PlayerSideMediator.playerSide == Side.light;
 
-    return Position(row: isLightSidePlayer ? row.reversed : row - 1, col: col);
+    int col, row;
+
+    if (isLightSidePlayer) {
+      col = boardLetters.indexOf(this[0]);
+      row = int.parse(this[1]);
+    } else {
+      col = boardLetters.reversed.toList().indexOf(this[0]);
+      row = int.parse(this[1]);
+    }
+
+    return Position(
+        row: isLightSidePlayer ? row.reversed : row - 1,
+        col: isLightSidePlayer ? col : col);
   }
 }

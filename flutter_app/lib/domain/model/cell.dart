@@ -58,9 +58,6 @@ extension NearestRookExtension on Cell {
   int getNearestRook() {
     final rooksX = [0, 7];
     final toX = position.col;
-    print('========= toX = $toX');
-    print('========= rooksX[1] - toX = ${rooksX[1] - toX}');
-    print('========= toX - rooksX[0] = ${toX - rooksX[0]}');
     final nearestRookX =
         rooksX[1] - toX > toX - rooksX[0] ? rooksX[0] : rooksX[1];
 

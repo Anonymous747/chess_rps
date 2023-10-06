@@ -26,7 +26,8 @@ class Root extends StatelessWidget {
           }
 
           return MaterialPageRoute(
-              builder: (context) => appRoutes[route]!(context));
+              builder: (context) => appRoutes[route]!(context),
+              settings: settings);
         },
       ),
     );

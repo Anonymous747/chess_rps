@@ -17,6 +17,8 @@ part 'game_controller.g.dart';
 
 @riverpod
 class GameController extends _$GameController {
+  late final Side _playerSide;
+
   @protected
   @visibleForTesting
   late final StockfishInterpreter stockfishInterpreter;
@@ -26,14 +28,17 @@ class GameController extends _$GameController {
   GameState build() {
     stockfishInterpreter = StockfishInterpreter(
       parameters: {},
-      isLoggerSwitchOn: false,
+      isLoggerSwitchOn: true,
     );
     actionLogger = ref.read(loggerProvider);
+    _playerSide = PlayerSideMediator.playerSide;
+
+    if (!_playerSide.isLight) {
+      _makeAIMove();
+    }
 
     final board = Board()..startGame();
-    // TODO: Correct define player side
-    final state = GameState(board: board, playerSide: Side.light);
-    PlayerSideMediator.changePlayerSide(state.playerSide);
+    final state = GameState(board: board, playerSide: _playerSide);
 
     return state;
   }
@@ -154,11 +159,8 @@ class GameController extends _$GameController {
     } catch (e) {
       isAvailableForSF = false;
     }
-    print('========= action = $action');
 
     if (isAvailableForSF) {
-      print(
-          '========= action = $action selectedCell = ${selectedCell.position.col} targetCell = ${targetCell.position.col}');
       final updatedBoard = state.board
         ..makeMove(selectedCell, targetCell)
         ..removeSelection();
@@ -181,6 +183,7 @@ class GameController extends _$GameController {
 
   void dispose() {
     PlayerSideMediator.makeByDefault();
+
     stockfishInterpreter.disposeEngine();
   }
 }

@@ -1,5 +1,6 @@
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/domain/model/board.dart';
+import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
 import 'package:chess_rps/presentation/widget/cell_widget.dart';
 import 'package:chess_rps/presentation/widget/collection/letters_collection.dart';
 import 'package:chess_rps/presentation/widget/collection/numbers_column.dart';
@@ -20,7 +21,14 @@ class BoardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
-    final sideSize = _calculateCellWidth(context);
+    final sideSize = _calculateCellWidth(context, width);
+    final letters = PlayerSideMediator.playerSide.isLight
+        ? boardLetters
+        : boardLetters.reversed.toList();
+
+    final numbers = PlayerSideMediator.playerSide.isLight
+        ? boardNumbers
+        : boardNumbers.reversed.toList();
 
     return Stack(
       children: [
@@ -48,7 +56,7 @@ class BoardWidget extends StatelessWidget {
           left: _parentBorderWidth + _childBorderWidth,
           top: 2,
           child: LettersCollection(
-            letters: boardLetters,
+            letters: letters,
             cellWidth: sideSize,
           ),
         ),
@@ -56,7 +64,7 @@ class BoardWidget extends StatelessWidget {
           left: _parentBorderWidth + _childBorderWidth,
           bottom: 4,
           child: LettersCollection(
-            letters: boardLetters,
+            letters: letters,
             cellWidth: sideSize,
           ),
         ),
@@ -64,7 +72,7 @@ class BoardWidget extends StatelessWidget {
           top: _parentBorderWidth + _childBorderWidth,
           left: 6,
           child: NumbersColumn(
-            letters: boardNumbers,
+            letters: numbers,
             cellHeight: sideSize,
           ),
         ),
@@ -72,7 +80,7 @@ class BoardWidget extends StatelessWidget {
           top: _parentBorderWidth + _childBorderWidth,
           right: 6,
           child: NumbersColumn(
-            letters: boardNumbers,
+            letters: numbers,
             cellHeight: sideSize,
           ),
         ),
@@ -96,9 +104,6 @@ class BoardWidget extends StatelessWidget {
     return widgets;
   }
 
-  double _calculateCellWidth(BuildContext context) =>
-      (MediaQuery.of(context).size.width -
-          _parentBorderWidth * 2 -
-          _childBorderWidth * 2) /
-      8;
+  double _calculateCellWidth(BuildContext context, double width) =>
+      (width - _parentBorderWidth * 2 - _childBorderWidth * 2) / 8;
 }

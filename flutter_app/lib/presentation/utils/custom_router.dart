@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 final routerKey = GlobalKey<NavigatorState>();
 
-void pushNamed(String routeName) {
-  routerKey.currentState!.pushNamed(routeName);
+void pushNamed(String routeName, {Object? arguments}) {
+  routerKey.currentState!.pushNamed(routeName, arguments: arguments);
 }
 
 void pop() {

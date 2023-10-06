@@ -22,8 +22,8 @@ class ChessScreen extends HookConsumerWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: BackButton(onPressed: () {
-                Navigator.pop(context);
                 provider.dispose();
+                Navigator.pop(context);
               }),
             ),
             const Expanded(

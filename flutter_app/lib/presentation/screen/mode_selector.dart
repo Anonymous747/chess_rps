@@ -1,3 +1,4 @@
+import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/presentation/screen/chess_screen.dart';
 import 'package:chess_rps/presentation/utils/custom_router.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,8 @@ class ModeSelector extends StatelessWidget {
           children: [
             ElevatedButton(
               child: const Text(_normalModeText),
-              onPressed: () => pushNamed(ChessScreen.routeName),
+              onPressed: () =>
+                  pushNamed(ChessScreen.routeName, arguments: Side.dark),
             ),
             const SizedBox(height: 10),
             ElevatedButton(

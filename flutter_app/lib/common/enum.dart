@@ -11,6 +11,7 @@ enum Side {
   }
 
   Side get opposite => this == Side.dark ? Side.light : Side.dark;
+  bool get isLight => this == Side.light;
 }
 
 enum Role {
