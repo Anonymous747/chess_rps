@@ -79,7 +79,6 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(820, 1230));
 
       PlayerSideMediator.changePlayerSide(Side.dark);
-      // await tester.runAsync(() async {
       await tester.pumpWidget(MaterialApp(
         home: ProviderScope(overrides: [
           gameControllerProvider.overrideWith(() => GameControllerMock())
@@ -87,7 +86,6 @@ void main() {
       ));
 
       await tester.pump();
-      // });
 
       await expectLater(find.byType(MaterialApp),
           matchesGoldenFile('snapshots/chess_screen_board_from_dark_side.png'));
