@@ -128,6 +128,7 @@ class GameController extends _$GameController {
   }
 
   @protected
+  @visibleForTesting
   void makeMove(Cell target, {Cell? from}) async {
     final board = state.board;
 
