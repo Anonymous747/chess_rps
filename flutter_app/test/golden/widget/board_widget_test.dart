@@ -51,8 +51,9 @@ void main() {
           const Duration(seconds: 2));
 
       final to = board.getCellAt(4, 4);
+      final from = board.getCellAt(6, 4);
 
-      gameController.makeMove(to);
+      gameController.makeMove(to, from: from);
 
       final aimedBlack = board.getCellAt(1, 3);
 

@@ -9,10 +9,7 @@ import 'package:stockfish_interpreter/stockfish/stockfish_interpreter.dart';
 class GameControllerMock extends GameController with Mock {
   @override
   GameState build() {
-    stockfishInterpreter = StockfishInterpreter(
-      parameters: {},
-      isTestFlow: true,
-    );
+    stockfishInterpreter = StockfishInterpreterMock();
 
     final board = Board()..startGame();
     final state = GameState(board: board);
@@ -22,10 +19,12 @@ class GameControllerMock extends GameController with Mock {
 
   @override
   void makeMove(Cell target, {Cell? from}) {
-    state = state.copyWith(selectedFigure: '6-4');
-
     super.makeMove(target, from: from);
   }
 }
 
-class LoggerProviderMock extends Mock implements Logger {}
+class LoggerProviderMock extends Logger with Mock {}
+
+class StockfishInterpreterMock extends StockfishInterpreter with Mock {
+  StockfishInterpreterMock() : super(parameters: {}, isTestFlow: true);
+}

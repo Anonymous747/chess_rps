@@ -153,10 +153,6 @@ void main() {
                   's.board.getCellAt(3, 7).isAvailable', false)
               .having((s) => s.board.getCellAt(1, 1).isAvailable,
                   's.board.getCellAt(1, 1).isAvailable', false),
-
-          // TODO: Need to mock stockfishInterpreter
-          isA<GameState>()
-              .having((s) => s.selectedFigure, 's.selectedFigure', '6-4'),
         ];
       },
     );
