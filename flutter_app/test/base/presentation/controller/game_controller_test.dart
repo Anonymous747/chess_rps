@@ -3,7 +3,7 @@ import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
-import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
+import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_test/riverpod_test.dart';
 

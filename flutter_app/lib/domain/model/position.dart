@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/extension.dart';
 import 'package:chess_rps/domain/model/board.dart';
-import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
+import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 
 class Position {
   final int row;

@@ -25,6 +25,9 @@ extension CellExtension on Cell {
   bool get isOccupied => figure != null;
   Side? get figureSide => figure?.side;
 
+  int get row => position.row;
+  int get col => position.col;
+
   bool calculateCanBeKnockedDown(Cell target) {
     return target.isOccupied &&
         figure != null &&

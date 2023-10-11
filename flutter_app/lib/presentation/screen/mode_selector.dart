@@ -21,7 +21,7 @@ class ModeSelector extends StatelessWidget {
             ElevatedButton(
               child: const Text(_normalModeText),
               onPressed: () =>
-                  pushNamed(ChessScreen.routeName, arguments: Side.dark),
+                  pushNamed(ChessScreen.routeName, arguments: Side.light),
             ),
             const SizedBox(height: 10),
             ElevatedButton(

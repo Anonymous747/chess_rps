@@ -3,7 +3,7 @@ import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/figure.dart';
 import 'package:chess_rps/domain/model/position.dart';
-import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
+import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 
 class Pawn extends Figure {
   bool _canDoubleMove = true;

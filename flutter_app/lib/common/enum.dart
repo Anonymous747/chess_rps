@@ -22,3 +22,15 @@ enum Role {
   queen,
   king,
 }
+
+enum GameMode {
+  classicalAi,
+  classicalSocket,
+  rpsAi,
+  rpsSocket;
+
+  bool get isAIOpponent =>
+      this == GameMode.classicalAi || this == GameMode.rpsAi;
+  bool get isRealOpponent =>
+      this == GameMode.classicalSocket || this == GameMode.rpsSocket;
+}
