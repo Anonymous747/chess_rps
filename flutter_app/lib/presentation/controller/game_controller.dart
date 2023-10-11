@@ -105,7 +105,6 @@ class GameController extends _$GameController {
   }
 
   Future<void> _makeAIMove() async {
-    // print('========= state = ${state.currentOrder}');
     final bestMove = await actionHandler.getOpponentsMove();
 
     if (bestMove.isNotNullOrEmpty) {
@@ -169,8 +168,6 @@ class GameController extends _$GameController {
         selectedFigure: null,
         currentOrder: state.currentOrder.opposite,
       );
-
-      print('========= state = ${state.selectedFigure} ${state.currentOrder}');
 
       actionLogger.add(action);
 
