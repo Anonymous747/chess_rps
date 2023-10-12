@@ -38,13 +38,13 @@ void main() {
       overrides: [
         gameControllerProvider.overrideWith(() => GameControllerMock())
       ],
-      act: (c) => c.board.getCellAt(0, 3),
+      act: (c) => c.board.getCellAt(0, 4),
       expect: () {
-        const position = Position(row: 0, col: 3);
+        const position = Position(row: 0, col: 4);
 
         return [
           isA<Cell>()
-              .having((c) => c.side, 'c.side', Side.dark)
+              .having((c) => c.side, 'c.side', Side.light)
               .having((c) => c.figure?.side, 'c.figure.side', Side.dark)
               .having((c) => c.position.row, 'c.position.row', position.row)
               .having((c) => c.figure?.role, 'c.figure.role', Role.king),
@@ -58,13 +58,13 @@ void main() {
       overrides: [
         gameControllerProvider.overrideWith(() => GameControllerMock())
       ],
-      act: (c) => c.board.getCellAt(7, 4),
+      act: (c) => c.board.getCellAt(7, 3),
       expect: () {
-        const position = Position(row: 7, col: 4);
+        const position = Position(row: 7, col: 3);
 
         return [
           isA<Cell>()
-              .having((c) => c.side, 'c.side', Side.dark)
+              .having((c) => c.side, 'c.side', Side.light)
               .having((c) => c.figure?.side, 'c.figure.side', Side.light)
               .having((c) => c.figure?.position.row, 'c.figure.position.row',
                   position.row)
