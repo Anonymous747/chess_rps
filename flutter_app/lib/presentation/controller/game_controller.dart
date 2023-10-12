@@ -40,10 +40,6 @@ class GameController extends _$GameController {
     return state;
   }
 
-  Future<void> executeCommand() async {
-    await actionHandler.visualizeBoard();
-  }
-
   void onPressed(Cell pressedCell) {
     final currentOrder = state.currentOrder;
 
@@ -181,5 +177,9 @@ class GameController extends _$GameController {
     PlayerSideMediator.makeByDefault();
 
     actionHandler.dispose();
+  }
+
+  Future<void> executeCommand() async {
+    await actionHandler.visualizeBoard();
   }
 }
