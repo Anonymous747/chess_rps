@@ -126,7 +126,7 @@ class GameController extends _$GameController {
 
   @protected
   @visibleForTesting
-  void makeMove(Cell target, {Cell? from}) async {
+  Future<void> makeMove(Cell target, {Cell? from}) async {
     final board = state.board;
 
     Cell selectedCell;
@@ -174,8 +174,6 @@ class GameController extends _$GameController {
       if (state.currentOrder != PlayerSideMediator.playerSide) {
         await _makeAIMove();
       }
-
-      ref.notifyListeners();
     }
   }
 

@@ -20,7 +20,11 @@ class GameControllerMock extends GameController with Mock {
   }
 
   @override
-  void makeMove(Cell target, {Cell? from}) {
+  Future<void> makeMove(Cell target, {Cell? from}) async {
+    if (from != null) {
+      state = state.copyWith(selectedFigure: from.positionHash);
+    }
+
     super.makeMove(target, from: from);
   }
 }
@@ -31,4 +35,12 @@ class StockfishInterpreterMock extends StockfishInterpreter with Mock {
   StockfishInterpreterMock() : super(parameters: {}, isTestFlow: true);
 }
 
-class ActionHandlerMock extends ActionHandler with Mock {}
+class ActionHandlerMock extends ActionHandler with Mock {
+  @override
+  Future<void> makeMove(String action) async {}
+
+  @override
+  Future<String?> getOpponentsMove() async {
+    return 'bestmove c7c5';
+  }
+}
