@@ -59,7 +59,7 @@ void main() {
 
       await gameController.makeMove(to, from: from);
 
-      final aimedBlack = board.getCellAt(6, 2);
+      final aimedBlack = board.getCellAt(1, 2);
 
       gameController.showAvailableActions(aimedBlack);
       await tester.pump(const Duration(milliseconds: 400));
