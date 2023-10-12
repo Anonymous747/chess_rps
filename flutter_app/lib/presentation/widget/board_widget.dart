@@ -1,6 +1,6 @@
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/domain/model/board.dart';
-import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
+import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:chess_rps/presentation/widget/cell_widget.dart';
 import 'package:chess_rps/presentation/widget/collection/letters_collection.dart';
 import 'package:chess_rps/presentation/widget/collection/numbers_column.dart';

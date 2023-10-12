@@ -1,4 +1,5 @@
 import 'package:chess_rps/domain/model/board.dart';
+import 'package:chess_rps/domain/service/action_handler.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/widget/board_widget.dart';
 import 'package:flutter/material.dart';
@@ -12,10 +13,12 @@ void main() {
   group('Board widget', () {
     late Board board;
     late GameControllerMock gameController;
+    late ActionHandlerMock actionHandler;
 
     setUp(() {
       board = Board()..startGame();
       gameController = GameControllerMock();
+      actionHandler = ActionHandlerMock();
     });
 
     testGoldens('general with precaching test', (tester) async {
@@ -43,18 +46,20 @@ void main() {
     });
 
     testGoldens('with board after move and black pressed test', (tester) async {
+      final from = board.getCellAt(6, 4);
+      final to = board.getCellAt(4, 4);
+
       await tester.pumpFrames(
           MaterialApp(
               home: ProviderScope(overrides: [
-            gameControllerProvider.overrideWith(() => gameController)
+            gameControllerProvider.overrideWith(() => gameController),
+            actionHandlerProvider.overrideWith((ref) => actionHandler),
           ], child: BoardWidget(board: board))),
           const Duration(seconds: 2));
 
-      final to = board.getCellAt(4, 4);
+      await gameController.makeMove(to, from: from);
 
-      gameController.makeMove(to);
-
-      final aimedBlack = board.getCellAt(1, 3);
+      final aimedBlack = board.getCellAt(6, 2);
 
       gameController.showAvailableActions(aimedBlack);
       await tester.pump(const Duration(milliseconds: 400));

@@ -1,50 +1,43 @@
 import 'dart:async';
 
-import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/extension.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/position.dart';
+import 'package:chess_rps/domain/service/action_handler.dart';
 import 'package:chess_rps/domain/service/logger.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
-import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
+import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:stockfish_interpreter/stockfish_interpreter.dart';
 
 part 'game_controller.g.dart';
 
 @riverpod
 class GameController extends _$GameController {
-  late final Side _playerSide;
-
   @protected
   @visibleForTesting
-  late final StockfishInterpreter stockfishInterpreter;
+  late final ActionHandler actionHandler;
+  @protected
+  @visibleForTesting
   late final Logger actionLogger;
 
   @override
   GameState build() {
-    stockfishInterpreter = StockfishInterpreter(
-      parameters: {},
-      isLoggerSwitchOn: true,
-    );
+    actionHandler = ref.read(actionHandlerProvider);
     actionLogger = ref.read(loggerProvider);
-    _playerSide = PlayerSideMediator.playerSide;
 
-    if (!_playerSide.isLight) {
+    final playerSide = PlayerSideMediator.playerSide;
+
+    final board = Board()..startGame();
+    final state = GameState(board: board, playerSide: playerSide);
+
+    if (!playerSide.isLight) {
       _makeAIMove();
     }
 
-    final board = Board()..startGame();
-    final state = GameState(board: board, playerSide: _playerSide);
-
     return state;
-  }
-
-  Future<void> executeCommand() async {
-    await stockfishInterpreter.visualizeBoard();
   }
 
   void onPressed(Cell pressedCell) {
@@ -55,7 +48,9 @@ class GameController extends _$GameController {
       makeMove(pressedCell);
     }
 
-    if (pressedCell.isOccupied && pressedCell.figureSide == currentOrder) {
+    if (pressedCell.isOccupied &&
+        pressedCell.figureSide == currentOrder &&
+        pressedCell.figure!.side == PlayerSideMediator.playerSide) {
       showAvailableActions(pressedCell);
       ref.notifyListeners();
     }
@@ -106,9 +101,7 @@ class GameController extends _$GameController {
   }
 
   Future<void> _makeAIMove() async {
-    await stockfishInterpreter.visualizeBoard();
-
-    final bestMove = await stockfishInterpreter.getBestMove();
+    final bestMove = await actionHandler.getOpponentsMove();
 
     if (bestMove.isNotNullOrEmpty) {
       final bestAction = bestMove!.split(" ")[1];
@@ -123,13 +116,13 @@ class GameController extends _$GameController {
       final targetCell =
           state.board.getCellAt(targetPosition.row, targetPosition.col);
 
-      makeMoveViaAction(bestAction, fromCell, targetCell);
+      await _makeMoveViaAction(bestAction, fromCell, targetCell);
     }
   }
 
   @protected
   @visibleForTesting
-  void makeMove(Cell target, {Cell? from}) async {
+  Future<void> makeMove(Cell target, {Cell? from}) async {
     final board = state.board;
 
     Cell selectedCell;
@@ -148,20 +141,20 @@ class GameController extends _$GameController {
       final action =
           '${selectedCell.position.algebraicPosition}${target.position.algebraicPosition}';
 
-      await makeMoveViaAction(action, selectedCell, target);
+      await _makeMoveViaAction(action, selectedCell, target);
     }
   }
 
-  Future<void> makeMoveViaAction(
+  Future<void> _makeMoveViaAction(
       String action, Cell selectedCell, Cell targetCell) async {
-    bool isAvailableForSF = true;
+    bool isAvailableForOpponent = true;
     try {
-      await stockfishInterpreter.makeMovesFromCurrentPosition([action]);
+      await actionHandler.makeMove(action);
     } catch (e) {
-      isAvailableForSF = false;
+      isAvailableForOpponent = false;
     }
 
-    if (isAvailableForSF) {
+    if (isAvailableForOpponent) {
       final updatedBoard = state.board
         ..makeMove(selectedCell, targetCell)
         ..removeSelection();
@@ -177,14 +170,16 @@ class GameController extends _$GameController {
       if (state.currentOrder != PlayerSideMediator.playerSide) {
         await _makeAIMove();
       }
-
-      ref.notifyListeners();
     }
   }
 
   void dispose() {
     PlayerSideMediator.makeByDefault();
 
-    stockfishInterpreter.disposeEngine();
+    actionHandler.dispose();
+  }
+
+  Future<void> executeCommand() async {
+    await actionHandler.visualizeBoard();
   }
 }

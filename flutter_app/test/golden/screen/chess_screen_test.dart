@@ -2,7 +2,7 @@ import 'package:chess_rps/common/assets.dart';
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/screen/chess_screen.dart';
-import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
+import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:flutter/material.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:flutter_test/flutter_test.dart';

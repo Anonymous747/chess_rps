@@ -1,9 +1,11 @@
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/position.dart';
+import 'package:chess_rps/domain/service/action_handler.dart';
+import 'package:chess_rps/domain/service/logger.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
-import 'package:chess_rps/presentation/utils/player_side_mediator.dart';
+import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_test/riverpod_test.dart';
 
@@ -38,13 +40,13 @@ void main() {
       overrides: [
         gameControllerProvider.overrideWith(() => GameControllerMock())
       ],
-      act: (c) => c.board.getCellAt(0, 3),
+      act: (c) => c.board.getCellAt(0, 4),
       expect: () {
-        const position = Position(row: 0, col: 3);
+        const position = Position(row: 0, col: 4);
 
         return [
           isA<Cell>()
-              .having((c) => c.side, 'c.side', Side.dark)
+              .having((c) => c.side, 'c.side', Side.light)
               .having((c) => c.figure?.side, 'c.figure.side', Side.dark)
               .having((c) => c.position.row, 'c.position.row', position.row)
               .having((c) => c.figure?.role, 'c.figure.role', Role.king),
@@ -58,13 +60,13 @@ void main() {
       overrides: [
         gameControllerProvider.overrideWith(() => GameControllerMock())
       ],
-      act: (c) => c.board.getCellAt(7, 4),
+      act: (c) => c.board.getCellAt(7, 3),
       expect: () {
-        const position = Position(row: 7, col: 4);
+        const position = Position(row: 7, col: 3);
 
         return [
           isA<Cell>()
-              .having((c) => c.side, 'c.side', Side.dark)
+              .having((c) => c.side, 'c.side', Side.light)
               .having((c) => c.figure?.side, 'c.figure.side', Side.light)
               .having((c) => c.figure?.position.row, 'c.figure.position.row',
                   position.row)
@@ -98,11 +100,20 @@ void main() {
   });
 
   group('Available actions check', () {
+    late ActionHandlerMock actionHandler;
+    late LoggerProviderMock actionLogger;
+
+    setUp(() {
+      actionHandler = ActionHandlerMock();
+      actionLogger = LoggerProviderMock();
+    });
+
     testNotifier(
       'for pawn test',
       provider: gameControllerProvider,
       overrides: [
-        gameControllerProvider.overrideWith(() => GameControllerMock())
+        gameControllerProvider.overrideWith(() => GameControllerMock()),
+        actionHandlerProvider.overrideWith((ref) => actionHandler),
       ],
       act: (c) {
         final fromCell = c.state.board.getCellAt(6, 3);
@@ -128,11 +139,11 @@ void main() {
       'for knight after move test',
       provider: gameControllerProvider,
       overrides: [
-        gameControllerProvider.overrideWith(() => GameControllerMock())
+        gameControllerProvider.overrideWith(() => GameControllerMock()),
+        actionHandlerProvider.overrideWith((ref) => actionHandler),
+        loggerProvider.overrideWith((ref) => actionLogger),
       ],
-      setUp: () {
-        PlayerSideMediator.changePlayerSide(Side.dark);
-      },
+      setUp: () => PlayerSideMediator.changePlayerSide(Side.dark),
       tearDown: () => PlayerSideMediator.makeByDefault(),
       act: (c) {
         final fromCell = c.state.board.getCellAt(0, 6);
@@ -140,23 +151,19 @@ void main() {
 
         c.showAvailableActions(fromCell);
         c.makeMove(targetCell);
-
-        return c.state;
       },
       expect: () {
         return [
           isA<GameState>()
               .having((s) => s.selectedFigure, 's.selectedFigure', '0-6')
               .having((s) => s.board.getCellAt(0, 6).isOccupied,
-                  's.board.getCellAt(0, 6).isOccupied', true)
+                  's.board.getCellAt(0, 6).isOccupied', false)
               .having((s) => s.board.getCellAt(3, 7).isAvailable,
                   's.board.getCellAt(3, 7).isAvailable', false)
               .having((s) => s.board.getCellAt(1, 1).isAvailable,
                   's.board.getCellAt(1, 1).isAvailable', false),
-
-          // TODO: Need to mock stockfishInterpreter
           isA<GameState>()
-              .having((s) => s.selectedFigure, 's.selectedFigure', '6-4'),
+              .having((s) => s.selectedFigure, 's.selectedFigure', null),
         ];
       },
     );
