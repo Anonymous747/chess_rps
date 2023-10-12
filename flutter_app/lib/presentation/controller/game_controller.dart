@@ -5,6 +5,7 @@ import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/domain/service/action_handler.dart';
+import 'package:chess_rps/domain/service/game_strategy.dart';
 import 'package:chess_rps/domain/service/logger.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
@@ -24,12 +25,17 @@ class GameController extends _$GameController {
   @visibleForTesting
   late final Logger actionLogger;
 
+  @protected
+  @visibleForTesting
+  late final GameStrategy gameStrategy;
+
   GameState get currentState => state;
 
   @override
   GameState build() {
     actionHandler = ref.read(actionHandlerProvider);
     actionLogger = ref.read(loggerProvider);
+    gameStrategy = ref.read(gameStrategyProvider);
 
     final playerSide = PlayerSideMediator.playerSide;
 
@@ -39,20 +45,9 @@ class GameController extends _$GameController {
     return state;
   }
 
-  // Future<void> onPressed(Cell pressedCell) async {
-  //   final currentOrder = state.currentOrder;
-  //
-  //   if (pressedCell.isAvailable || pressedCell.canBeKnockedDown) {
-  //     assert(state.selectedFigure != null, "Figure should be chosen");
-  //     await makeMove(pressedCell);
-  //   }
-  //
-  //   if (pressedCell.isOccupied &&
-  //       pressedCell.figureSide == currentOrder &&
-  //       pressedCell.figure!.side == PlayerSideMediator.playerSide) {
-  //     showAvailableActions(pressedCell);
-  //   }
-  // }
+  Future<void> onPressed(Cell pressedCell) async {
+    await gameStrategy.onPressed(this, state, pressedCell);
+  }
 
   void _displayAvailableCells(Cell fromCell) {
     final availableHashes =
@@ -77,7 +72,6 @@ class GameController extends _$GameController {
     }
   }
 
-  @visibleForTesting
   void showAvailableActions(Cell fromCell) {
     // Wipe selected cells before follow action
     if (state.selectedFigure != null) {

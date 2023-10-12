@@ -1,24 +1,24 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'game_service.dart';
+part of 'game_strategy.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$gameHandlerHash() => r'd2f2a1758a0c9446da218a99f864007eea9d55f9';
+String _$gameStrategyHash() => r'b64466b7df5aa16c468263f8d18dfdb61857cfe5';
 
-/// See also [gameHandler].
-@ProviderFor(gameHandler)
-final gameHandlerProvider = AutoDisposeProvider<GameService>.internal(
-  gameHandler,
-  name: r'gameHandlerProvider',
+/// See also [gameStrategy].
+@ProviderFor(gameStrategy)
+final gameStrategyProvider = AutoDisposeProvider<GameStrategy>.internal(
+  gameStrategy,
+  name: r'gameStrategyProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$gameHandlerHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$gameStrategyHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef GameHandlerRef = AutoDisposeProviderRef<GameService>;
+typedef GameStrategyRef = AutoDisposeProviderRef<GameStrategy>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
