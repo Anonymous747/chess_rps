@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class ChessScreen extends HookConsumerWidget {
-  static const routeName = 'chess';
+  static const routeName = '/Chess';
 
   const ChessScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final provider = ref.read(gameControllerProvider.notifier);
+    final controller = ref.read(gameControllerProvider.notifier);
     final board =
         ref.read(gameControllerProvider.select((state) => state.board));
 
@@ -22,7 +22,7 @@ class ChessScreen extends HookConsumerWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: BackButton(onPressed: () {
-                provider.dispose();
+                controller.dispose();
                 Navigator.pop(context);
               }),
             ),
@@ -39,7 +39,7 @@ class ChessScreen extends HookConsumerWidget {
                   MaterialButton(
                       child: const Text('Press me'),
                       onPressed: () async {
-                        await provider.executeCommand();
+                        await controller.executeCommand();
                       }),
                 ],
               ),

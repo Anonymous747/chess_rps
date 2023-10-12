@@ -5,6 +5,7 @@ import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/domain/service/action_handler.dart';
+import 'package:chess_rps/domain/service/game_strategy.dart';
 import 'package:chess_rps/domain/service/logger.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
@@ -19,41 +20,33 @@ class GameController extends _$GameController {
   @protected
   @visibleForTesting
   late final ActionHandler actionHandler;
+
   @protected
   @visibleForTesting
   late final Logger actionLogger;
+
+  @protected
+  @visibleForTesting
+  late final GameStrategy gameStrategy;
+
+  GameState get currentState => state;
 
   @override
   GameState build() {
     actionHandler = ref.read(actionHandlerProvider);
     actionLogger = ref.read(loggerProvider);
+    gameStrategy = ref.read(gameStrategyProvider);
 
     final playerSide = PlayerSideMediator.playerSide;
 
     final board = Board()..startGame();
     final state = GameState(board: board, playerSide: playerSide);
 
-    if (!playerSide.isLight) {
-      _makeAIMove();
-    }
-
     return state;
   }
 
-  void onPressed(Cell pressedCell) {
-    final currentOrder = state.currentOrder;
-
-    if (pressedCell.isAvailable || pressedCell.canBeKnockedDown) {
-      assert(state.selectedFigure != null, "Figure should be chosen");
-      makeMove(pressedCell);
-    }
-
-    if (pressedCell.isOccupied &&
-        pressedCell.figureSide == currentOrder &&
-        pressedCell.figure!.side == PlayerSideMediator.playerSide) {
-      showAvailableActions(pressedCell);
-      ref.notifyListeners();
-    }
+  Future<void> onPressed(Cell pressedCell) async {
+    await gameStrategy.onPressed(this, state, pressedCell);
   }
 
   void _displayAvailableCells(Cell fromCell) {
@@ -64,7 +57,7 @@ class GameController extends _$GameController {
       final position = hash.toPosition();
       final row = position.row;
       final col = position.col;
-      final target = state.board.cells[row][col];
+      final target = state.board.getCellAt(row, col);
 
       final canBeKnockedDown = fromCell.calculateCanBeKnockedDown(target);
 
@@ -79,8 +72,6 @@ class GameController extends _$GameController {
     }
   }
 
-  @protected
-  @visibleForTesting
   void showAvailableActions(Cell fromCell) {
     // Wipe selected cells before follow action
     if (state.selectedFigure != null) {
@@ -100,29 +91,30 @@ class GameController extends _$GameController {
     state = state.copyWith(selectedFigure: fromCell.positionHash);
   }
 
-  Future<void> _makeAIMove() async {
+  /// Return the result is Opponents move has a correct status
+  ///
+  Future<bool> makeOpponentsMove() async {
     final bestMove = await actionHandler.getOpponentsMove();
 
-    if (bestMove.isNotNullOrEmpty) {
-      final bestAction = bestMove!.split(" ")[1];
+    if (bestMove.isNullOrEmpty) return false;
 
-      assert(bestAction.length == 4);
+    final bestAction = bestMove!.split(" ")[1];
 
-      final fromPosition = bestAction.substring(0, 2).convertToPosition();
-      final targetPosition = bestAction.substring(2, 4).convertToPosition();
+    assert(bestAction.length == 4);
 
-      final fromCell =
-          state.board.getCellAt(fromPosition.row, fromPosition.col);
-      final targetCell =
-          state.board.getCellAt(targetPosition.row, targetPosition.col);
+    final fromPosition = bestAction.substring(0, 2).convertToPosition();
+    final targetPosition = bestAction.substring(2, 4).convertToPosition();
 
-      await _makeMoveViaAction(bestAction, fromCell, targetCell);
-    }
+    final fromCell = state.board.getCellAt(fromPosition.row, fromPosition.col);
+    final targetCell =
+        state.board.getCellAt(targetPosition.row, targetPosition.col);
+
+    return await _makeMoveViaAction(bestAction, fromCell, targetCell);
   }
 
-  @protected
-  @visibleForTesting
-  Future<void> makeMove(Cell target, {Cell? from}) async {
+  /// Return the result is Opponents move has a correct status
+  ///
+  Future<bool> makeMove(Cell target, {Cell? from}) async {
     final board = state.board;
 
     Cell selectedCell;
@@ -137,40 +129,35 @@ class GameController extends _$GameController {
 
     final isMoveAvailable = selectedCell.moveFigure(board, target);
 
-    if (isMoveAvailable) {
-      final action =
-          '${selectedCell.position.algebraicPosition}${target.position.algebraicPosition}';
+    if (!isMoveAvailable) return false;
 
-      await _makeMoveViaAction(action, selectedCell, target);
-    }
+    final action =
+        '${selectedCell.position.algebraicPosition}${target.position.algebraicPosition}';
+
+    return await _makeMoveViaAction(action, selectedCell, target);
   }
 
-  Future<void> _makeMoveViaAction(
+  Future<bool> _makeMoveViaAction(
       String action, Cell selectedCell, Cell targetCell) async {
-    bool isAvailableForOpponent = true;
     try {
       await actionHandler.makeMove(action);
     } catch (e) {
-      isAvailableForOpponent = false;
+      return false;
     }
 
-    if (isAvailableForOpponent) {
-      final updatedBoard = state.board
-        ..makeMove(selectedCell, targetCell)
-        ..removeSelection();
+    final updatedBoard = state.board
+      ..makeMove(selectedCell, targetCell)
+      ..removeSelection();
 
-      state = state.copyWith(
-        board: updatedBoard,
-        selectedFigure: null,
-        currentOrder: state.currentOrder.opposite,
-      );
+    state = state.copyWith(
+      board: updatedBoard,
+      selectedFigure: null,
+      currentOrder: state.currentOrder.opposite,
+    );
 
-      actionLogger.add(action);
+    actionLogger.add(action);
 
-      if (state.currentOrder != PlayerSideMediator.playerSide) {
-        await _makeAIMove();
-      }
-    }
+    return true;
   }
 
   void dispose() {
