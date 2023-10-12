@@ -20,12 +20,12 @@ class GameControllerMock extends GameController with Mock {
   }
 
   @override
-  Future<void> makeMove(Cell target, {Cell? from}) async {
+  Future<bool> makeMove(Cell target, {Cell? from}) async {
     if (from != null) {
       state = state.copyWith(selectedFigure: from.positionHash);
     }
 
-    super.makeMove(target, from: from);
+    return super.makeMove(target, from: from);
   }
 }
 

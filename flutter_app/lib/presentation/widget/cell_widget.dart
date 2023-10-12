@@ -1,5 +1,6 @@
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/domain/model/cell.dart';
+import 'package:chess_rps/domain/service/game_service.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/widget/custom/animated_border.dart';
 import 'package:chess_rps/presentation/widget/custom/available_move.dart';
@@ -28,12 +29,12 @@ class CellWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final provider = ref.watch(gameControllerProvider.notifier);
     final cell = ref.watch(gameControllerProvider
         .select((state) => state.board.getCellAt(row, column)));
+    final gameHandler = ref.watch(gameHandlerProvider);
 
     return GestureDetector(
-      onTap: () => provider.onPressed(cell),
+      onTap: () async => await gameHandler.onPressed(cell),
       child: Container(
         decoration: BoxDecoration(boxShadow: [
           BoxShadow(

@@ -24,13 +24,17 @@ enum Role {
 }
 
 enum GameMode {
-  classicalAi,
-  classicalSocket,
-  rpsAi,
-  rpsSocket;
+  classical,
+  rps;
 
-  bool get isAIOpponent =>
-      this == GameMode.classicalAi || this == GameMode.rpsAi;
-  bool get isRealOpponent =>
-      this == GameMode.classicalSocket || this == GameMode.rpsSocket;
+  bool get isClassical => this == GameMode.classical;
+  bool get isRPS => this == GameMode.rps;
+}
+
+enum OpponentMode {
+  ai,
+  socket;
+
+  bool get isAI => this == OpponentMode.ai;
+  bool get isRealOpponent => this == OpponentMode.socket;
 }

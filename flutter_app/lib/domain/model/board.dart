@@ -18,7 +18,9 @@ const boardNumbers = ['8', '7', '6', '5', '4', '3', '2', '1'];
 class Board {
   /// Represent a state of board cells
   ///
-  List<List<Cell>> cells = [];
+  final List<List<Cell>> _cells = [];
+
+  List<List<Cell>> get cells => _cells;
 
   /// When the light player beat some figures, they appears here
   ///
@@ -31,7 +33,7 @@ class Board {
   /// Return cell from selected position
   ///
   Cell getCellAt(int row, int col) {
-    return cells[row][col];
+    return _cells[row][col];
   }
 
   /// Remove all modifications from cells like [isAvailable], [isSelected] or
@@ -43,7 +45,7 @@ class Board {
         final cell = getCellAt(row, col);
 
         if (cell.isAvailable || cell.isSelected || cell.canBeKnockedDown) {
-          cells[row][col] = cell.copyWith(
+          _cells[row][col] = cell.copyWith(
             isAvailable: false,
             isSelected: false,
             canBeKnockedDown: false,
@@ -113,7 +115,7 @@ class Board {
         row.add(Cell(side: side, position: Position(row: i, col: j)));
       }
 
-      cells.add(row);
+      _cells.add(row);
     }
   }
 
@@ -207,12 +209,12 @@ class Board {
   /// Shorter way to update cell's figure
   ///
   void _updateCellFigure(int row, int col, Figure? figure) {
-    cells[row][col] = cells[row][col].copyWith(figure: figure);
+    _cells[row][col] = _cells[row][col].copyWith(figure: figure);
   }
 
   /// Update needed to you cell on board more convenient
   ///
   void updateCell(int row, int col, Cell Function(Cell) updatedCell) {
-    cells[row][col] = updatedCell(cells[row][col]);
+    _cells[row][col] = updatedCell(_cells[row][col]);
   }
 }

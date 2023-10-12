@@ -1,4 +1,4 @@
-import 'package:chess_rps/data/service/action_logger.dart';
+import 'package:chess_rps/data/service/game/action_logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'logger.g.dart';

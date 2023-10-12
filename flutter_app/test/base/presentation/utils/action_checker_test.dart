@@ -42,8 +42,7 @@ void main() {
     final fromFigure =
         Rook(side: Side.light, position: const Position(row: row, col: col));
     final mockBoard = board;
-    mockBoard.cells[row][col] =
-        board.cells[row][col].copyWith(figure: fromFigure);
+    mockBoard.updateCell(row, col, (cell) => cell.copyWith(figure: fromFigure));
 
     test('Is not available as in other vertical', () {
       final toCell = mockBoard.getCellAt(row - 1, 5);
@@ -56,8 +55,7 @@ void main() {
     test('Is not available as the same side figure located', () {
       final toFigure =
           Rook(side: Side.light, position: const Position(row: row, col: 5));
-      mockBoard.cells[row][5] =
-          mockBoard.getCellAt(row, 5).copyWith(figure: toFigure);
+      mockBoard.updateCell(row, 5, (cell) => cell.copyWith(figure: toFigure));
       final toCell = mockBoard.getCellAt(row, 5);
       final result = ActionChecker.isHorizontalActionAvailable(
           mockBoard, fromFigure.position, toCell, Side.light);

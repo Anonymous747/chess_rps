@@ -6,7 +6,7 @@ part of 'action_handler.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$actionHandlerHash() => r'4b948ffdff7b1267a9aaaf153b25074036c90d3f';
+String _$actionHandlerHash() => r'8e8a7daaf5bf38475e2400dd4f317ba177c8e812';
 
 /// See also [actionHandler].
 @ProviderFor(actionHandler)
