@@ -29,8 +29,6 @@ class GameController extends _$GameController {
   @visibleForTesting
   late final GameStrategy gameStrategy;
 
-  GameState get currentState => state;
-
   @override
   GameState build() {
     actionHandler = ref.read(actionHandlerProvider);
@@ -94,15 +92,11 @@ class GameController extends _$GameController {
   /// Return the result is Opponents move has a correct status
   ///
   Future<bool> makeOpponentsMove() async {
-    final bestMove = await actionHandler.getOpponentsMove();
+    final bestAction = await actionHandler.getOpponentsMove();
 
-    if (bestMove.isNullOrEmpty) return false;
+    if (bestAction.isNullOrEmpty) return false;
 
-    final bestAction = bestMove!.split(" ")[1];
-
-    assert(bestAction.length == 4);
-
-    final fromPosition = bestAction.substring(0, 2).convertToPosition();
+    final fromPosition = bestAction!.substring(0, 2).convertToPosition();
     final targetPosition = bestAction.substring(2, 4).convertToPosition();
 
     final fromCell = state.board.getCellAt(fromPosition.row, fromPosition.col);

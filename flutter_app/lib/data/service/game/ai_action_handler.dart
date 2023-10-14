@@ -1,3 +1,4 @@
+import 'package:chess_rps/common/extension.dart';
 import 'package:chess_rps/domain/service/action_handler.dart';
 import 'package:stockfish_interpreter/stockfish_interpreter.dart';
 
@@ -9,7 +10,11 @@ class AIActionHandler extends ActionHandler {
   @override
   Future<String?> getOpponentsMove() async {
     await _stockfishInterpreter.visualizeBoard();
-    return await _stockfishInterpreter.getBestMove();
+    final bestMove = await _stockfishInterpreter.getBestMove();
+
+    if (bestMove.isNullOrEmpty) return null;
+
+    return bestMove!.split(" ")[1];
   }
 
   @override
@@ -27,7 +32,7 @@ class AIActionHandler extends ActionHandler {
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
     _stockfishInterpreter.disposeEngine();
   }
 }
