@@ -53,23 +53,23 @@ class GameController extends _$GameController {
 
     for (final hash in availableHashes) {
       final position = hash.toPosition();
-      final row = position.row;
-      final col = position.col;
-      final target = state.board.getCellAt(row, col);
+      final target = state.board.getCellAt(position.row, position.col);
 
       final canBeKnockedDown = fromCell.calculateCanBeKnockedDown(target);
 
       // Opposite figure available to knock
       if (canBeKnockedDown) {
-        state.board.updateCell(
-            row, col, (cell) => cell.copyWith(canBeKnockedDown: true));
+        state.board.updateCell(position.row, position.col,
+            (cell) => cell.copyWith(canBeKnockedDown: true));
       } else {
-        state.board
-            .updateCell(row, col, (cell) => cell.copyWith(isAvailable: true));
+        state.board.updateCell(position.row, position.col,
+            (cell) => cell.copyWith(isAvailable: true));
       }
     }
   }
 
+  /// Display all available figure's actions on the board
+  ///
   void showAvailableActions(Cell fromCell) {
     // Wipe selected cells before follow action
     if (state.selectedFigure != null) {
@@ -81,12 +81,10 @@ class GameController extends _$GameController {
       _displayAvailableCells(fromCell);
     }
 
-    final fromRow = fromCell.position.row;
-    final fromCol = fromCell.position.col;
-
-    state.board.updateCell(fromRow, fromCol,
+    state.board.updateCell(fromCell.row, fromCell.col,
         (cell) => cell.copyWith(isSelected: !fromCell.isSelected));
-    state = state.copyWith(selectedFigure: fromCell.positionHash);
+    state = state.copyWith(
+        selectedFigure: !fromCell.isSelected ? fromCell.positionHash : null);
   }
 
   /// Return the result is Opponents move has a correct status
@@ -106,23 +104,24 @@ class GameController extends _$GameController {
     return await _makeMoveViaAction(bestAction, fromCell, targetCell);
   }
 
+  /// Helps to define selected cell
+  ///
+  Cell _getSelectedCell(Board board, Cell target, {Cell? from}) {
+    if (from == null) {
+      final selectedPosition = state.selectedFigure!.toPosition();
+      return board.getCellAt(selectedPosition.row, selectedPosition.col);
+    }
+
+    return from;
+  }
+
   /// Return the result is Opponents move has a correct status
   ///
   Future<bool> makeMove(Cell target, {Cell? from}) async {
     final board = state.board;
-
-    Cell selectedCell;
-    if (from == null) {
-      final selectedPosition =
-          from == null ? state.selectedFigure!.toPosition() : from.position;
-      selectedCell =
-          board.getCellAt(selectedPosition.row, selectedPosition.col);
-    } else {
-      selectedCell = from;
-    }
+    final selectedCell = _getSelectedCell(board, target, from: from);
 
     final isMoveAvailable = selectedCell.moveFigure(board, target);
-
     if (!isMoveAvailable) return false;
 
     final action =
@@ -131,6 +130,8 @@ class GameController extends _$GameController {
     return await _makeMoveViaAction(action, selectedCell, target);
   }
 
+  /// Get [action] and make move according to it
+  ///
   Future<bool> _makeMoveViaAction(
       String action, Cell selectedCell, Cell targetCell) async {
     try {
@@ -156,7 +157,6 @@ class GameController extends _$GameController {
 
   void dispose() {
     PlayerSideMediator.makeByDefault();
-
     actionHandler.dispose();
   }
 

@@ -1,10 +1,10 @@
 import 'dart:async';
 
+import 'package:chess_rps/common/endpoint.dart';
 import 'package:chess_rps/domain/service/action_handler.dart';
-import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-const String _socketUrl = 'ws://10.0.2.2:8000/game/ws/112';
+const String _socketUrl = 'ws://${Endpoint.opponentSocket}/112';
 const String _opponentMoveSign = 'Opponent move ';
 
 class SocketActionHandler extends ActionHandler {
@@ -15,7 +15,7 @@ class SocketActionHandler extends ActionHandler {
   final List<StreamSubscription> _subs = <StreamSubscription>[];
 
   SocketActionHandler() {
-    _channel = IOWebSocketChannel.connect(Uri.parse(_socketUrl));
+    _channel = WebSocketChannel.connect(Uri.parse(_socketUrl));
 
     _subs.add(_channel.stream.listen((event) {
       _controller.add(event);
@@ -46,5 +46,6 @@ class SocketActionHandler extends ActionHandler {
     }
 
     await _channel.sink.close();
+    await _controller.close();
   }
 }
