@@ -4,7 +4,7 @@ import 'package:chess_rps/common/enum.dart';
 ///
 class GameModesMediator {
   static GameMode _gameMode = GameMode.classical;
-  static OpponentMode _opponentMode = OpponentMode.ai;
+  static OpponentMode _opponentMode = OpponentMode.socket;
 
   static GameMode get gameMode => _gameMode;
   static OpponentMode get opponentMode => _opponentMode;

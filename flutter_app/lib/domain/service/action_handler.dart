@@ -23,7 +23,6 @@ ActionHandler actionHandler(ActionHandlerRef ref) {
 abstract class ActionHandler {
   Future<String?> getOpponentsMove();
   Future<void> makeMove(String action);
-  Future<void> visualizeBoard();
-
-  void dispose();
+  Future<void> visualizeBoard() async {}
+  Future<void> dispose();
 }
