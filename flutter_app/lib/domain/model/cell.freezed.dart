@@ -12,7 +12,7 @@ part of 'cell.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
 mixin _$Cell {
@@ -23,7 +23,9 @@ mixin _$Cell {
   bool get canBeKnockedDown => throw _privateConstructorUsedError;
   Figure? get figure => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Cell
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $CellCopyWith<Cell> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -51,6 +53,8 @@ class _$CellCopyWithImpl<$Res, $Val extends Cell>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of Cell
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -91,9 +95,10 @@ class _$CellCopyWithImpl<$Res, $Val extends Cell>
 }
 
 /// @nodoc
-abstract class _$$_CellCopyWith<$Res> implements $CellCopyWith<$Res> {
-  factory _$$_CellCopyWith(_$_Cell value, $Res Function(_$_Cell) then) =
-      __$$_CellCopyWithImpl<$Res>;
+abstract class _$$CellImplCopyWith<$Res> implements $CellCopyWith<$Res> {
+  factory _$$CellImplCopyWith(
+          _$CellImpl value, $Res Function(_$CellImpl) then) =
+      __$$CellImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -106,11 +111,14 @@ abstract class _$$_CellCopyWith<$Res> implements $CellCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$$_CellCopyWithImpl<$Res> extends _$CellCopyWithImpl<$Res, _$_Cell>
-    implements _$$_CellCopyWith<$Res> {
-  __$$_CellCopyWithImpl(_$_Cell _value, $Res Function(_$_Cell) _then)
+class __$$CellImplCopyWithImpl<$Res>
+    extends _$CellCopyWithImpl<$Res, _$CellImpl>
+    implements _$$CellImplCopyWith<$Res> {
+  __$$CellImplCopyWithImpl(_$CellImpl _value, $Res Function(_$CellImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of Cell
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -121,7 +129,7 @@ class __$$_CellCopyWithImpl<$Res> extends _$CellCopyWithImpl<$Res, _$_Cell>
     Object? canBeKnockedDown = null,
     Object? figure = freezed,
   }) {
-    return _then(_$_Cell(
+    return _then(_$CellImpl(
       side: null == side
           ? _value.side
           : side // ignore: cast_nullable_to_non_nullable
@@ -152,8 +160,8 @@ class __$$_CellCopyWithImpl<$Res> extends _$CellCopyWithImpl<$Res, _$_Cell>
 
 /// @nodoc
 
-class _$_Cell implements _Cell {
-  _$_Cell(
+class _$CellImpl implements _Cell {
+  _$CellImpl(
       {required this.side,
       required this.position,
       this.isSelected = false,
@@ -184,10 +192,10 @@ class _$_Cell implements _Cell {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$_Cell &&
+            other is _$CellImpl &&
             (identical(other.side, side) || other.side == side) &&
             (identical(other.position, position) ||
                 other.position == position) &&
@@ -204,11 +212,13 @@ class _$_Cell implements _Cell {
   int get hashCode => Object.hash(runtimeType, side, position, isSelected,
       isAvailable, canBeKnockedDown, figure);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Cell
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$_CellCopyWith<_$_Cell> get copyWith =>
-      __$$_CellCopyWithImpl<_$_Cell>(this, _$identity);
+  _$$CellImplCopyWith<_$CellImpl> get copyWith =>
+      __$$CellImplCopyWithImpl<_$CellImpl>(this, _$identity);
 }
 
 abstract class _Cell implements Cell {
@@ -218,7 +228,7 @@ abstract class _Cell implements Cell {
       final bool isSelected,
       final bool isAvailable,
       final bool canBeKnockedDown,
-      final Figure? figure}) = _$_Cell;
+      final Figure? figure}) = _$CellImpl;
 
   @override
   Side get side;
@@ -232,7 +242,11 @@ abstract class _Cell implements Cell {
   bool get canBeKnockedDown;
   @override
   Figure? get figure;
+
+  /// Create a copy of Cell
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
-  _$$_CellCopyWith<_$_Cell> get copyWith => throw _privateConstructorUsedError;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$CellImplCopyWith<_$CellImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

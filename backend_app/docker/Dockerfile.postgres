@@ -1,0 +1,15 @@
+FROM postgres:15-alpine
+
+# Set environment variables for PostgreSQL
+ENV POSTGRES_DB=chess_rps
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=chess_rps_password
+
+# Create a custom initialization script
+COPY docker/init-scripts/ /docker-entrypoint-initdb.d/
+
+# Expose PostgreSQL port
+EXPOSE 5432
+
+# Use the default postgres entrypoint
+CMD ["postgres"]

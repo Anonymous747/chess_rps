@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgres:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.postgres
+    container_name: chess_rps_postgres
+    environment:
+      POSTGRES_DB: chess_rps
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: chess_rps_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - chess_rps_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d chess_rps"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  chess_rps_network:
+    driver: bridge

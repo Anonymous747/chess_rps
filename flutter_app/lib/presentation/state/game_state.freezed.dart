@@ -12,7 +12,7 @@ part of 'game_state.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
 mixin _$GameState {
@@ -21,7 +21,9 @@ mixin _$GameState {
   String? get selectedFigure => throw _privateConstructorUsedError;
   dynamic get playerSide => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of GameState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $GameStateCopyWith<GameState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -48,6 +50,8 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of GameState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -78,10 +82,11 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
 }
 
 /// @nodoc
-abstract class _$$_GameStateCopyWith<$Res> implements $GameStateCopyWith<$Res> {
-  factory _$$_GameStateCopyWith(
-          _$_GameState value, $Res Function(_$_GameState) then) =
-      __$$_GameStateCopyWithImpl<$Res>;
+abstract class _$$GameStateImplCopyWith<$Res>
+    implements $GameStateCopyWith<$Res> {
+  factory _$$GameStateImplCopyWith(
+          _$GameStateImpl value, $Res Function(_$GameStateImpl) then) =
+      __$$GameStateImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -92,13 +97,15 @@ abstract class _$$_GameStateCopyWith<$Res> implements $GameStateCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$$_GameStateCopyWithImpl<$Res>
-    extends _$GameStateCopyWithImpl<$Res, _$_GameState>
-    implements _$$_GameStateCopyWith<$Res> {
-  __$$_GameStateCopyWithImpl(
-      _$_GameState _value, $Res Function(_$_GameState) _then)
+class __$$GameStateImplCopyWithImpl<$Res>
+    extends _$GameStateCopyWithImpl<$Res, _$GameStateImpl>
+    implements _$$GameStateImplCopyWith<$Res> {
+  __$$GameStateImplCopyWithImpl(
+      _$GameStateImpl _value, $Res Function(_$GameStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of GameState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -107,7 +114,7 @@ class __$$_GameStateCopyWithImpl<$Res>
     Object? selectedFigure = freezed,
     Object? playerSide = freezed,
   }) {
-    return _then(_$_GameState(
+    return _then(_$GameStateImpl(
       board: null == board
           ? _value.board
           : board // ignore: cast_nullable_to_non_nullable
@@ -127,8 +134,8 @@ class __$$_GameStateCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$_GameState implements _GameState {
-  const _$_GameState(
+class _$GameStateImpl implements _GameState {
+  const _$GameStateImpl(
       {required this.board,
       this.currentOrder = Side.light,
       this.selectedFigure = null,
@@ -152,10 +159,10 @@ class _$_GameState implements _GameState {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$_GameState &&
+            other is _$GameStateImpl &&
             (identical(other.board, board) || other.board == board) &&
             (identical(other.currentOrder, currentOrder) ||
                 other.currentOrder == currentOrder) &&
@@ -169,11 +176,13 @@ class _$_GameState implements _GameState {
   int get hashCode => Object.hash(runtimeType, board, currentOrder,
       selectedFigure, const DeepCollectionEquality().hash(playerSide));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of GameState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$_GameStateCopyWith<_$_GameState> get copyWith =>
-      __$$_GameStateCopyWithImpl<_$_GameState>(this, _$identity);
+  _$$GameStateImplCopyWith<_$GameStateImpl> get copyWith =>
+      __$$GameStateImplCopyWithImpl<_$GameStateImpl>(this, _$identity);
 }
 
 abstract class _GameState implements GameState {
@@ -181,7 +190,7 @@ abstract class _GameState implements GameState {
       {required final Board board,
       final Side currentOrder,
       final String? selectedFigure,
-      final dynamic playerSide}) = _$_GameState;
+      final dynamic playerSide}) = _$GameStateImpl;
 
   @override
   Board get board;
@@ -191,8 +200,11 @@ abstract class _GameState implements GameState {
   String? get selectedFigure;
   @override
   dynamic get playerSide;
+
+  /// Create a copy of GameState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
-  _$$_GameStateCopyWith<_$_GameState> get copyWith =>
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$GameStateImplCopyWith<_$GameStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

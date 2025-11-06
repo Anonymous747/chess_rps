@@ -13,6 +13,15 @@ spec:
         app: postgres
 
     spec:
+      securityContext:
+        fsGroup: 999
+      initContainers:
+        - name: init-postgres
+          image: busybox:1.35
+          command: ['sh', '-c', 'chown -R 999:999 /var/lib/postgresql/data && chmod 700 /var/lib/postgresql/data']
+          volumeMounts:
+            - mountPath: "/var/lib/postgresql/data"
+              name: postgres-volume
       containers:
         - name: postgres
           image: postgres:latest
@@ -26,7 +35,7 @@ spec:
             - secretRef:
                 name: postgres-secret
           volumeMounts:
-            - mountPath: "var/lib/postgres"
+            - mountPath: "/var/lib/postgresql/data"
               name: postgres-volume
       volumes:
         - name: postgres-volume
