@@ -20,5 +20,6 @@ class GameState with _$GameState {
     @Default(600) int lightPlayerTimeSeconds, // 10 minutes
     @Default(600) int darkPlayerTimeSeconds, // 10 minutes
     @Default(null) DateTime? currentTurnStartedAt,
+    @Default(null) Side? kingInCheck, // Which side's king is in check
   }) = _GameState;
 }

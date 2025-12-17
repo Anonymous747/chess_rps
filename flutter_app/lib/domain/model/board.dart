@@ -69,8 +69,18 @@ class Board {
   void makeMove(Cell from, Cell to) {
     if (from.figure == null) throw Exception("From cell figure can't be null");
 
-    _updateCellFigure(
-        to.row, to.col, from.figure!.copyWith(position: to.position));
+    // Check for pawn promotion (when pawn reaches the 8th rank)
+    if (from.figure!.role == Role.pawn && (to.position.row == 0 || to.position.row == 7)) {
+      // Promote pawn to queen (standard promotion choice)
+      final promotedPiece = Queen(
+        side: from.figure!.side,
+        position: to.position,
+      );
+      _updateCellFigure(to.row, to.col, promotedPiece);
+    } else {
+      _updateCellFigure(
+          to.row, to.col, from.figure!.copyWith(position: to.position));
+    }
     _updateCellFigure(from.row, from.col, null);
 
     if (from.figure!.role == Role.king && (from.col - to.col).abs() > 1) {
@@ -81,14 +91,21 @@ class Board {
   /// King castling mechanism
   ///
   void _handleKingCastling(Cell from, Cell to) {
-    final nearestRookX = to.getNearestRook();
-    final mediumX = from.col.compareTo(to.col) + to.col;
-    final rook = getCellAt(from.row, nearestRookX)
-        .figure!
-        .copyWith(position: Position(row: from.row, col: mediumX));
+    // Determine which side we're castling to (kingside or queenside)
+    final isKingside = to.position.col > from.position.col;
+    final rookCol = isKingside ? 7 : 0;
+    final rookCell = getCellAt(from.row, rookCol);
+    
+    if (rookCell.figure == null || rookCell.figure!.role != Role.rook) {
+      throw Exception("Castling attempted but rook not found at expected position");
+    }
+    
+    // Rook moves to the square next to the king (on the opposite side)
+    final rookNewCol = isKingside ? to.position.col - 1 : to.position.col + 1;
+    final rook = rookCell.figure!.copyWith(position: Position(row: from.row, col: rookNewCol));
 
-    _updateCellFigure(from.row, mediumX, rook);
-    _updateCellFigure(from.row, nearestRookX, null);
+    _updateCellFigure(from.row, rookNewCol, rook);
+    _updateCellFigure(from.row, rookCol, null);
   }
 
   /// Method that initialize cells and define figure positions

@@ -1,3 +1,4 @@
+import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
@@ -30,7 +31,15 @@ class CellWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cell = ref.watch(gameControllerProvider
         .select((state) => state.board.getCellAt(row, column)));
+    final kingInCheck = ref.watch(gameControllerProvider
+        .select((state) => state.kingInCheck));
     final controller = ref.watch(gameControllerProvider.notifier);
+    
+    // Check if this cell contains a king that is in check
+    final isKingInCheck = cell.figure != null &&
+        cell.figure!.role == Role.king &&
+        kingInCheck != null &&
+        cell.figure!.side == kingInCheck;
 
     return GestureDetector(
       onTap: () async => await controller.onPressed(cell),
@@ -61,6 +70,12 @@ class CellWidget extends HookConsumerWidget {
                     beginColor: Palette.white200,
                     endColor: Palette.purple500,
                     backgroundColor: Palette.purple400,
+                  ),
+                if (isKingInCheck)
+                  AnimatedBorder(
+                    beginColor: Palette.error,
+                    endColor: Palette.warning,
+                    backgroundColor: Palette.error.withOpacity(0.3),
                   ),
                 if (cell.figure != null)
                   Container(

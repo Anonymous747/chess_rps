@@ -171,8 +171,25 @@ class GameController extends _$GameController {
   }
 
   void _displayAvailableCells(Cell fromCell) {
+    final movingSide = fromCell.figure?.side;
+    if (movingSide == null) return;
+    
+    final isInCheck = ActionChecker.isKingInCheck(state.board, movingSide);
+    
+    if (isInCheck) {
+      AppLogger.info(
+        'King is in check for ${movingSide.name}. Filtering moves to only show moves that remove check.',
+        tag: 'GameController'
+      );
+    }
+    
     final availableHashes =
         ActionChecker.getAvailablePositionsHash(state.board, fromCell);
+
+    AppLogger.debug(
+      'Found ${availableHashes.length} available moves for ${fromCell.figure?.role} at ${fromCell.position.algebraicPosition}',
+      tag: 'GameController'
+    );
 
     for (final hash in availableHashes) {
       final position = hash.toPosition();
@@ -347,14 +364,34 @@ class GameController extends _$GameController {
       ..makeMove(selectedCell, targetCell)
       ..removeSelection();
 
+    // Determine new current order (opposite side)
+    final newCurrentOrder = state.currentOrder.opposite;
+    
+    // Check if the new current order's king is in check
+    final kingInCheck = ActionChecker.isKingInCheck(updatedBoard, newCurrentOrder)
+        ? newCurrentOrder
+        : null;
+    
+    // Also check if the side that just moved is still in check (shouldn't happen, but check anyway)
+    final previousSideInCheck = ActionChecker.isKingInCheck(updatedBoard, state.currentOrder)
+        ? state.currentOrder
+        : null;
+    
+    // Use the new current order's check status
+    final finalCheckStatus = kingInCheck ?? previousSideInCheck;
+
     state = state.copyWith(
       board: updatedBoard,
       selectedFigure: null,
-      currentOrder: state.currentOrder.opposite,
+      currentOrder: newCurrentOrder,
       currentTurnStartedAt: DateTime.now(),
+      kingInCheck: finalCheckStatus,
     );
     
-    AppLogger.debug('Turn switched to: ${state.currentOrder.name}', tag: 'GameController');
+    AppLogger.debug('Turn switched to: ${newCurrentOrder.name}', tag: 'GameController');
+    if (finalCheckStatus != null) {
+      AppLogger.info('King in check detected for: ${finalCheckStatus.name}', tag: 'GameController');
+    }
     
     // Restart timer for new turn
     _restartTimerCountdown();
