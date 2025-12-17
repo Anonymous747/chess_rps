@@ -3,6 +3,7 @@ import 'package:chess_rps/domain/service/game_strategy.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
+import 'package:flutter/foundation.dart';
 
 class ClassicalGameStrategy extends GameStrategy {
   @override
@@ -24,6 +25,16 @@ class ClassicalGameStrategy extends GameStrategy {
 
     if (!isMoved) return false;
 
-    return await controller.makeOpponentsMove();
+    // Trigger AI move after player's move
+    // Don't await to avoid blocking, but handle errors
+    controller.makeOpponentsMove().then((aiMoved) {
+      if (!aiMoved) {
+        debugPrint('AI failed to make a move');
+      }
+    }).catchError((error) {
+      debugPrint('AI move error: $error');
+    });
+
+    return true;
   }
 }

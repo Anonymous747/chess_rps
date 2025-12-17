@@ -285,21 +285,6 @@ class StockfishInterpreter {
     }
   }
 
-  /// Code for this function taken from: https://gist.github.com/Dani4kor/e1e8b439115878f8c6dcf127a4ed5d3e
-  /// Some small changes have been made to the code.
-  ///
-  bool _isFenSyntaxValid(String fen) {
-    bool isRegexMatch = RegExp(
-      r"\s*^(((?:[rnbqkpRNBQKP1-8]+\/){7})[rnbqkpRNBQKP1-8]+)\s([b|w])\s(-|[K|Q|k|q]{1,4})\s(-|[a-h][1-8])\s(\d+\s\d+)$",
-    ).hasMatch(fen);
-
-    if (!isRegexMatch) return false;
-
-    // TODO: Finish fen check impl
-
-    return true;
-  }
-
   /// Checks new move
   /// [move] - New move value in algebraic notation
   ///

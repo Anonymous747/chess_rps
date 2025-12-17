@@ -53,14 +53,14 @@ class CellWidget extends HookConsumerWidget {
                 if (cell.canBeKnockedDown)
                   const AnimatedBorder(
                     beginColor: Palette.white200,
-                    endColor: Palette.red500,
-                    backgroundColor: Palette.red300,
+                    endColor: Palette.purple400,
+                    backgroundColor: Palette.purple300,
                   ),
                 if (cell.isSelected)
                   const AnimatedBorder(
                     beginColor: Palette.white200,
-                    endColor: Palette.blue500,
-                    backgroundColor: Palette.blue300,
+                    endColor: Palette.purple500,
+                    backgroundColor: Palette.purple400,
                   ),
                 if (cell.figure != null)
                   Container(

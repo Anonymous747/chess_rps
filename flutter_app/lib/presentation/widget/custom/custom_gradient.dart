@@ -5,19 +5,19 @@ import 'package:chess_rps/common/palette.dart';
 import 'package:flutter/material.dart';
 
 const _darkPalette = [
-  Palette.yellow200,
-  Palette.yellow300,
-  Palette.yellow400,
-  Palette.yellow500,
-  Palette.yellow800
+  Palette.purple700,
+  Palette.purple800,
+  Palette.purple800,
+  Palette.purple900,
+  Palette.purple900
 ];
 
 const _lightPalette = [
+  Palette.white100,
+  Palette.white200,
   Palette.white200,
   Palette.white300,
-  Palette.white400,
-  Palette.white500,
-  Palette.white600
+  Palette.white300
 ];
 
 class CustomGradient extends CustomPainter {

@@ -23,7 +23,10 @@ class LettersCollection extends StatelessWidget {
                   letters[i],
                   textAlign: TextAlign.center,
                   style:
-                      TextStyles.regularNormalStyle(color: Palette.yellow150),
+                      TextStyles.regularNormalStyle(
+                        color: Palette.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               )),
     );

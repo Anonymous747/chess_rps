@@ -19,7 +19,15 @@ mixin _$GameState {
   Board get board => throw _privateConstructorUsedError;
   Side get currentOrder => throw _privateConstructorUsedError;
   String? get selectedFigure => throw _privateConstructorUsedError;
-  dynamic get playerSide => throw _privateConstructorUsedError;
+  Side get playerSide => throw _privateConstructorUsedError;
+  bool get showRpsOverlay => throw _privateConstructorUsedError;
+  RpsChoice? get playerRpsChoice => throw _privateConstructorUsedError;
+  RpsChoice? get opponentRpsChoice => throw _privateConstructorUsedError;
+  bool get waitingForRpsResult => throw _privateConstructorUsedError;
+  bool? get playerWonRps => throw _privateConstructorUsedError;
+  int get lightPlayerTimeSeconds => throw _privateConstructorUsedError;
+  int get darkPlayerTimeSeconds => throw _privateConstructorUsedError;
+  DateTime? get currentTurnStartedAt => throw _privateConstructorUsedError;
 
   /// Create a copy of GameState
   /// with the given fields replaced by the non-null parameter values.
@@ -37,7 +45,15 @@ abstract class $GameStateCopyWith<$Res> {
       {Board board,
       Side currentOrder,
       String? selectedFigure,
-      dynamic playerSide});
+      Side playerSide,
+      bool showRpsOverlay,
+      RpsChoice? playerRpsChoice,
+      RpsChoice? opponentRpsChoice,
+      bool waitingForRpsResult,
+      bool? playerWonRps,
+      int lightPlayerTimeSeconds,
+      int darkPlayerTimeSeconds,
+      DateTime? currentTurnStartedAt});
 }
 
 /// @nodoc
@@ -58,7 +74,15 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
     Object? board = null,
     Object? currentOrder = null,
     Object? selectedFigure = freezed,
-    Object? playerSide = freezed,
+    Object? playerSide = null,
+    Object? showRpsOverlay = null,
+    Object? playerRpsChoice = freezed,
+    Object? opponentRpsChoice = freezed,
+    Object? waitingForRpsResult = null,
+    Object? playerWonRps = freezed,
+    Object? lightPlayerTimeSeconds = null,
+    Object? darkPlayerTimeSeconds = null,
+    Object? currentTurnStartedAt = freezed,
   }) {
     return _then(_value.copyWith(
       board: null == board
@@ -73,10 +97,42 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
           ? _value.selectedFigure
           : selectedFigure // ignore: cast_nullable_to_non_nullable
               as String?,
-      playerSide: freezed == playerSide
+      playerSide: null == playerSide
           ? _value.playerSide
           : playerSide // ignore: cast_nullable_to_non_nullable
-              as dynamic,
+              as Side,
+      showRpsOverlay: null == showRpsOverlay
+          ? _value.showRpsOverlay
+          : showRpsOverlay // ignore: cast_nullable_to_non_nullable
+              as bool,
+      playerRpsChoice: freezed == playerRpsChoice
+          ? _value.playerRpsChoice
+          : playerRpsChoice // ignore: cast_nullable_to_non_nullable
+              as RpsChoice?,
+      opponentRpsChoice: freezed == opponentRpsChoice
+          ? _value.opponentRpsChoice
+          : opponentRpsChoice // ignore: cast_nullable_to_non_nullable
+              as RpsChoice?,
+      waitingForRpsResult: null == waitingForRpsResult
+          ? _value.waitingForRpsResult
+          : waitingForRpsResult // ignore: cast_nullable_to_non_nullable
+              as bool,
+      playerWonRps: freezed == playerWonRps
+          ? _value.playerWonRps
+          : playerWonRps // ignore: cast_nullable_to_non_nullable
+              as bool?,
+      lightPlayerTimeSeconds: null == lightPlayerTimeSeconds
+          ? _value.lightPlayerTimeSeconds
+          : lightPlayerTimeSeconds // ignore: cast_nullable_to_non_nullable
+              as int,
+      darkPlayerTimeSeconds: null == darkPlayerTimeSeconds
+          ? _value.darkPlayerTimeSeconds
+          : darkPlayerTimeSeconds // ignore: cast_nullable_to_non_nullable
+              as int,
+      currentTurnStartedAt: freezed == currentTurnStartedAt
+          ? _value.currentTurnStartedAt
+          : currentTurnStartedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ) as $Val);
   }
 }
@@ -93,7 +149,15 @@ abstract class _$$GameStateImplCopyWith<$Res>
       {Board board,
       Side currentOrder,
       String? selectedFigure,
-      dynamic playerSide});
+      Side playerSide,
+      bool showRpsOverlay,
+      RpsChoice? playerRpsChoice,
+      RpsChoice? opponentRpsChoice,
+      bool waitingForRpsResult,
+      bool? playerWonRps,
+      int lightPlayerTimeSeconds,
+      int darkPlayerTimeSeconds,
+      DateTime? currentTurnStartedAt});
 }
 
 /// @nodoc
@@ -112,7 +176,15 @@ class __$$GameStateImplCopyWithImpl<$Res>
     Object? board = null,
     Object? currentOrder = null,
     Object? selectedFigure = freezed,
-    Object? playerSide = freezed,
+    Object? playerSide = null,
+    Object? showRpsOverlay = null,
+    Object? playerRpsChoice = freezed,
+    Object? opponentRpsChoice = freezed,
+    Object? waitingForRpsResult = null,
+    Object? playerWonRps = freezed,
+    Object? lightPlayerTimeSeconds = null,
+    Object? darkPlayerTimeSeconds = null,
+    Object? currentTurnStartedAt = freezed,
   }) {
     return _then(_$GameStateImpl(
       board: null == board
@@ -127,7 +199,42 @@ class __$$GameStateImplCopyWithImpl<$Res>
           ? _value.selectedFigure
           : selectedFigure // ignore: cast_nullable_to_non_nullable
               as String?,
-      playerSide: freezed == playerSide ? _value.playerSide! : playerSide,
+      playerSide: null == playerSide
+          ? _value.playerSide
+          : playerSide // ignore: cast_nullable_to_non_nullable
+              as Side,
+      showRpsOverlay: null == showRpsOverlay
+          ? _value.showRpsOverlay
+          : showRpsOverlay // ignore: cast_nullable_to_non_nullable
+              as bool,
+      playerRpsChoice: freezed == playerRpsChoice
+          ? _value.playerRpsChoice
+          : playerRpsChoice // ignore: cast_nullable_to_non_nullable
+              as RpsChoice?,
+      opponentRpsChoice: freezed == opponentRpsChoice
+          ? _value.opponentRpsChoice
+          : opponentRpsChoice // ignore: cast_nullable_to_non_nullable
+              as RpsChoice?,
+      waitingForRpsResult: null == waitingForRpsResult
+          ? _value.waitingForRpsResult
+          : waitingForRpsResult // ignore: cast_nullable_to_non_nullable
+              as bool,
+      playerWonRps: freezed == playerWonRps
+          ? _value.playerWonRps
+          : playerWonRps // ignore: cast_nullable_to_non_nullable
+              as bool?,
+      lightPlayerTimeSeconds: null == lightPlayerTimeSeconds
+          ? _value.lightPlayerTimeSeconds
+          : lightPlayerTimeSeconds // ignore: cast_nullable_to_non_nullable
+              as int,
+      darkPlayerTimeSeconds: null == darkPlayerTimeSeconds
+          ? _value.darkPlayerTimeSeconds
+          : darkPlayerTimeSeconds // ignore: cast_nullable_to_non_nullable
+              as int,
+      currentTurnStartedAt: freezed == currentTurnStartedAt
+          ? _value.currentTurnStartedAt
+          : currentTurnStartedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -139,7 +246,15 @@ class _$GameStateImpl implements _GameState {
       {required this.board,
       this.currentOrder = Side.light,
       this.selectedFigure = null,
-      this.playerSide = Side.light});
+      this.playerSide = Side.light,
+      this.showRpsOverlay = false,
+      this.playerRpsChoice = null,
+      this.opponentRpsChoice = null,
+      this.waitingForRpsResult = false,
+      this.playerWonRps = null,
+      this.lightPlayerTimeSeconds = 600,
+      this.darkPlayerTimeSeconds = 600,
+      this.currentTurnStartedAt = null});
 
   @override
   final Board board;
@@ -151,11 +266,35 @@ class _$GameStateImpl implements _GameState {
   final String? selectedFigure;
   @override
   @JsonKey()
-  final dynamic playerSide;
+  final Side playerSide;
+  @override
+  @JsonKey()
+  final bool showRpsOverlay;
+  @override
+  @JsonKey()
+  final RpsChoice? playerRpsChoice;
+  @override
+  @JsonKey()
+  final RpsChoice? opponentRpsChoice;
+  @override
+  @JsonKey()
+  final bool waitingForRpsResult;
+  @override
+  @JsonKey()
+  final bool? playerWonRps;
+  @override
+  @JsonKey()
+  final int lightPlayerTimeSeconds;
+  @override
+  @JsonKey()
+  final int darkPlayerTimeSeconds;
+  @override
+  @JsonKey()
+  final DateTime? currentTurnStartedAt;
 
   @override
   String toString() {
-    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure, playerSide: $playerSide)';
+    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure, playerSide: $playerSide, showRpsOverlay: $showRpsOverlay, playerRpsChoice: $playerRpsChoice, opponentRpsChoice: $opponentRpsChoice, waitingForRpsResult: $waitingForRpsResult, playerWonRps: $playerWonRps, lightPlayerTimeSeconds: $lightPlayerTimeSeconds, darkPlayerTimeSeconds: $darkPlayerTimeSeconds, currentTurnStartedAt: $currentTurnStartedAt)';
   }
 
   @override
@@ -168,13 +307,41 @@ class _$GameStateImpl implements _GameState {
                 other.currentOrder == currentOrder) &&
             (identical(other.selectedFigure, selectedFigure) ||
                 other.selectedFigure == selectedFigure) &&
-            const DeepCollectionEquality()
-                .equals(other.playerSide, playerSide));
+            (identical(other.playerSide, playerSide) ||
+                other.playerSide == playerSide) &&
+            (identical(other.showRpsOverlay, showRpsOverlay) ||
+                other.showRpsOverlay == showRpsOverlay) &&
+            (identical(other.playerRpsChoice, playerRpsChoice) ||
+                other.playerRpsChoice == playerRpsChoice) &&
+            (identical(other.opponentRpsChoice, opponentRpsChoice) ||
+                other.opponentRpsChoice == opponentRpsChoice) &&
+            (identical(other.waitingForRpsResult, waitingForRpsResult) ||
+                other.waitingForRpsResult == waitingForRpsResult) &&
+            (identical(other.playerWonRps, playerWonRps) ||
+                other.playerWonRps == playerWonRps) &&
+            (identical(other.lightPlayerTimeSeconds, lightPlayerTimeSeconds) ||
+                other.lightPlayerTimeSeconds == lightPlayerTimeSeconds) &&
+            (identical(other.darkPlayerTimeSeconds, darkPlayerTimeSeconds) ||
+                other.darkPlayerTimeSeconds == darkPlayerTimeSeconds) &&
+            (identical(other.currentTurnStartedAt, currentTurnStartedAt) ||
+                other.currentTurnStartedAt == currentTurnStartedAt));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, board, currentOrder,
-      selectedFigure, const DeepCollectionEquality().hash(playerSide));
+  int get hashCode => Object.hash(
+      runtimeType,
+      board,
+      currentOrder,
+      selectedFigure,
+      playerSide,
+      showRpsOverlay,
+      playerRpsChoice,
+      opponentRpsChoice,
+      waitingForRpsResult,
+      playerWonRps,
+      lightPlayerTimeSeconds,
+      darkPlayerTimeSeconds,
+      currentTurnStartedAt);
 
   /// Create a copy of GameState
   /// with the given fields replaced by the non-null parameter values.
@@ -190,7 +357,15 @@ abstract class _GameState implements GameState {
       {required final Board board,
       final Side currentOrder,
       final String? selectedFigure,
-      final dynamic playerSide}) = _$GameStateImpl;
+      final Side playerSide,
+      final bool showRpsOverlay,
+      final RpsChoice? playerRpsChoice,
+      final RpsChoice? opponentRpsChoice,
+      final bool waitingForRpsResult,
+      final bool? playerWonRps,
+      final int lightPlayerTimeSeconds,
+      final int darkPlayerTimeSeconds,
+      final DateTime? currentTurnStartedAt}) = _$GameStateImpl;
 
   @override
   Board get board;
@@ -199,7 +374,23 @@ abstract class _GameState implements GameState {
   @override
   String? get selectedFigure;
   @override
-  dynamic get playerSide;
+  Side get playerSide;
+  @override
+  bool get showRpsOverlay;
+  @override
+  RpsChoice? get playerRpsChoice;
+  @override
+  RpsChoice? get opponentRpsChoice;
+  @override
+  bool get waitingForRpsResult;
+  @override
+  bool? get playerWonRps;
+  @override
+  int get lightPlayerTimeSeconds;
+  @override
+  int get darkPlayerTimeSeconds;
+  @override
+  DateTime? get currentTurnStartedAt;
 
   /// Create a copy of GameState
   /// with the given fields replaced by the non-null parameter values.

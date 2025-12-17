@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
@@ -8,7 +9,7 @@ from src.database import get_async_session, engine
 from src.database import Base
 
 # Import models to register them with Base.metadata
-from src.game.models import Messages  # noqa: F401
+from src.game.models import Messages, GameRoom, GamePlayer, GameMove, RpsRound  # noqa: F401
 from src.auth.models import User, Token  # noqa: F401
 
 # Configure logging
@@ -19,6 +20,15 @@ app = FastAPI(
     title="Chess RPS API",
     description="A chess game API with Rock Paper Scissors mechanics",
     version="1.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
