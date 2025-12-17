@@ -26,7 +26,7 @@ class AuthController extends _$AuthController {
       // Try to load saved user
       final savedUser = await _authStorage!.getAuthUser();
       if (savedUser != null) {
-        // Validate token with timeout protection
+        // Validate access token with timeout protection
         try {
           final isValid = await _authService!.validateToken(savedUser.accessToken)
               .timeout(
@@ -41,12 +41,48 @@ class AuthController extends _$AuthController {
             AppLogger.info('Loaded valid auth user from storage', tag: 'AuthController');
             return savedUser;
           } else {
-            AppLogger.info('Saved token is invalid, clearing storage', tag: 'AuthController');
-            await _authStorage!.clearAuthUser();
+            // Access token is invalid, try to refresh using refresh token
+            AppLogger.info('Access token invalid, attempting to refresh', tag: 'AuthController');
+            try {
+              final refreshedUser = await _authService!.refreshToken(savedUser.refreshToken)
+                  .timeout(
+                    const Duration(seconds: 6),
+                    onTimeout: () {
+                      AppLogger.warning('Token refresh timed out', tag: 'AuthController');
+                      throw Exception('Token refresh timed out');
+                    },
+                  );
+              
+              // Save refreshed tokens
+              await _authStorage!.saveAuthUser(refreshedUser);
+              AppLogger.info('Token refreshed successfully', tag: 'AuthController');
+              return refreshedUser;
+            } catch (refreshError) {
+              AppLogger.warning('Token refresh failed, clearing storage', tag: 'AuthController', error: refreshError);
+              await _authStorage!.clearAuthUser();
+            }
           }
         } catch (e) {
-          AppLogger.error('Error validating token, clearing storage', tag: 'AuthController', error: e);
-          await _authStorage!.clearAuthUser();
+          // If validation throws an error, try to refresh token
+          AppLogger.warning('Token validation error, attempting refresh', tag: 'AuthController', error: e);
+          try {
+            final refreshedUser = await _authService!.refreshToken(savedUser.refreshToken)
+                .timeout(
+                  const Duration(seconds: 6),
+                  onTimeout: () {
+                    AppLogger.warning('Token refresh timed out', tag: 'AuthController');
+                    throw Exception('Token refresh timed out');
+                  },
+                );
+            
+            // Save refreshed tokens
+            await _authStorage!.saveAuthUser(refreshedUser);
+            AppLogger.info('Token refreshed successfully after validation error', tag: 'AuthController');
+            return refreshedUser;
+          } catch (refreshError) {
+            AppLogger.error('Token refresh failed, clearing storage', tag: 'AuthController', error: refreshError);
+            await _authStorage!.clearAuthUser();
+          }
         }
       }
       

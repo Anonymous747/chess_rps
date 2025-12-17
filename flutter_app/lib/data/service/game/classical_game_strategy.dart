@@ -1,3 +1,4 @@
+import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/service/game_strategy.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
@@ -8,8 +9,15 @@ import 'package:flutter/foundation.dart';
 class ClassicalGameStrategy extends GameStrategy {
   @override
   Future<void> initialAction(GameController controller, GameState state) async {
+    AppLogger.info(
+      'ClassicalGameStrategy.initialAction - Player side: ${PlayerSideMediator.playerSide}, Current order: ${state.currentOrder}',
+      tag: 'ClassicalGameStrategy'
+    );
     if (!PlayerSideMediator.playerSide.isLight) {
+      AppLogger.info('Player is dark, triggering initial AI move', tag: 'ClassicalGameStrategy');
       await controller.makeOpponentsMove();
+    } else {
+      AppLogger.info('Player is light, waiting for player move', tag: 'ClassicalGameStrategy');
     }
   }
 
@@ -21,19 +29,40 @@ class ClassicalGameStrategy extends GameStrategy {
 
   @override
   Future<bool> makeMove(GameController controller, Cell pressedCell) async {
+    final currentState = controller.currentState;
+    AppLogger.info(
+      'ClassicalGameStrategy.makeMove - Player move: ${pressedCell.position.row},${pressedCell.position.col}, Current order before move: ${currentState.currentOrder}',
+      tag: 'ClassicalGameStrategy'
+    );
+    
     final isMoved = await super.makeMove(controller, pressedCell);
 
-    if (!isMoved) return false;
+    if (!isMoved) {
+      AppLogger.warning('Player move failed, not triggering AI move', tag: 'ClassicalGameStrategy');
+      return false;
+    }
+
+    final stateAfterMove = controller.currentState;
+    AppLogger.info(
+      'Player move successful. Current order after move: ${stateAfterMove.currentOrder}, Triggering AI move...',
+      tag: 'ClassicalGameStrategy'
+    );
 
     // Trigger AI move after player's move
-    // Don't await to avoid blocking, but handle errors
-    controller.makeOpponentsMove().then((aiMoved) {
+    // Await to ensure the move is fully processed before continuing
+    try {
+      AppLogger.info('Calling makeOpponentsMove()...', tag: 'ClassicalGameStrategy');
+      final aiMoved = await controller.makeOpponentsMove();
       if (!aiMoved) {
+        AppLogger.warning('AI failed to make a move', tag: 'ClassicalGameStrategy');
         debugPrint('AI failed to make a move');
+      } else {
+        AppLogger.info('AI move completed successfully', tag: 'ClassicalGameStrategy');
       }
-    }).catchError((error) {
+    } catch (error, stackTrace) {
+      AppLogger.error('AI move error: $error', tag: 'ClassicalGameStrategy', error: error, stackTrace: stackTrace);
       debugPrint('AI move error: $error');
-    });
+    }
 
     return true;
   }

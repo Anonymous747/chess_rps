@@ -14,6 +14,7 @@ import 'package:chess_rps/domain/service/game_strategy.dart';
 import 'package:chess_rps/domain/service/logger.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +43,10 @@ class GameController extends _$GameController {
   GameState build() {
     AppLogger.info('Initializing GameController', tag: 'GameController');
     actionHandler = ref.read(actionHandlerProvider);
+    AppLogger.info(
+      'ActionHandler type: ${actionHandler.runtimeType}, Opponent mode: ${GameModesMediator.opponentMode}',
+      tag: 'GameController'
+    );
     actionLogger = ref.read(loggerProvider);
     gameStrategy = ref.read(gameStrategyProvider);
 
@@ -208,44 +213,83 @@ class GameController extends _$GameController {
   /// Return the result is Opponents move has a correct status
   ///
   Future<bool> makeOpponentsMove() async {
-    AppLogger.info('Getting opponent move', tag: 'GameController');
+    AppLogger.info('=== GameController.makeOpponentsMove() START ===', tag: 'GameController');
+    AppLogger.info('Current game state:', tag: 'GameController');
+    AppLogger.info('  - Current order (whose turn): ${state.currentOrder}', tag: 'GameController');
+    AppLogger.info('  - Player side: ${state.playerSide}', tag: 'GameController');
+    AppLogger.info('  - Opponent side: ${state.currentOrder}', tag: 'GameController');
+    
     try {
+      // Ensure board state is synced before getting opponent move
+      AppLogger.info('Step 1: Visualizing board to sync state', tag: 'GameController');
+      await actionHandler.visualizeBoard();
+      AppLogger.info('Board visualization completed', tag: 'GameController');
+      
+      AppLogger.info('Step 2: Requesting opponent move from action handler', tag: 'GameController');
       final bestAction = await actionHandler.getOpponentsMove();
+      AppLogger.info('Action handler returned: ${bestAction ?? "null"}', tag: 'GameController');
 
       if (bestAction.isNullOrEmpty) {
-        AppLogger.warning('No valid move found from opponent', tag: 'GameController');
+        AppLogger.warning('=== makeOpponentsMove() FAILED: No valid move found from opponent ===', tag: 'GameController');
+        AppLogger.warning('Possible reasons:', tag: 'GameController');
+        AppLogger.warning('  1. Stockfish returned null/empty', tag: 'GameController');
+        AppLogger.warning('  2. No legal moves available', tag: 'GameController');
+        AppLogger.warning('  3. Stockfish engine error', tag: 'GameController');
         return false;
       }
 
-      AppLogger.info('Opponent move: $bestAction', tag: 'GameController');
+      AppLogger.info('Step 3: Parsing opponent move: $bestAction', tag: 'GameController');
       final fromPosition = bestAction!.substring(0, 2).convertToPosition();
       final targetPosition = bestAction.substring(2, 4).convertToPosition();
+      AppLogger.info('  - From position: row ${fromPosition.row}, col ${fromPosition.col}', tag: 'GameController');
+      AppLogger.info('  - To position: row ${targetPosition.row}, col ${targetPosition.col}', tag: 'GameController');
 
       final fromCell = state.board.getCellAt(fromPosition.row, fromPosition.col);
       final targetCell =
           state.board.getCellAt(targetPosition.row, targetPosition.col);
+      
+      AppLogger.info('  - From cell: ${fromCell.position.row},${fromCell.position.col}', tag: 'GameController');
+      AppLogger.info('  - To cell: ${targetCell.position.row},${targetCell.position.col}', tag: 'GameController');
 
       // Check if the move is valid before executing
+      AppLogger.info('Step 4: Validating move', tag: 'GameController');
       if (fromCell.figure == null) {
-        AppLogger.warning('Invalid move - no figure at source position', tag: 'GameController');
+        AppLogger.warning('=== makeOpponentsMove() FAILED: No figure at source position ===', tag: 'GameController');
+        AppLogger.warning('  - Source position: ${fromCell.position.algebraicPosition}', tag: 'GameController');
+        AppLogger.warning('  - Cell is empty', tag: 'GameController');
         return false;
       }
+
+      AppLogger.info('  - Source cell has figure: ${fromCell.figure!.role} (${fromCell.figure!.side})', tag: 'GameController');
 
       // Check if it's the opponent's turn
+      // currentOrder should match the figure's side for the opponent's move to be valid
+      AppLogger.info('Step 5: Checking turn validity', tag: 'GameController');
+      AppLogger.info('  - Figure side: ${fromCell.figure!.side}', tag: 'GameController');
+      AppLogger.info('  - Current order: ${state.currentOrder}', tag: 'GameController');
+      AppLogger.info('  - Match: ${fromCell.figure!.side == state.currentOrder}', tag: 'GameController');
+      
       if (fromCell.figure!.side != state.currentOrder) {
-        AppLogger.warning('Invalid move - not opponent\'s turn', tag: 'GameController');
+        AppLogger.warning('=== makeOpponentsMove() FAILED: Not opponent\'s turn ===', tag: 'GameController');
+        AppLogger.warning('  - Expected side: ${state.currentOrder}', tag: 'GameController');
+        AppLogger.warning('  - Figure side: ${fromCell.figure!.side}', tag: 'GameController');
+        AppLogger.warning('  - This suggests a board state mismatch or Stockfish returned wrong side move', tag: 'GameController');
         return false;
       }
 
+      AppLogger.info('Step 6: Executing opponent move via action', tag: 'GameController');
       final success = await _makeMoveViaAction(bestAction, fromCell, targetCell);
       if (success) {
-        AppLogger.info('Opponent move executed successfully', tag: 'GameController');
+        AppLogger.info('=== GameController.makeOpponentsMove() SUCCESS ===', tag: 'GameController');
+        AppLogger.info('Opponent move executed successfully: $bestAction', tag: 'GameController');
       } else {
-        AppLogger.warning('Failed to execute opponent move', tag: 'GameController');
+        AppLogger.warning('=== GameController.makeOpponentsMove() FAILED: Move execution failed ===', tag: 'GameController');
+        AppLogger.warning('Move was valid but execution failed', tag: 'GameController');
       }
       return success;
-    } catch (e) {
-      AppLogger.error('Error making opponent move: $e', tag: 'GameController', error: e);
+    } catch (e, stackTrace) {
+      AppLogger.error('=== GameController.makeOpponentsMove() ERROR ===', tag: 'GameController', error: e, stackTrace: stackTrace);
+      AppLogger.error('Exception details: $e', tag: 'GameController');
       return false;
     }
   }

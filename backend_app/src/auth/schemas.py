@@ -36,12 +36,17 @@ class UserLogin(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
     user_id: int
     phone_number: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 
 class UserResponse(BaseModel):
@@ -51,7 +56,7 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 

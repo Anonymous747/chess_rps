@@ -13,6 +13,7 @@ class AuthStorage {
   );
 
   static const _tokenKey = 'auth_token';
+  static const _refreshTokenKey = 'auth_refresh_token';
   static const _userIdKey = 'auth_user_id';
   static const _phoneNumberKey = 'auth_phone_number';
 
@@ -21,6 +22,7 @@ class AuthStorage {
       AppLogger.info('Saving auth user', tag: 'AuthStorage');
       await Future.wait([
         _storage.write(key: _tokenKey, value: user.accessToken),
+        _storage.write(key: _refreshTokenKey, value: user.refreshToken),
         _storage.write(key: _userIdKey, value: user.userId.toString()),
         _storage.write(key: _phoneNumberKey, value: user.phoneNumber),
       ]);
@@ -34,10 +36,11 @@ class AuthStorage {
   Future<AuthUser?> getAuthUser() async {
     try {
       final token = await _storage.read(key: _tokenKey);
+      final refreshToken = await _storage.read(key: _refreshTokenKey);
       final userIdStr = await _storage.read(key: _userIdKey);
       final phoneNumber = await _storage.read(key: _phoneNumberKey);
 
-      if (token == null || userIdStr == null || phoneNumber == null) {
+      if (token == null || refreshToken == null || userIdStr == null || phoneNumber == null) {
         return null;
       }
 
@@ -45,6 +48,7 @@ class AuthStorage {
         userId: int.parse(userIdStr),
         phoneNumber: phoneNumber,
         accessToken: token,
+        refreshToken: refreshToken,
       );
     } catch (e) {
       AppLogger.error('Error reading auth user', tag: 'AuthStorage', error: e);
@@ -57,6 +61,7 @@ class AuthStorage {
       AppLogger.info('Clearing auth user', tag: 'AuthStorage');
       await Future.wait([
         _storage.delete(key: _tokenKey),
+        _storage.delete(key: _refreshTokenKey),
         _storage.delete(key: _userIdKey),
         _storage.delete(key: _phoneNumberKey),
       ]);

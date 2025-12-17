@@ -107,7 +107,7 @@ class ModeSelector extends StatelessWidget {
                           color: Palette.accent,
                         onPressed: () {
                           AppLogger.info('Classical mode selected', tag: 'ModeSelector');
-                          GameModesMediator().changeGameMode(GameMode.classical);
+                          GameModesMediator.changeGameMode(GameMode.classical);
                           context.push(AppRoutes.opponentSelector);
                         },
                         ),
@@ -119,7 +119,7 @@ class ModeSelector extends StatelessWidget {
                           color: Palette.purpleAccent,
                         onPressed: () {
                           AppLogger.info('RPS mode selected', tag: 'ModeSelector');
-                          GameModesMediator().changeGameMode(GameMode.rps);
+                          GameModesMediator.changeGameMode(GameMode.rps);
                           context.push(AppRoutes.opponentSelector);
                         },
                         ),

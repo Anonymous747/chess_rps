@@ -117,7 +117,8 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                                   icon: Icons.smart_toy,
                                   color: Palette.accent,
                               onPressed: () {
-                                GameModesMediator().changeOpponentMode(OpponentMode.ai);
+                                AppLogger.info('User selected AI opponent', tag: 'OpponentSelector');
+                                GameModesMediator.changeOpponentMode(OpponentMode.ai);
                                 context.push(AppRoutes.chess);
                               },
                                 ),
@@ -135,7 +136,8 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                                     });
 
                                     try {
-                                      GameModesMediator().changeOpponentMode(OpponentMode.socket);
+                                      AppLogger.info('User selected online opponent', tag: 'OpponentSelector');
+                                      GameModesMediator.changeOpponentMode(OpponentMode.socket);
                                       // Create room and navigate to waiting room
                                       final roomHandler = GameRoomHandler();
                                       final roomCode = await roomHandler.createRoom(

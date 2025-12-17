@@ -41,6 +41,7 @@ class AuthService {
           userId: data['user_id'],
           phoneNumber: data['phone_number'],
           accessToken: data['access_token'],
+          refreshToken: data['refresh_token'],
         );
       } else {
         throw Exception('Registration failed: ${response.statusMessage}');
@@ -83,6 +84,7 @@ class AuthService {
           userId: data['user_id'],
           phoneNumber: data['phone_number'],
           accessToken: data['access_token'],
+          refreshToken: data['refresh_token'],
         );
       } else {
         throw Exception('Login failed: ${response.statusMessage}');
@@ -158,6 +160,54 @@ class AuthService {
     } catch (e) {
       AppLogger.error('Unexpected token validation error', tag: 'AuthService', error: e);
       return false;
+    }
+  }
+
+  Future<AuthUser> refreshToken(String refreshToken) async {
+    try {
+      AppLogger.info('Refreshing access token', tag: 'AuthService');
+      
+      // Create a separate Dio instance without interceptor to avoid circular token addition
+      final dio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 5),
+          sendTimeout: const Duration(seconds: 5),
+        ),
+      );
+      
+      final response = await dio.post(
+        '${Endpoint.apiBase}/api/v1/auth/refresh',
+        data: {
+          'refresh_token': refreshToken,
+        },
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        AppLogger.info('Token refresh successful', tag: 'AuthService');
+        return AuthUser(
+          userId: data['user_id'],
+          phoneNumber: data['phone_number'],
+          accessToken: data['access_token'],
+          refreshToken: data['refresh_token'],
+        );
+      } else {
+        throw Exception('Token refresh failed: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      AppLogger.error('Token refresh error: ${e.message}', tag: 'AuthService', error: e);
+      if (e.response != null) {
+        final errorMessage = e.response?.data['detail'] ?? 'Token refresh failed';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      AppLogger.error('Unexpected error during token refresh', tag: 'AuthService', error: e);
+      throw Exception('Unexpected error: $e');
     }
   }
 }

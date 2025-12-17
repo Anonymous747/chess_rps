@@ -10,7 +10,7 @@ class MessagesModel(BaseModel):
     message: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class Connection:
@@ -41,7 +41,7 @@ class GameRoomResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class GamePlayerResponse(BaseModel):
@@ -53,7 +53,7 @@ class GamePlayerResponse(BaseModel):
     joined_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class GameMoveCreate(BaseModel):
@@ -69,7 +69,7 @@ class GameMoveResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class RpsChoiceRequest(BaseModel):
@@ -89,7 +89,7 @@ class RpsRoundResponse(BaseModel):
     completed_at: Optional[datetime]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class WebSocketMessage(BaseModel):
