@@ -5,6 +5,8 @@ import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
+import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
+import 'package:chess_rps/presentation/utils/board_theme_utils.dart';
 import 'package:chess_rps/presentation/widget/custom/animated_border.dart';
 import 'package:chess_rps/presentation/widget/custom/available_move.dart';
 import 'package:chess_rps/presentation/widget/custom/custom_gradient.dart';
@@ -23,11 +25,14 @@ class CellWidget extends HookConsumerWidget {
     Key? key,
   }) : super(key: key);
 
-  String _getAppropriateImage(Cell cell) {
+  String _getAppropriateImage(Cell cell, String pieceSet) {
     final side = cell.figure!.side.toString();
     final name = cell.figure!.runtimeType.toString().toLowerCase();
+    
+    // Ensure pieceSet is not empty
+    final safePieceSet = pieceSet.isNotEmpty ? pieceSet : 'cardinal';
 
-    return '$_imagesPath/$side/$name.png';
+    return '$_imagesPath/$safePieceSet/$side/$name.png';
   }
 
   @override
@@ -38,6 +43,26 @@ class CellWidget extends HookConsumerWidget {
         .select((state) => state.kingInCheck));
     final controller = ref.watch(gameControllerProvider.notifier);
     final gameState = ref.watch(gameControllerProvider);
+    final settingsAsync = ref.watch(settingsControllerProvider);
+    
+    // Get piece set from settings, validate it exists, fallback to default (cardinal)
+    String pieceSet = 'cardinal'; // Default fallback
+    if (settingsAsync.hasValue && settingsAsync.value != null) {
+      final requestedPieceSet = settingsAsync.value!.pieceSet;
+      if (requestedPieceSet.isNotEmpty) {
+        final knownPacks = PiecePackUtils.getKnownPiecePacks();
+        pieceSet = knownPacks.contains(requestedPieceSet) 
+            ? requestedPieceSet 
+            : 'cardinal';
+      }
+    }
+    
+    // Get board theme from settings, validate it exists, fallback to default
+    final requestedBoardTheme = settingsAsync.valueOrNull?.boardTheme ?? 'glass_dark';
+    final knownThemes = BoardThemeUtils.getKnownBoardThemes();
+    final boardTheme = knownThemes.contains(requestedBoardTheme)
+        ? requestedBoardTheme
+        : 'glass_dark'; // Default to glass_dark if invalid
     
     // Check if this cell contains a king that is in check
     final isKingInCheck = cell.figure != null &&
@@ -110,8 +135,8 @@ class CellWidget extends HookConsumerWidget {
         ], borderRadius: BorderRadius.circular(4)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(6),
-          child: CustomPaint(
-            painter: CustomGradient(cellSide: cell.side),
+            child: CustomPaint(
+              painter: CustomGradient(cellSide: cell.side, boardTheme: boardTheme),
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -138,7 +163,7 @@ class CellWidget extends HookConsumerWidget {
                     key: const ValueKey('figureKey'),
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: AssetImage(_getAppropriateImage(cell)),
+                        image: AssetImage(_getAppropriateImage(cell, pieceSet)),
                       ),
                     ),
                   ),

@@ -8,7 +8,7 @@ import 'package:riverpod/riverpod.dart';
 part 'auth_controller.g.dart';
 
 @riverpod
-AuthService authService(AuthServiceRef ref) {
+AuthService authService(Ref ref) {
   return AuthService();
 }
 

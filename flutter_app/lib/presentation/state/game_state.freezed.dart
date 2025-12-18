@@ -30,6 +30,10 @@ mixin _$GameState {
   DateTime? get currentTurnStartedAt => throw _privateConstructorUsedError;
   Side? get kingInCheck => throw _privateConstructorUsedError;
   List<String> get moveHistory => throw _privateConstructorUsedError;
+  bool get gameOver => throw _privateConstructorUsedError;
+  Side? get winner => throw _privateConstructorUsedError;
+  bool get isCheckmate => throw _privateConstructorUsedError;
+  bool get isStalemate => throw _privateConstructorUsedError;
 
   /// Create a copy of GameState
   /// with the given fields replaced by the non-null parameter values.
@@ -57,7 +61,11 @@ abstract class $GameStateCopyWith<$Res> {
       int darkPlayerTimeSeconds,
       DateTime? currentTurnStartedAt,
       Side? kingInCheck,
-      List<String> moveHistory});
+      List<String> moveHistory,
+      bool gameOver,
+      Side? winner,
+      bool isCheckmate,
+      bool isStalemate});
 }
 
 /// @nodoc
@@ -89,6 +97,10 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
     Object? currentTurnStartedAt = freezed,
     Object? kingInCheck = freezed,
     Object? moveHistory = null,
+    Object? gameOver = null,
+    Object? winner = freezed,
+    Object? isCheckmate = null,
+    Object? isStalemate = null,
   }) {
     return _then(_value.copyWith(
       board: null == board
@@ -147,6 +159,22 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
           ? _value.moveHistory
           : moveHistory // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      gameOver: null == gameOver
+          ? _value.gameOver
+          : gameOver // ignore: cast_nullable_to_non_nullable
+              as bool,
+      winner: freezed == winner
+          ? _value.winner
+          : winner // ignore: cast_nullable_to_non_nullable
+              as Side?,
+      isCheckmate: null == isCheckmate
+          ? _value.isCheckmate
+          : isCheckmate // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isStalemate: null == isStalemate
+          ? _value.isStalemate
+          : isStalemate // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -173,7 +201,11 @@ abstract class _$$GameStateImplCopyWith<$Res>
       int darkPlayerTimeSeconds,
       DateTime? currentTurnStartedAt,
       Side? kingInCheck,
-      List<String> moveHistory});
+      List<String> moveHistory,
+      bool gameOver,
+      Side? winner,
+      bool isCheckmate,
+      bool isStalemate});
 }
 
 /// @nodoc
@@ -203,6 +235,10 @@ class __$$GameStateImplCopyWithImpl<$Res>
     Object? currentTurnStartedAt = freezed,
     Object? kingInCheck = freezed,
     Object? moveHistory = null,
+    Object? gameOver = null,
+    Object? winner = freezed,
+    Object? isCheckmate = null,
+    Object? isStalemate = null,
   }) {
     return _then(_$GameStateImpl(
       board: null == board
@@ -253,6 +289,30 @@ class __$$GameStateImplCopyWithImpl<$Res>
           ? _value.currentTurnStartedAt
           : currentTurnStartedAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      kingInCheck: freezed == kingInCheck
+          ? _value.kingInCheck
+          : kingInCheck // ignore: cast_nullable_to_non_nullable
+              as Side?,
+      moveHistory: null == moveHistory
+          ? _value.moveHistory
+          : moveHistory // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      gameOver: null == gameOver
+          ? _value.gameOver
+          : gameOver // ignore: cast_nullable_to_non_nullable
+              as bool,
+      winner: freezed == winner
+          ? _value.winner
+          : winner // ignore: cast_nullable_to_non_nullable
+              as Side?,
+      isCheckmate: null == isCheckmate
+          ? _value.isCheckmate
+          : isCheckmate // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isStalemate: null == isStalemate
+          ? _value.isStalemate
+          : isStalemate // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -274,7 +334,11 @@ class _$GameStateImpl implements _GameState {
       this.darkPlayerTimeSeconds = 600,
       this.currentTurnStartedAt = null,
       this.kingInCheck = null,
-      this.moveHistory = const []});
+      this.moveHistory = const [],
+      this.gameOver = false,
+      this.winner = null,
+      this.isCheckmate = false,
+      this.isStalemate = false});
 
   @override
   final Board board;
@@ -317,10 +381,22 @@ class _$GameStateImpl implements _GameState {
   @override
   @JsonKey()
   final List<String> moveHistory;
+  @override
+  @JsonKey()
+  final bool gameOver;
+  @override
+  @JsonKey()
+  final Side? winner;
+  @override
+  @JsonKey()
+  final bool isCheckmate;
+  @override
+  @JsonKey()
+  final bool isStalemate;
 
   @override
   String toString() {
-    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure, playerSide: $playerSide, showRpsOverlay: $showRpsOverlay, playerRpsChoice: $playerRpsChoice, opponentRpsChoice: $opponentRpsChoice, waitingForRpsResult: $waitingForRpsResult, playerWonRps: $playerWonRps, lightPlayerTimeSeconds: $lightPlayerTimeSeconds, darkPlayerTimeSeconds: $darkPlayerTimeSeconds, currentTurnStartedAt: $currentTurnStartedAt, kingInCheck: $kingInCheck, moveHistory: $moveHistory)';
+    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure, playerSide: $playerSide, showRpsOverlay: $showRpsOverlay, playerRpsChoice: $playerRpsChoice, opponentRpsChoice: $opponentRpsChoice, waitingForRpsResult: $waitingForRpsResult, playerWonRps: $playerWonRps, lightPlayerTimeSeconds: $lightPlayerTimeSeconds, darkPlayerTimeSeconds: $darkPlayerTimeSeconds, currentTurnStartedAt: $currentTurnStartedAt, kingInCheck: $kingInCheck, moveHistory: $moveHistory, gameOver: $gameOver, winner: $winner, isCheckmate: $isCheckmate, isStalemate: $isStalemate)';
   }
 
   @override
@@ -354,7 +430,15 @@ class _$GameStateImpl implements _GameState {
             (identical(other.kingInCheck, kingInCheck) ||
                 other.kingInCheck == kingInCheck) &&
             (identical(other.moveHistory, moveHistory) ||
-                const DeepCollectionEquality().equals(other.moveHistory, moveHistory)));
+                const DeepCollectionEquality().equals(other.moveHistory, moveHistory)) &&
+            (identical(other.gameOver, gameOver) ||
+                other.gameOver == gameOver) &&
+            (identical(other.winner, winner) ||
+                other.winner == winner) &&
+            (identical(other.isCheckmate, isCheckmate) ||
+                other.isCheckmate == isCheckmate) &&
+            (identical(other.isStalemate, isStalemate) ||
+                other.isStalemate == isStalemate));
   }
 
   @override
@@ -373,7 +457,11 @@ class _$GameStateImpl implements _GameState {
       darkPlayerTimeSeconds,
       currentTurnStartedAt,
       kingInCheck,
-      moveHistory);
+      moveHistory,
+      gameOver,
+      winner,
+      isCheckmate,
+      isStalemate);
 
   /// Create a copy of GameState
   /// with the given fields replaced by the non-null parameter values.
@@ -399,7 +487,11 @@ abstract class _GameState implements GameState {
       final int darkPlayerTimeSeconds,
       final DateTime? currentTurnStartedAt,
       final Side? kingInCheck,
-      final List<String> moveHistory}) = _$GameStateImpl;
+      final List<String> moveHistory,
+      final bool gameOver,
+      final Side? winner,
+      final bool isCheckmate,
+      final bool isStalemate}) = _$GameStateImpl;
 
   @override
   Board get board;
@@ -429,6 +521,14 @@ abstract class _GameState implements GameState {
   Side? get kingInCheck;
   @override
   List<String> get moveHistory;
+  @override
+  bool get gameOver;
+  @override
+  Side? get winner;
+  @override
+  bool get isCheckmate;
+  @override
+  bool get isStalemate;
 
   /// Create a copy of GameState
   /// with the given fields replaced by the non-null parameter values.

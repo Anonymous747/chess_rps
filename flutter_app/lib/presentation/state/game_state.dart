@@ -23,5 +23,9 @@ class GameState with _$GameState {
     @Default(null) DateTime? currentTurnStartedAt,
     @Default(null) Side? kingInCheck, // Which side's king is in check
     @Default([]) List<String> moveHistory, // History of all moves in algebraic notation
+    @Default(false) bool gameOver, // Whether the game has ended
+    @Default(null) Side? winner, // Which side won (null if draw/stalemate)
+    @Default(false) bool isCheckmate, // Whether the game ended in checkmate
+    @Default(false) bool isStalemate, // Whether the game ended in stalemate
   }) = _GameState;
 }

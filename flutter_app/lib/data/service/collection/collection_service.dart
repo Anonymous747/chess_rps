@@ -1,6 +1,7 @@
 import 'package:chess_rps/common/endpoint.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/data/service/auth/auth_interceptor.dart';
+import 'package:chess_rps/data/service/dio_logger_interceptor.dart';
 import 'package:dio/dio.dart';
 
 class CollectionItem {
@@ -173,7 +174,10 @@ class CollectionService {
                 connectTimeout: const Duration(seconds: 30),
                 receiveTimeout: const Duration(seconds: 30),
               ),
-            )..interceptors.add(AuthInterceptor());
+            )..interceptors.addAll([
+                DioLoggerInterceptor(),
+                AuthInterceptor(),
+              ]);
 
   Future<List<CollectionItem>> getCollectionItems({
     CollectionCategory? category,

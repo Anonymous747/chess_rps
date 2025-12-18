@@ -696,3 +696,4 @@ class EventsScreen extends StatelessWidget {
     );
   }
 }
+

@@ -1,6 +1,7 @@
 import 'package:chess_rps/common/endpoint.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/data/service/auth/auth_interceptor.dart';
+import 'package:chess_rps/data/service/dio_logger_interceptor.dart';
 import 'package:chess_rps/domain/model/auth_user.dart';
 import 'package:dio/dio.dart';
 
@@ -14,7 +15,10 @@ class AuthService {
             receiveTimeout: const Duration(seconds: 5),
             sendTimeout: const Duration(seconds: 5),
           ),
-        )..interceptors.add(AuthInterceptor());
+        )..interceptors.addAll([
+            DioLoggerInterceptor(),
+            AuthInterceptor(),
+          ]);
 
   Future<AuthUser> register({
     required String phoneNumber,

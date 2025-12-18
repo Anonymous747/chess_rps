@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:chess_rps/common/endpoint.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/rps_choice.dart';
+import 'package:chess_rps/data/service/dio_logger_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -72,7 +73,7 @@ class GameRoomHandler {
   Future<String> createRoom(String gameMode) async {
     AppLogger.info('Creating room with game mode: $gameMode', tag: 'GameRoomHandler');
     try {
-      final dio = Dio();
+      final dio = Dio()..interceptors.add(DioLoggerInterceptor());
       AppLogger.debug('Sending POST request to: ${Endpoint.createRoom}', tag: 'GameRoomHandler');
       final response = await dio.post(
         Endpoint.createRoom,

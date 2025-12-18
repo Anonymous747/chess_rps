@@ -1,9 +1,14 @@
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/figure.dart';
+import 'package:chess_rps/presentation/controller/settings_controller.dart';
+import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class CapturedPiecesWidget extends StatelessWidget {
+const String _imagesPath = 'assets/images/figures';
+
+class CapturedPiecesWidget extends ConsumerWidget {
   final Board board;
   final bool isLightSide;
 
@@ -14,10 +19,23 @@ class CapturedPiecesWidget extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final capturedFigures = isLightSide
         ? board.lostDarkFigures
         : board.lostLightFigures;
+
+    // Get piece set from settings
+    final settingsAsync = ref.watch(settingsControllerProvider);
+    String pieceSet = 'cardinal'; // Default fallback
+    if (settingsAsync.hasValue && settingsAsync.value != null) {
+      final requestedPieceSet = settingsAsync.value!.pieceSet;
+      if (requestedPieceSet.isNotEmpty) {
+        final knownPacks = PiecePackUtils.getKnownPiecePacks();
+        pieceSet = knownPacks.contains(requestedPieceSet) 
+            ? requestedPieceSet 
+            : 'cardinal';
+      }
+    }
 
     if (capturedFigures.isEmpty) {
       return Container(
@@ -55,17 +73,18 @@ class CapturedPiecesWidget extends StatelessWidget {
         spacing: 4,
         runSpacing: 4,
         children: capturedFigures.map((figure) {
-          return _buildPieceIcon(figure);
+          return _buildPieceIcon(figure, pieceSet);
         }).toList(),
       ),
     );
   }
 
-  Widget _buildPieceIcon(Figure figure) {
+  Widget _buildPieceIcon(Figure figure, String pieceSet) {
     // Use same approach as cell_widget
     final side = figure.side.toString(); // Returns 'black' or 'white'
     final role = figure.role.toString().split('.').last.toLowerCase();
-    final imagePath = 'assets/images/figures/$side/$role.png';
+    final safePieceSet = pieceSet.isNotEmpty ? pieceSet : 'cardinal';
+    final imagePath = '$_imagesPath/$safePieceSet/$side/$role.png';
 
     return Container(
       width: 24,

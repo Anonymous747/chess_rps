@@ -192,6 +192,33 @@ class GameController extends _$GameController {
       tag: 'GameController'
     );
 
+    // Check for checkmate/stalemate: if king has 0 available moves, check if any other pieces can move
+    if (fromCell.figure?.role == Role.king && availableHashes.isEmpty) {
+      AppLogger.info(
+        'King has 0 moves. Checking if side has any legal moves...',
+        tag: 'GameController'
+      );
+      final hasLegalMoves = ActionChecker.hasAnyLegalMoves(state.board, movingSide);
+      if (!hasLegalMoves) {
+        if (isInCheck) {
+          // Checkmate - the side has no legal moves and king is in check
+          AppLogger.warning(
+            'CHECKMATE! ${movingSide.name} has no legal moves and king is in check.',
+            tag: 'GameController'
+          );
+          _endGameWithCheckmate(movingSide);
+        } else {
+          // Stalemate - the side has no legal moves but king is not in check
+          AppLogger.warning(
+            'STALEMATE! ${movingSide.name} has no legal moves but king is not in check.',
+            tag: 'GameController'
+          );
+          _endGameWithStalemate(movingSide);
+        }
+        return; // Don't display any moves, game is over
+      }
+    }
+
     for (final hash in availableHashes) {
       final position = hash.toPosition();
       final target = state.board.getCellAt(position.row, position.col);
@@ -399,6 +426,23 @@ class GameController extends _$GameController {
       AppLogger.info('King in check detected for: ${finalCheckStatus.name}', tag: 'GameController');
     }
     
+    // Check for checkmate or stalemate after the move
+    if (ActionChecker.isCheckmate(updatedBoard, newCurrentOrder)) {
+      AppLogger.warning(
+        'CHECKMATE detected after move! ${newCurrentOrder.name} is checkmated.',
+        tag: 'GameController'
+      );
+      _endGameWithCheckmate(newCurrentOrder);
+      return true;
+    } else if (ActionChecker.isStalemate(updatedBoard, newCurrentOrder)) {
+      AppLogger.warning(
+        'STALEMATE detected after move! ${newCurrentOrder.name} is stalemated.',
+        tag: 'GameController'
+      );
+      _endGameWithStalemate(newCurrentOrder);
+      return true;
+    }
+    
     // Restart timer for new turn
     _restartTimerCountdown();
 
@@ -462,5 +506,47 @@ class GameController extends _$GameController {
   /// Update game state (for use by game strategies)
   void updateState(GameState newState) {
     state = newState;
+  }
+
+  /// End the game with checkmate
+  /// [losingSide] is the side that was checkmated (lost)
+  void _endGameWithCheckmate(Side losingSide) {
+    final winningSide = losingSide.opposite;
+    
+    AppLogger.info(
+      'Game Over: ${winningSide.name} wins by checkmate. ${losingSide.name} loses.',
+      tag: 'GameController'
+    );
+    
+    // Stop the timer
+    _timerCountdown?.cancel();
+    
+    // Update state to mark game as over
+    state = state.copyWith(
+      gameOver: true,
+      winner: winningSide,
+      isCheckmate: true,
+      isStalemate: false,
+    );
+  }
+
+  /// End the game with stalemate
+  /// [stalematedSide] is the side that was stalemated (draw)
+  void _endGameWithStalemate(Side stalematedSide) {
+    AppLogger.info(
+      'Game Over: Stalemate! ${stalematedSide.name} has no legal moves but is not in check.',
+      tag: 'GameController'
+    );
+    
+    // Stop the timer
+    _timerCountdown?.cancel();
+    
+    // Update state to mark game as over (stalemate is a draw, no winner)
+    state = state.copyWith(
+      gameOver: true,
+      winner: null, // No winner in stalemate (draw)
+      isCheckmate: false,
+      isStalemate: true,
+    );
   }
 }

@@ -213,4 +213,43 @@ class ActionChecker {
     }
     return null;
   }
+
+  /// Check if the given side has any legal moves available
+  /// Returns true if at least one piece of the side can make a legal move
+  static bool hasAnyLegalMoves(Board board, Side side) {
+    // Check all pieces of the given side
+    for (int row = 0; row < cellsRowCount; row++) {
+      for (int col = 0; col < cellsRowCount; col++) {
+        final cell = board.getCellAt(row, col);
+        if (cell.figure != null && cell.figure!.side == side) {
+          // Check if this piece has any legal moves
+          final availableMoves = getAvailablePositionsHash(board, cell);
+          if (availableMoves.isNotEmpty) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  /// Check if the given side is in checkmate
+  /// Checkmate occurs when the king is in check and there are no legal moves
+  static bool isCheckmate(Board board, Side side) {
+    final isInCheck = isKingInCheck(board, side);
+    if (!isInCheck) return false; // Not checkmate if not in check
+    
+    // If in check, check if there are any legal moves
+    return !hasAnyLegalMoves(board, side);
+  }
+
+  /// Check if the given side is in stalemate
+  /// Stalemate occurs when the king is NOT in check but there are no legal moves
+  static bool isStalemate(Board board, Side side) {
+    final isInCheck = isKingInCheck(board, side);
+    if (isInCheck) return false; // Not stalemate if in check (would be checkmate)
+    
+    // If not in check, check if there are any legal moves
+    return !hasAnyLegalMoves(board, side);
+  }
 }

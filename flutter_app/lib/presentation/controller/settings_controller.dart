@@ -23,7 +23,7 @@ class SettingsController extends _$SettingsController {
       // Return default settings if fetch fails
       return UserSettings(
         boardTheme: 'glass_dark',
-        pieceSet: 'neon_3d',
+        pieceSet: 'cardinal',
         autoQueen: true,
         confirmMoves: false,
         masterVolume: 0.8,

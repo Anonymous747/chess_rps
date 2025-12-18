@@ -1,33 +1,31 @@
 import 'dart:math' as math;
 
 import 'package:chess_rps/common/enum.dart';
-import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/presentation/utils/board_theme_utils.dart';
 import 'package:flutter/material.dart';
-
-const _darkPalette = [
-  Palette.purple700,
-  Palette.purple800,
-  Palette.purple800,
-  Palette.purple900,
-  Palette.purple900
-];
-
-const _lightPalette = [
-  Palette.white100,
-  Palette.white200,
-  Palette.white200,
-  Palette.white300,
-  Palette.white300
-];
 
 class CustomGradient extends CustomPainter {
   final Side cellSide;
+  final String boardTheme;
 
-  const CustomGradient({required this.cellSide});
+  const CustomGradient({
+    required this.cellSide,
+    this.boardTheme = 'glass_dark',
+  });
+
+  List<Color> _getDarkPalette() {
+    final colors = BoardThemeUtils.getDarkPalette(boardTheme);
+    return colors.map((color) => Color(color)).toList();
+  }
+
+  List<Color> _getLightPalette() {
+    final colors = BoardThemeUtils.getLightPalette(boardTheme);
+    return colors.map((color) => Color(color)).toList();
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final palette = cellSide == Side.light ? _lightPalette : _darkPalette;
+    final palette = cellSide == Side.light ? _getLightPalette() : _getDarkPalette();
 
     final side = size.width;
 
@@ -92,5 +90,8 @@ class CustomGradient extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomGradient oldDelegate) {
+    // Repaint if board theme or cell side changes
+    return oldDelegate.boardTheme != boardTheme || oldDelegate.cellSide != cellSide;
+  }
 }

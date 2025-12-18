@@ -32,12 +32,10 @@ class Root extends ConsumerWidget {
           primary: Palette.accent,
           secondary: Palette.purpleAccent,
           surface: Palette.backgroundTertiary,
-          background: Palette.background,
           error: Palette.error,
           onPrimary: Palette.textPrimary,
           onSecondary: Palette.textPrimary,
           onSurface: Palette.textPrimary,
-          onBackground: Palette.textPrimary,
           onError: Palette.textPrimary,
         ),
         appBarTheme: const AppBarTheme(

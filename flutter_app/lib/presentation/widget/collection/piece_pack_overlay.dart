@@ -1,8 +1,11 @@
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:chess_rps/presentation/controller/settings_controller.dart';
+import 'package:chess_rps/common/logger.dart';
 
-class PiecePackOverlay extends StatelessWidget {
+class PiecePackOverlay extends ConsumerWidget {
   final String packName;
 
   const PiecePackOverlay({
@@ -11,7 +14,9 @@ class PiecePackOverlay extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settingsAsync = ref.watch(settingsControllerProvider);
+    final isSelected = settingsAsync.valueOrNull?.pieceSet == packName;
     final whitePieces = PiecePackUtils.getAllPieceImages(packName, isWhite: true);
     final blackPieces = PiecePackUtils.getAllPieceImages(packName, isWhite: false);
     
@@ -44,13 +49,73 @@ class PiecePackOverlay extends StatelessWidget {
                       ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: Icon(Icons.close, color: Palette.textSecondary),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Palette.backgroundSecondary,
-                      shape: const CircleBorder(),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isSelected)
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Palette.success.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Palette.success),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_circle, color: Palette.success, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Selected',
+                                style: TextStyle(
+                                  color: Palette.success,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isSelected)
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Palette.success.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Palette.success),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_circle, color: Palette.success, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Selected',
+                                style: TextStyle(
+                                  color: Palette.success,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(Icons.close, color: Palette.textSecondary),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Palette.backgroundSecondary,
+                          shape: const CircleBorder(),
+                        ),
+                      ),
+                    ],
+                  ),
+                    ],
                   ),
                 ],
               ),
@@ -89,6 +154,61 @@ class PiecePackOverlay extends StatelessWidget {
                     const SizedBox(height: 12),
                     _buildPiecesGrid(blackPieces),
                     
+                    const SizedBox(height: 24),
+                    
+                    // Select button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          AppLogger.info('Selecting piece set from overlay: $packName', tag: 'PiecePackOverlay');
+                          try {
+                            await ref.read(settingsControllerProvider.notifier).updatePieceSet(packName);
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${PiecePackUtils.formatPackName(packName)} selected'),
+                                  backgroundColor: Palette.success,
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            AppLogger.error('Error selecting piece set', tag: 'PiecePackOverlay', error: e);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to select piece set: $e'),
+                                  backgroundColor: Palette.error,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        icon: Icon(
+                          isSelected ? Icons.check_circle : Icons.check,
+                          color: Palette.textPrimary,
+                        ),
+                        label: Text(
+                          isSelected ? 'Currently Selected' : 'Select This Set',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Palette.textPrimary,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isSelected
+                              ? Palette.success
+                              : Palette.purpleAccent,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 20),
                   ],
                 ),

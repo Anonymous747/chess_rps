@@ -2,8 +2,10 @@ import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/collection/collection_service.dart';
 import 'package:chess_rps/presentation/controller/collection_controller.dart';
+import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/utils/collection_utils.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
+import 'package:chess_rps/presentation/utils/board_theme_utils.dart';
 import 'package:chess_rps/presentation/widget/collection/piece_pack_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -238,6 +240,11 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     // For PIECES category, show all available piece packs from assets
     if (currentCategory == CollectionCategory.PIECES) {
       return _buildPiecePacksGrid();
+    }
+    
+    // For BOARDS category, show all available board themes
+    if (currentCategory == CollectionCategory.BOARDS) {
+      return _buildBoardThemesGrid();
     }
     
     // For other categories, use the backend collection items
@@ -743,49 +750,106 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
 
   Widget _buildPiecePacksGrid() {
     final piecePacks = PiecePackUtils.getKnownPiecePacks();
+    final settingsAsync = ref.watch(settingsControllerProvider);
     
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 12),
-          Text(
-            'Available Piece Sets (${piecePacks.length})',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Palette.textSecondary,
+    return settingsAsync.when(
+      data: (settings) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Available Piece Sets (${piecePacks.length})',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Palette.textSecondary,
+                  ),
+                ),
+                if (settings.pieceSet.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Palette.purpleAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      'Selected: ${PiecePackUtils.formatPackName(settings.pieceSet)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Palette.purpleAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.75,
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.75,
+              ),
+              itemCount: piecePacks.length,
+              itemBuilder: (context, index) {
+                final packName = piecePacks[index];
+                final isSelected = packName == settings.pieceSet;
+                return _buildPiecePackCard(packName, isSelected: isSelected);
+              },
             ),
-            itemCount: piecePacks.length,
-            itemBuilder: (context, index) {
-              final packName = piecePacks[index];
-              return _buildPiecePackCard(packName);
-            },
-          ),
-          const SizedBox(height: 100),
-        ],
+            const SizedBox(height: 100),
+          ],
+        ),
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Text(
+              'Available Piece Sets (${piecePacks.length})',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Palette.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Palette.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Palette.error),
+              ),
+              child: Text(
+                'Error loading settings',
+                style: TextStyle(color: Palette.error),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildPiecePackCard(String packName) {
+  Widget _buildPiecePackCard(String packName, {bool isSelected = false}) {
     final queenImagePath = PiecePackUtils.getQueenImagePath(packName, isWhite: true);
     
     return GestureDetector(
       onTap: () {
-        // Show overlay with all pieces
+        // Show overlay with all pieces when clicking on the card
         showDialog(
           context: context,
           builder: (context) => PiecePackOverlay(packName: packName),
@@ -796,7 +860,278 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
         decoration: BoxDecoration(
           color: Palette.backgroundTertiary,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Palette.glassBorder),
+          border: Border.all(
+            color: isSelected ? Palette.purpleAccent : Palette.glassBorder,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Palette.backgroundSecondary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Stack(
+                children: [
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Image.asset(
+                        queenImagePath,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.extension,
+                            size: 48,
+                            color: Palette.textTertiary,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isSelected)
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Palette.success,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Palette.success.withOpacity(0.5),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.check,
+                              size: 12,
+                              color: Palette.textPrimary,
+                            ),
+                          ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () {
+                            // Show overlay with all pieces
+                            showDialog(
+                              context: context,
+                              builder: (context) => PiecePackOverlay(packName: packName),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Palette.backgroundTertiary.withOpacity(0.8),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.visibility,
+                              color: Palette.purpleAccent,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            PiecePackUtils.formatPackName(packName),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? Palette.purpleAccent : Palette.textPrimary,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                // Save selected piece set to settings
+                AppLogger.info('Selecting piece set: $packName', tag: 'CollectionScreen');
+                try {
+                  await ref.read(settingsControllerProvider.notifier).updatePieceSet(packName);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${PiecePackUtils.formatPackName(packName)} selected'),
+                        backgroundColor: Palette.success,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  AppLogger.error('Error selecting piece set', tag: 'CollectionScreen', error: e);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to select piece set: $e'),
+                        backgroundColor: Palette.error,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isSelected
+                    ? Palette.purpleAccent
+                    : Palette.backgroundSecondary,
+                foregroundColor: isSelected
+                    ? Palette.textPrimary
+                    : Palette.textSecondary,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                isSelected ? 'Selected' : 'Select',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      ),
+    );
+  }
+
+  Widget _buildBoardThemesGrid() {
+    final boardThemes = BoardThemeUtils.getKnownBoardThemes();
+    final settingsAsync = ref.watch(settingsControllerProvider);
+    
+    return settingsAsync.when(
+      data: (settings) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Available Board Themes (${boardThemes.length})',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Palette.textSecondary,
+                  ),
+                ),
+                if (settings.boardTheme.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Palette.purpleAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      'Selected: ${BoardThemeUtils.formatThemeName(settings.boardTheme)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Palette.purpleAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: boardThemes.length,
+              itemBuilder: (context, index) {
+                final themeName = boardThemes[index];
+                final isSelected = themeName == settings.boardTheme;
+                return _buildBoardThemeCard(themeName, isSelected: isSelected);
+              },
+            ),
+            const SizedBox(height: 100),
+          ],
+        ),
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Text(
+              'Available Board Themes (${boardThemes.length})',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Palette.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Palette.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Palette.error),
+              ),
+              child: Text(
+                'Error loading settings',
+                style: TextStyle(color: Palette.error),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBoardThemeCard(String themeName, {bool isSelected = false}) {
+    final lightColor = Color(BoardThemeUtils.getLightColor(themeName));
+    final darkColor = Color(BoardThemeUtils.getDarkColor(themeName));
+    
+    return GestureDetector(
+      onTap: () {
+        // Show preview of the board theme
+        showDialog(
+          context: context,
+          builder: (context) => _BoardThemePreviewDialog(themeName: themeName),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Palette.backgroundTertiary,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? Palette.purpleAccent : Palette.glassBorder,
+            width: isSelected ? 2 : 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -810,29 +1145,49 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 ),
                 child: Stack(
                   children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Image.asset(
-                          queenImagePath,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.extension,
-                              size: 48,
-                              color: Palette.textTertiary,
-                            );
-                          },
-                        ),
-                      ),
+                    // Mini chess board preview (4x4 grid)
+                    GridView.count(
+                      crossAxisCount: 4,
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      children: List.generate(16, (index) {
+                        final row = index ~/ 4;
+                        final col = index % 4;
+                        final isLight = (row + col) % 2 == 0;
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: isLight ? lightColor : darkColor,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        );
+                      }),
                     ),
                     Positioned(
                       top: 8,
                       right: 8,
-                      child: Icon(
-                        Icons.visibility,
-                        color: Palette.purpleAccent.withOpacity(0.7),
-                        size: 16,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isSelected)
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Palette.success,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Palette.success.withOpacity(0.5),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.check,
+                                size: 12,
+                                color: Palette.textPrimary,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
@@ -841,23 +1196,269 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              PiecePackUtils.formatPackName(packName),
+              BoardThemeUtils.formatThemeName(themeName),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Palette.textPrimary,
+                color: isSelected ? Palette.purpleAccent : Palette.textPrimary,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Tap to view all pieces',
-              style: TextStyle(
-                fontSize: 10,
-                color: Palette.textSecondary,
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  // Save selected board theme to backend settings
+                  AppLogger.info('Selecting board theme: $themeName', tag: 'CollectionScreen');
+                  try {
+                    await ref.read(settingsControllerProvider.notifier).updateBoardTheme(themeName);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${BoardThemeUtils.formatThemeName(themeName)} selected and saved'),
+                          backgroundColor: Palette.success,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    AppLogger.error('Error selecting board theme', tag: 'CollectionScreen', error: e);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to select board theme: $e'),
+                          backgroundColor: Palette.error,
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isSelected
+                      ? Palette.purpleAccent
+                      : Palette.backgroundSecondary,
+                  foregroundColor: isSelected
+                      ? Palette.textPrimary
+                      : Palette.textSecondary,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  isSelected ? 'Selected' : 'Select',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Board theme preview dialog
+class _BoardThemePreviewDialog extends ConsumerWidget {
+  final String themeName;
+
+  const _BoardThemePreviewDialog({required this.themeName});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settingsAsync = ref.watch(settingsControllerProvider);
+    final isSelected = settingsAsync.valueOrNull?.boardTheme == themeName;
+    final lightColor = Color(BoardThemeUtils.getLightColor(themeName));
+    final darkColor = Color(BoardThemeUtils.getDarkColor(themeName));
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(20),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: Palette.backgroundTertiary,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Palette.glassBorder),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      BoardThemeUtils.formatThemeName(themeName),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Palette.textPrimary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(Icons.close, color: Palette.textSecondary),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Palette.backgroundSecondary,
+                      shape: const CircleBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Board preview (8x8)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                width: double.infinity,
+                height: 300,
+                decoration: BoxDecoration(
+                  color: Palette.backgroundSecondary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: GridView.count(
+                  crossAxisCount: 8,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: List.generate(64, (index) {
+                    final row = index ~/ 8;
+                    final col = index % 8;
+                    final isLight = (row + col) % 2 == 0;
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: isLight ? lightColor : darkColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Color info
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: lightColor,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Palette.glassBorder),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Light',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Palette.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: darkColor,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Palette.glassBorder),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Dark',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Palette.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Select button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    AppLogger.info('Selecting board theme from preview: $themeName', tag: 'BoardThemePreview');
+                    try {
+                      await ref.read(settingsControllerProvider.notifier).updateBoardTheme(themeName);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${BoardThemeUtils.formatThemeName(themeName)} selected'),
+                            backgroundColor: Palette.success,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      AppLogger.error('Error selecting board theme', tag: 'BoardThemePreview', error: e);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to select board theme: $e'),
+                            backgroundColor: Palette.error,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: Icon(
+                    isSelected ? Icons.check_circle : Icons.check,
+                    color: Palette.textPrimary,
+                  ),
+                  label: Text(
+                    isSelected ? 'Currently Selected' : 'Select This Theme',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Palette.textPrimary,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isSelected
+                        ? Palette.success
+                        : Palette.purpleAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 20),
           ],
         ),
       ),

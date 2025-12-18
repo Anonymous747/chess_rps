@@ -1,6 +1,7 @@
 import 'package:chess_rps/common/endpoint.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/data/service/auth/auth_interceptor.dart';
+import 'package:chess_rps/data/service/dio_logger_interceptor.dart';
 import 'package:dio/dio.dart';
 
 class UserSettings {
@@ -25,9 +26,9 @@ class UserSettings {
   });
 
   factory UserSettings.fromJson(Map<String, dynamic> json) {
-    return UserSettings(
-      boardTheme: json['board_theme'] as String? ?? 'glass_dark',
-      pieceSet: json['piece_set'] as String? ?? 'neon_3d',
+      return UserSettings(
+        boardTheme: json['board_theme'] as String? ?? 'glass_dark',
+        pieceSet: json['piece_set'] as String? ?? 'cardinal',
       autoQueen: json['auto_queen'] as bool? ?? true,
       confirmMoves: json['confirm_moves'] as bool? ?? false,
       masterVolume: (json['master_volume'] as num?)?.toDouble() ?? 0.8,
@@ -78,7 +79,10 @@ class SettingsService {
     _dio.options.baseUrl = Endpoint.apiBase;
     _dio.options.connectTimeout = const Duration(seconds: 30);
     _dio.options.receiveTimeout = const Duration(seconds: 30);
-    _dio.interceptors.add(AuthInterceptor());
+    _dio.interceptors.addAll([
+      DioLoggerInterceptor(),
+      AuthInterceptor(),
+    ]);
   }
 
   Future<UserSettings> getSettings() async {
