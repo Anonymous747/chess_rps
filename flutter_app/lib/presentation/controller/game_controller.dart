@@ -299,6 +299,7 @@ class GameController extends _$GameController {
       if (success) {
         AppLogger.info('=== GameController.makeOpponentsMove() SUCCESS ===', tag: 'GameController');
         AppLogger.info('Opponent move executed successfully: $bestAction', tag: 'GameController');
+        // Move history is already updated in _makeMoveViaAction
       } else {
         AppLogger.warning('=== GameController.makeOpponentsMove() FAILED: Move execution failed ===', tag: 'GameController');
         AppLogger.warning('Move was valid but execution failed', tag: 'GameController');
@@ -398,6 +399,13 @@ class GameController extends _$GameController {
 
     actionLogger.add(action);
     AppLogger.debug('Move logged: $action', tag: 'GameController');
+    
+    // Update move history in state
+    final updatedMoveHistory = [...state.moveHistory, action];
+    state = state.copyWith(
+      moveHistory: updatedMoveHistory,
+    );
+    AppLogger.info('Move history updated. Total moves: ${updatedMoveHistory.length}. Latest: $action', tag: 'GameController');
 
     return true;
   }

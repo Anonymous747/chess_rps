@@ -4,10 +4,19 @@ import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
+import 'package:chess_rps/presentation/screen/chat_screen.dart';
 import 'package:chess_rps/presentation/screen/chess_screen.dart';
+import 'package:chess_rps/presentation/screen/collection_screen.dart';
+import 'package:chess_rps/presentation/screen/events_screen.dart';
+import 'package:chess_rps/presentation/screen/friends_screen.dart';
 import 'package:chess_rps/presentation/screen/login_screen.dart';
+import 'package:chess_rps/presentation/screen/main_menu_screen.dart';
+import 'package:chess_rps/presentation/screen/main_navigation_screen.dart';
 import 'package:chess_rps/presentation/screen/mode_selector.dart';
 import 'package:chess_rps/presentation/screen/opponent_selector.dart';
+import 'package:chess_rps/presentation/screen/profile_screen.dart';
+import 'package:chess_rps/presentation/screen/rating_screen.dart';
+import 'package:chess_rps/presentation/screen/settings_screen.dart';
 import 'package:chess_rps/presentation/screen/signup_screen.dart';
 import 'package:chess_rps/presentation/screen/waiting_room_screen.dart';
 import 'package:flutter/material.dart';
@@ -19,10 +28,18 @@ import 'package:riverpod/riverpod.dart';
 class AppRoutes {
   static const login = '/login';
   static const signup = '/signup';
+  static const mainMenu = '/main-menu';
   static const modeSelector = '/mode-selector';
   static const opponentSelector = '/opponent-selector';
   static const waitingRoom = '/waiting-room';
   static const chess = '/chess';
+  static const rating = '/rating';
+  static const collection = '/collection';
+  static const friends = '/friends';
+  static const settings = '/settings';
+  static const events = '/events';
+  static const chat = '/chat';
+  static const profile = '/profile';
 }
 
 // ValueNotifier to trigger router refresh when auth state changes
@@ -77,11 +94,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.login;
       }
       
-      // Redirect to mode selector if authenticated and on auth route
+      // Redirect to main menu if authenticated and on auth route
       // This handles the case when user opens app with valid token
       if (isAuthenticated && isAuthRoute) {
-        AppLogger.info('Redirecting to mode selector - authenticated user on auth route', tag: 'AppRouter');
-        return AppRoutes.modeSelector;
+        AppLogger.info('Redirecting to main menu - authenticated user on auth route', tag: 'AppRouter');
+        return AppRoutes.mainMenu;
       }
       
       return null; // No redirect needed
@@ -96,6 +113,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.signup,
         name: 'signup',
         builder: (context, state) => const SignupScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.mainMenu,
+        name: 'main-menu',
+        builder: (context, state) => const MainNavigationScreen(),
       ),
       GoRoute(
         path: AppRoutes.modeSelector,
@@ -146,6 +168,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(
+        path: AppRoutes.rating,
+        name: 'rating',
+        builder: (context, state) => const RatingScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.collection,
+        name: 'collection',
+        builder: (context, state) => const CollectionScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.friends,
+        name: 'friends',
+        builder: (context, state) => const FriendsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.events,
+        name: 'events',
+        builder: (context, state) => const EventsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.chat,
+        name: 'chat',
+        builder: (context, state) => const ChatScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       backgroundColor: Palette.background,
@@ -178,7 +235,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => context.go(AppRoutes.modeSelector),
+              onPressed: () => context.go(AppRoutes.mainMenu),
               child: const Text('Go Home'),
             ),
           ],

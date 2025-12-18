@@ -1,6 +1,8 @@
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/widget/board_widget.dart';
+import 'package:chess_rps/presentation/widget/captured_pieces_widget.dart';
+import 'package:chess_rps/presentation/widget/move_history_widget.dart';
 import 'package:chess_rps/presentation/widget/rps_overlay.dart';
 import 'package:chess_rps/presentation/widget/timer_widget.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +18,7 @@ class ChessScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(gameControllerProvider.notifier);
     final board =
-        ref.read(gameControllerProvider.select((state) => state.board));
+        ref.watch(gameControllerProvider.select((state) => state.board));
     final showRpsOverlay =
         ref.read(gameControllerProvider.select((state) => state.showRpsOverlay));
     final waitingForRpsResult = ref.read(
@@ -31,6 +33,10 @@ class ChessScreen extends HookConsumerWidget {
         gameControllerProvider.select((state) => state.darkPlayerTimeSeconds));
     final currentOrder = ref.watch(
         gameControllerProvider.select((state) => state.currentOrder));
+    final playerSide = ref.watch(
+        gameControllerProvider.select((state) => state.playerSide));
+    final moveHistory = ref.watch(
+        gameControllerProvider.select((state) => state.moveHistory));
 
     return Scaffold(
       body: Container(
@@ -99,6 +105,28 @@ class ChessScreen extends HookConsumerWidget {
                       ],
                     ),
                   ),
+                  // Opponent's captured pieces (above board)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Opponent\'s Captures',
+                          style: TextStyle(
+                            color: Palette.textSecondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        CapturedPiecesWidget(
+                          board: board,
+                          isLightSide: !playerSide.isLight,
+                        ),
+                      ],
+                    ),
+                  ),
                   // Board area
                   Expanded(
                     flex: 3,
@@ -109,41 +137,36 @@ class ChessScreen extends HookConsumerWidget {
                       ),
                     ),
                   ),
-                  // Bottom area
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 14,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Palette.backgroundTertiary,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Palette.glassBorder,
-                                width: 1,
-                              ),
-                            ),
-                            child: TextButton(
-                              onPressed: () async {
-                                await controller.executeCommand();
-                              },
-                              child: Text(
-                                'Debug: Visualize Board',
-                                style: TextStyle(
-                                  color: Palette.textSecondary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
+                  // Player's captured pieces (below board)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your Captures',
+                          style: TextStyle(
+                            color: Palette.textSecondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
-                        ],
+                        ),
+                        const SizedBox(height: 8),
+                        CapturedPiecesWidget(
+                          board: board,
+                          isLightSide: playerSide.isLight,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Move history at the bottom
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      child: MoveHistoryWidget(
+                        moveHistory: moveHistory,
+                        board: board,
                       ),
                     ),
                   ),

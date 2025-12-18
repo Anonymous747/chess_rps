@@ -1,6 +1,7 @@
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/rps_choice.dart';
 import 'package:chess_rps/domain/model/board.dart';
+import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'game_state.freezed.dart';
@@ -21,5 +22,6 @@ class GameState with _$GameState {
     @Default(600) int darkPlayerTimeSeconds, // 10 minutes
     @Default(null) DateTime? currentTurnStartedAt,
     @Default(null) Side? kingInCheck, // Which side's king is in check
+    @Default([]) List<String> moveHistory, // History of all moves in algebraic notation
   }) = _GameState;
 }

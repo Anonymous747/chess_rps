@@ -29,6 +29,7 @@ mixin _$GameState {
   int get darkPlayerTimeSeconds => throw _privateConstructorUsedError;
   DateTime? get currentTurnStartedAt => throw _privateConstructorUsedError;
   Side? get kingInCheck => throw _privateConstructorUsedError;
+  List<String> get moveHistory => throw _privateConstructorUsedError;
 
   /// Create a copy of GameState
   /// with the given fields replaced by the non-null parameter values.
@@ -55,7 +56,8 @@ abstract class $GameStateCopyWith<$Res> {
       int lightPlayerTimeSeconds,
       int darkPlayerTimeSeconds,
       DateTime? currentTurnStartedAt,
-      Side? kingInCheck});
+      Side? kingInCheck,
+      List<String> moveHistory});
 }
 
 /// @nodoc
@@ -86,6 +88,7 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
     Object? darkPlayerTimeSeconds = null,
     Object? currentTurnStartedAt = freezed,
     Object? kingInCheck = freezed,
+    Object? moveHistory = null,
   }) {
     return _then(_value.copyWith(
       board: null == board
@@ -140,6 +143,10 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
           ? _value.kingInCheck
           : kingInCheck // ignore: cast_nullable_to_non_nullable
               as Side?,
+      moveHistory: null == moveHistory
+          ? _value.moveHistory
+          : moveHistory // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ) as $Val);
   }
 }
@@ -165,7 +172,8 @@ abstract class _$$GameStateImplCopyWith<$Res>
       int lightPlayerTimeSeconds,
       int darkPlayerTimeSeconds,
       DateTime? currentTurnStartedAt,
-      Side? kingInCheck});
+      Side? kingInCheck,
+      List<String> moveHistory});
 }
 
 /// @nodoc
@@ -194,6 +202,7 @@ class __$$GameStateImplCopyWithImpl<$Res>
     Object? darkPlayerTimeSeconds = null,
     Object? currentTurnStartedAt = freezed,
     Object? kingInCheck = freezed,
+    Object? moveHistory = null,
   }) {
     return _then(_$GameStateImpl(
       board: null == board
@@ -264,7 +273,8 @@ class _$GameStateImpl implements _GameState {
       this.lightPlayerTimeSeconds = 600,
       this.darkPlayerTimeSeconds = 600,
       this.currentTurnStartedAt = null,
-      this.kingInCheck = null});
+      this.kingInCheck = null,
+      this.moveHistory = const []});
 
   @override
   final Board board;
@@ -304,10 +314,13 @@ class _$GameStateImpl implements _GameState {
   @override
   @JsonKey()
   final Side? kingInCheck;
+  @override
+  @JsonKey()
+  final List<String> moveHistory;
 
   @override
   String toString() {
-    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure, playerSide: $playerSide, showRpsOverlay: $showRpsOverlay, playerRpsChoice: $playerRpsChoice, opponentRpsChoice: $opponentRpsChoice, waitingForRpsResult: $waitingForRpsResult, playerWonRps: $playerWonRps, lightPlayerTimeSeconds: $lightPlayerTimeSeconds, darkPlayerTimeSeconds: $darkPlayerTimeSeconds, currentTurnStartedAt: $currentTurnStartedAt, kingInCheck: $kingInCheck)';
+    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure, playerSide: $playerSide, showRpsOverlay: $showRpsOverlay, playerRpsChoice: $playerRpsChoice, opponentRpsChoice: $opponentRpsChoice, waitingForRpsResult: $waitingForRpsResult, playerWonRps: $playerWonRps, lightPlayerTimeSeconds: $lightPlayerTimeSeconds, darkPlayerTimeSeconds: $darkPlayerTimeSeconds, currentTurnStartedAt: $currentTurnStartedAt, kingInCheck: $kingInCheck, moveHistory: $moveHistory)';
   }
 
   @override
@@ -339,7 +352,9 @@ class _$GameStateImpl implements _GameState {
             (identical(other.currentTurnStartedAt, currentTurnStartedAt) ||
                 other.currentTurnStartedAt == currentTurnStartedAt) &&
             (identical(other.kingInCheck, kingInCheck) ||
-                other.kingInCheck == kingInCheck));
+                other.kingInCheck == kingInCheck) &&
+            (identical(other.moveHistory, moveHistory) ||
+                const DeepCollectionEquality().equals(other.moveHistory, moveHistory)));
   }
 
   @override
@@ -357,7 +372,8 @@ class _$GameStateImpl implements _GameState {
       lightPlayerTimeSeconds,
       darkPlayerTimeSeconds,
       currentTurnStartedAt,
-      kingInCheck);
+      kingInCheck,
+      moveHistory);
 
   /// Create a copy of GameState
   /// with the given fields replaced by the non-null parameter values.
@@ -382,7 +398,8 @@ abstract class _GameState implements GameState {
       final int lightPlayerTimeSeconds,
       final int darkPlayerTimeSeconds,
       final DateTime? currentTurnStartedAt,
-      final Side? kingInCheck}) = _$GameStateImpl;
+      final Side? kingInCheck,
+      final List<String> moveHistory}) = _$GameStateImpl;
 
   @override
   Board get board;
@@ -410,6 +427,8 @@ abstract class _GameState implements GameState {
   DateTime? get currentTurnStartedAt;
   @override
   Side? get kingInCheck;
+  @override
+  List<String> get moveHistory;
 
   /// Create a copy of GameState
   /// with the given fields replaced by the non-null parameter values.

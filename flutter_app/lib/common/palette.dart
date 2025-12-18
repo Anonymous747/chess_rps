@@ -36,6 +36,14 @@ class Palette {
   static const warning = Color(0xFFF59E0B); // Amber
   static const error = Color(0xFFEF4444); // Red
   static const info = Color(0xFF3B82F6); // Blue
+  
+  // Tournament/Gold colors
+  static const gold = Color(0xFFFFD700); // Gold
+  static const goldAccent = Color(0xFFFFC107); // Amber gold
+  static const goldDark = Color(0xFFB8860B); // Dark goldenrod
+  
+  // Online status green
+  static const onlineGreen = Color(0xFF4CAF50); // Bright green for online status
 
   // White shades (for light elements)
   static const white = Color(0xFFFFFFFF);

@@ -44,7 +44,7 @@ class _OpponentSelectorState extends State<OpponentSelector> {
           child: SafeArea(
             child: Column(
               children: [
-                // Back button and title
+                // Header with back button at the top
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Row(
@@ -58,57 +58,84 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                             width: 1,
                           ),
                         ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Palette.textPrimary),
-                        onPressed: () => context.pop(),
-                      ),
-                      ),
-                      const Expanded(
-                        child: Text(
-                          'Select Opponent',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Palette.textPrimary,
-                            letterSpacing: 0.5,
-                          ),
-                          textAlign: TextAlign.center,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Palette.textPrimary),
+                          onPressed: () => context.pop(),
                         ),
                       ),
-                      const SizedBox(width: 56), // Balance for back button
                     ],
                   ),
                 ),
+                // Centered content
                 Expanded(
                   child: Center(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          // App Title with modern card design
                           Container(
-                            padding: const EdgeInsets.all(24),
+                            padding: const EdgeInsets.all(32),
                             decoration: BoxDecoration(
                               color: Palette.backgroundTertiary,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(24),
                               border: Border.all(
                                 color: Palette.glassBorder,
                                 width: 1,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Palette.accent.withOpacity(0.1),
+                                  blurRadius: 20,
+                                  spreadRadius: 0,
+                                ),
+                              ],
                             ),
-                            child: Text(
-                              'Choose your opponent:',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Palette.textSecondary,
-                                letterSpacing: 0.5,
-                              ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Palette.accent.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Palette.accent.withOpacity(0.3),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.people,
+                                    size: 64,
+                                    color: Palette.accent,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                const Text(
+                                  'Select Opponent',
+                                  style: TextStyle(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: Palette.textPrimary,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Choose who you want to play with',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Palette.textSecondary,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 48),
+                          // Opponent Buttons
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
                                 _buildOpponentButton(
@@ -116,11 +143,11 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                                   title: _aiOpponentText,
                                   icon: Icons.smart_toy,
                                   color: Palette.accent,
-                              onPressed: () {
-                                AppLogger.info('User selected AI opponent', tag: 'OpponentSelector');
-                                GameModesMediator.changeOpponentMode(OpponentMode.ai);
-                                context.push(AppRoutes.chess);
-                              },
+                                  onPressed: () {
+                                    AppLogger.info('User selected AI opponent', tag: 'OpponentSelector');
+                                    GameModesMediator.changeOpponentMode(OpponentMode.ai);
+                                    context.push(AppRoutes.chess);
+                                  },
                                 ),
                                 const SizedBox(height: 20),
                                 _buildOpponentButton(
