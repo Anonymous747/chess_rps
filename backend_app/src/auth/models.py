@@ -24,6 +24,8 @@ class User(Base):
     tokens = relationship("Token", back_populates="user", cascade="all, delete-orphan")
     # Relationship to settings (defined in settings_models.py)
     settings = relationship("UserSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    # Relationship to collections (defined in collection/models.py)
+    collections = relationship("UserCollection", back_populates="user", cascade="all, delete-orphan")
 
 
 class Token(Base):

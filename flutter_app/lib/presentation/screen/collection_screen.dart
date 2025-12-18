@@ -1,20 +1,42 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/data/service/collection/collection_service.dart';
+import 'package:chess_rps/presentation/controller/collection_controller.dart';
+import 'package:chess_rps/presentation/utils/collection_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CollectionScreen extends StatefulWidget {
+class CollectionScreen extends ConsumerStatefulWidget {
   static const routeName = '/collection';
 
   const CollectionScreen({Key? key}) : super(key: key);
 
   @override
-  State<CollectionScreen> createState() => _CollectionScreenState();
+  ConsumerState<CollectionScreen> createState() => _CollectionScreenState();
 }
 
-class _CollectionScreenState extends State<CollectionScreen> {
+class _CollectionScreenState extends ConsumerState<CollectionScreen> {
   int _selectedTab = 0;
-  final List<String> _tabs = ['Pieces', 'Boards', 'Avatars', 'Effects'];
+  final List<CollectionCategory> _tabs = [
+    CollectionCategory.PIECES,
+    CollectionCategory.BOARDS,
+    CollectionCategory.AVATARS,
+    CollectionCategory.EFFECTS,
+  ];
+
+  String _getTabLabel(CollectionCategory category) {
+    switch (category) {
+      case CollectionCategory.PIECES:
+        return 'Pieces';
+      case CollectionCategory.BOARDS:
+        return 'Boards';
+      case CollectionCategory.AVATARS:
+        return 'Avatars';
+      case CollectionCategory.EFFECTS:
+        return 'Effects';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,41 +82,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                       ),
                     ),
                     const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Palette.backgroundTertiary.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Palette.glassBorder),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: Palette.purpleAccent,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Palette.purpleAccent.withOpacity(0.6),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '34/120',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Palette.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildCollectionStats(),
                     const SizedBox(width: 12),
                     IconButton(
                       onPressed: () {
@@ -124,7 +112,12 @@ class _CollectionScreenState extends State<CollectionScreen> {
                       (index) => Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: _buildTabButton(_tabs[index], index == _selectedTab, () {
-                          setState(() => _selectedTab = index);
+                          setState(() {
+                            _selectedTab = index;
+                            // Refresh collection when tab changes
+                            ref.read(userCollectionControllerProvider.notifier)
+                                .refreshCollection(category: _tabs[index]);
+                          });
                         }),
                       ),
                     ),
@@ -136,20 +129,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
 
               // Content
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      // Featured Set
-                      _buildFeaturedSet(),
-                      const SizedBox(height: 24),
-
-                      // Collection Grid
-                      _buildCollectionGrid(),
-                      const SizedBox(height: 100),
-                    ],
-                  ),
-                ),
+                child: _buildCollectionContent(),
               ),
             ],
           ),
@@ -158,7 +138,8 @@ class _CollectionScreenState extends State<CollectionScreen> {
     );
   }
 
-  Widget _buildTabButton(String label, bool isActive, VoidCallback onTap) {
+  Widget _buildTabButton(CollectionCategory category, bool isActive, VoidCallback onTap) {
+    final label = _getTabLabel(category);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -182,7 +163,155 @@ class _CollectionScreenState extends State<CollectionScreen> {
     );
   }
 
-  Widget _buildFeaturedSet() {
+  Widget _buildCollectionStats() {
+    final statsAsync = ref.watch(collectionStatsControllerProvider);
+    
+    return statsAsync.when(
+      data: (stats) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Palette.backgroundTertiary.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Palette.glassBorder),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: Palette.purpleAccent,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Palette.purpleAccent.withValues(alpha: 0.6),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${stats.ownedItems}/${stats.totalItems}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Palette.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+      loading: () => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Palette.purpleAccent),
+          ),
+        ),
+      ),
+      error: (error, stack) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Text(
+          '0/0',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Palette.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollectionContent() {
+    final currentCategory = _tabs[_selectedTab];
+    final userCollectionAsync = ref.watch(userCollectionControllerProvider);
+    final allItemsAsync = ref.watch(collectionControllerProvider);
+    
+    return userCollectionAsync.when(
+      data: (userCollection) => allItemsAsync.when(
+        data: (allItems) {
+          // Filter items by selected category
+          final categoryItems = allItems.where((item) => item.category == currentCategory).toList();
+          
+          // Create a map of user collection items by item_id
+          final userCollectionMap = <int, UserCollectionItem>{};
+          for (final uc in userCollection) {
+            if (uc.item.category == currentCategory) {
+              userCollectionMap[uc.itemId] = uc;
+            }
+          }
+          
+          // Find equipped item for featured set
+          UserCollectionItem? equippedItem;
+          try {
+            equippedItem = userCollection.firstWhere(
+              (uc) => uc.isEquipped && uc.item.category == currentCategory,
+            );
+          } catch (e) {
+            // No equipped item, try to find any owned item in this category
+            try {
+              equippedItem = userCollection.firstWhere(
+                (uc) => uc.isOwned && uc.item.category == currentCategory,
+              );
+            } catch (e2) {
+              // No owned items in this category
+              equippedItem = null;
+            }
+          }
+          
+          // If no user collection items, find first item from all items
+          if (equippedItem == null && categoryItems.isNotEmpty) {
+            final firstItem = categoryItems.first;
+            equippedItem = UserCollectionItem(
+              id: 0,
+              userId: 0,
+              itemId: firstItem.id,
+              item: firstItem,
+              isOwned: false,
+              isEquipped: false,
+            );
+          }
+          
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                // Featured Set (show equipped item or first owned item)
+                if (equippedItem != null)
+                  _buildFeaturedSet(equippedItem.item, equippedItem.isEquipped),
+                if (equippedItem != null) const SizedBox(height: 24),
+                
+                // Collection Grid
+                _buildCollectionGrid(categoryItems, userCollectionMap, currentCategory),
+                const SizedBox(height: 100),
+              ],
+            ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Text(
+            'Error loading items',
+            style: TextStyle(color: Palette.error),
+          ),
+        ),
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text(
+          'Error loading collection',
+          style: TextStyle(color: Palette.error),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeaturedSet(CollectionItem item, bool isEquipped) {
     return Container(
       height: 220,
       padding: const EdgeInsets.all(20),
@@ -209,28 +338,34 @@ class _CollectionScreenState extends State<CollectionScreen> {
                 children: [
                   Row(
                     children: [
-                      _buildBadge('Equipped', Palette.success),
-                      const SizedBox(width: 8),
-                      _buildBadge('Epic', Palette.purpleAccent),
+                      if (isEquipped)
+                        _buildBadge('Equipped', Palette.success),
+                      if (isEquipped) const SizedBox(width: 8),
+                      _buildBadge(
+                        CollectionUtils.getRarityDisplayName(item.rarity),
+                        CollectionUtils.getColorFromHexOrRarity(item.colorHex, item.rarity),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Crystal Void Set',
+                    item.name,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Palette.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Season 4 Rewards',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Palette.textSecondary,
+                  if (item.description != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      item.description!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Palette.textSecondary,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
               IconButton(
@@ -249,16 +384,17 @@ class _CollectionScreenState extends State<CollectionScreen> {
             children: [
               Row(
                 children: [
-                  _buildPiecePreview(Icons.circle, Palette.purpleAccent),
-                  const SizedBox(width: 8),
-                  _buildPiecePreview(Icons.extension, Palette.purpleAccent, isLarge: true),
-                  const SizedBox(width: 8),
-                  _buildPiecePreview(Icons.square, Palette.purpleAccent),
+                  _buildPiecePreview(
+                    CollectionUtils.getIconFromName(item.iconName),
+                    CollectionUtils.getColorFromHexOrRarity(item.colorHex, item.rarity),
+                    isLarge: true,
+                  ),
                 ],
               ),
               ElevatedButton(
                 onPressed: () {
-                  AppLogger.info('Customize tapped', tag: 'CollectionScreen');
+                  AppLogger.info('Customize tapped for ${item.name}', tag: 'CollectionScreen');
+                  // TODO: Navigate to customization screen
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Palette.purpleAccent,
@@ -329,7 +465,23 @@ class _CollectionScreenState extends State<CollectionScreen> {
     );
   }
 
-  Widget _buildCollectionGrid() {
+  Widget _buildCollectionGrid(
+    List<CollectionItem> items,
+    Map<int, UserCollectionItem> userCollectionMap,
+    CollectionCategory category,
+  ) {
+    // Sort items by rarity (Legendary first, then Epic, etc.)
+    items.sort((a, b) {
+      final rarityOrder = {
+        CollectionRarity.LEGENDARY: 0,
+        CollectionRarity.EPIC: 1,
+        CollectionRarity.RARE: 2,
+        CollectionRarity.UNCOMMON: 3,
+        CollectionRarity.COMMON: 4,
+      };
+      return (rarityOrder[a.rarity] ?? 4).compareTo(rarityOrder[b.rarity] ?? 4);
+    });
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -337,7 +489,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'My Pieces',
+              'My ${_getTabLabel(category)}',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -345,7 +497,10 @@ class _CollectionScreenState extends State<CollectionScreen> {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                AppLogger.info('Sort button tapped', tag: 'CollectionScreen');
+                // TODO: Implement sorting options
+              },
               child: Text(
                 'Sort by: Rarity',
                 style: TextStyle(
@@ -365,11 +520,20 @@ class _CollectionScreenState extends State<CollectionScreen> {
           physics: const NeverScrollableScrollPhysics(),
           childAspectRatio: 0.75,
           children: [
-            _buildCollectionItem('Golden Age', 'Legendary', Icons.star, Palette.gold, true, true),
-            _buildCollectionItem('Neon City', 'Rare', Icons.trip_origin, Palette.accent, true, false),
-            _buildCollectionItem('Obsidian', 'Unlock at Lvl 50', Icons.workspace_premium, Palette.textTertiary, false, false, isLocked: true),
-            _buildCollectionItem('Forest Spirit', 'Uncommon', Icons.circle, Palette.success, true, false),
-            _buildCollectionItem('Classic Wood', 'Common', Icons.square, Palette.textSecondary, true, false),
+            ...items.map((item) {
+              final userItem = userCollectionMap[item.id];
+              final isOwned = userItem?.isOwned ?? false;
+              final isEquipped = userItem?.isEquipped ?? false;
+              final isLocked = !isOwned && (item.unlockLevel != null);
+              
+              return _buildCollectionItem(
+                item,
+                userItem,
+                isOwned,
+                isEquipped,
+                isLocked,
+              );
+            }),
             _buildShopCard(),
           ],
         ),
@@ -378,14 +542,17 @@ class _CollectionScreenState extends State<CollectionScreen> {
   }
 
   Widget _buildCollectionItem(
-    String name,
-    String rarity,
-    IconData icon,
-    Color color,
+    CollectionItem item,
+    UserCollectionItem? userItem,
     bool isOwned,
-    bool isEquipped, {
-    bool isLocked = false,
-  }) {
+    bool isEquipped,
+    bool isLocked,
+  ) {
+    final color = CollectionUtils.getColorFromHexOrRarity(item.colorHex, item.rarity);
+    final icon = CollectionUtils.getIconFromName(item.iconName);
+    final rarityText = item.unlockLevel != null && isLocked
+        ? 'Unlock at Lvl ${item.unlockLevel}'
+        : CollectionUtils.getRarityDisplayName(item.rarity);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -419,11 +586,24 @@ class _CollectionScreenState extends State<CollectionScreen> {
                         child: Icon(Icons.lock, color: Palette.textSecondary, size: 24),
                       ),
                     ),
-                  if (!isLocked && rarity == 'Legendary')
+                  if (!isLocked && item.rarity == CollectionRarity.LEGENDARY)
                     Positioned(
                       top: 8,
                       right: 8,
                       child: Icon(Icons.star, color: color, size: 16),
+                    ),
+                  if (isEquipped)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Palette.success,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.check, color: Palette.textPrimary, size: 12),
+                      ),
                     ),
                 ],
               ),
@@ -438,7 +618,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      item.name,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -447,7 +627,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      rarity,
+                      rarityText,
                       style: TextStyle(
                         fontSize: 10,
                         color: isLocked ? Palette.textTertiary : color,
@@ -457,16 +637,33 @@ class _CollectionScreenState extends State<CollectionScreen> {
                 ),
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: isLocked
+                    ? () {
+                        AppLogger.info('Unlock item ${item.id}', tag: 'CollectionScreen');
+                        ref.read(userCollectionControllerProvider.notifier).unlockItem(item.id);
+                      }
+                    : isEquipped
+                        ? null // Disable if already equipped
+                        : () {
+                            AppLogger.info('Equip item ${item.id}', tag: 'CollectionScreen');
+                            ref.read(userCollectionControllerProvider.notifier)
+                                .equipItem(item.id, item.category);
+                          },
                 icon: Icon(
                   isLocked ? Icons.shopping_cart : Icons.checkroom,
-                  color: isLocked ? Palette.purpleAccent : Palette.textSecondary,
+                  color: isLocked
+                      ? Palette.purpleAccent
+                      : isEquipped
+                          ? Palette.success
+                          : Palette.textSecondary,
                   size: 20,
                 ),
                 style: IconButton.styleFrom(
                   backgroundColor: isLocked
-                      ? Palette.purpleAccent.withOpacity(0.1)
-                      : Colors.white.withOpacity(0.05),
+                      ? Palette.purpleAccent.withValues(alpha: 0.1)
+                      : isEquipped
+                          ? Palette.success.withValues(alpha: 0.1)
+                          : Colors.white.withValues(alpha: 0.05),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -532,3 +729,4 @@ class _CollectionScreenState extends State<CollectionScreen> {
     );
   }
 }
+
