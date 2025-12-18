@@ -23,7 +23,10 @@ class NumbersColumn extends StatelessWidget {
                 child: Text(
                   letters[i],
                   style:
-                      TextStyles.regularNormalStyle(color: Palette.yellow150),
+                      TextStyles.regularNormalStyle(
+                        color: Palette.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               )),
     );

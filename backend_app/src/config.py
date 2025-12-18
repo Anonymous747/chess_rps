@@ -16,4 +16,8 @@ DB_NAME_TEST = os.environ.get("DB_NAME_TEST")
 DB_USER_TEST = os.environ.get("DB_USER_TEST")
 DB_PASS_TEST = os.environ.get("DB_PASS_TEST")
 
-SECRET_AUTH = os.environ.get("SECRET_AUTH")
+# JWT Configuration
+SECRET_KEY = os.environ.get("SECRET_AUTH", "your-secret-key-change-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+REFRESH_TOKEN_EXPIRE_DAYS = 3  # 3 days

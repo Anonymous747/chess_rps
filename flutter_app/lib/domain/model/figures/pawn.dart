@@ -52,7 +52,12 @@ class Pawn extends Figure {
       final isDoubleStepMatch = to.position.row == position.row + doubleStep;
 
       if (isDoubleStepMatch && isSameCol && !isTargetOccupied) {
-        return true;
+        // Check if the intermediate square is empty (pawn can't jump over pieces)
+        final intermediateRow = position.row + step;
+        final intermediateCell = board.getCellAt(intermediateRow, position.col);
+        if (!intermediateCell.isOccupied) {
+          return true;
+        }
       }
     }
 

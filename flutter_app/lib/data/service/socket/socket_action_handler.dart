@@ -1,51 +1,56 @@
 import 'dart:async';
 
-import 'package:chess_rps/common/endpoint.dart';
+import 'package:chess_rps/common/logger.dart';
+import 'package:chess_rps/common/rps_choice.dart';
+import 'package:chess_rps/data/service/socket/game_room_handler.dart';
 import 'package:chess_rps/domain/service/action_handler.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-
-const String _socketUrl = 'ws://${Endpoint.opponentSocket}/112';
-const String _opponentMoveSign = 'Opponent move ';
 
 class SocketActionHandler extends ActionHandler {
-  late final WebSocketChannel _channel;
-  set sink(String action) => _channel.sink.add(action);
-
-  final StreamController _controller = StreamController.broadcast();
-  final List<StreamSubscription> _subs = <StreamSubscription>[];
+  late final GameRoomHandler _roomHandler;
 
   SocketActionHandler() {
-    _channel = WebSocketChannel.connect(Uri.parse(_socketUrl));
+    AppLogger.info('Creating SocketActionHandler', tag: 'SocketActionHandler');
+    _roomHandler = GameRoomHandler();
+  }
 
-    _subs.add(_channel.stream.listen((event) {
-      _controller.add(event);
-    }));
+  Future<void> connectToRoom(String roomCode) async {
+    AppLogger.info('Connecting to room via SocketActionHandler: $roomCode', tag: 'SocketActionHandler');
+    await _roomHandler.connectToRoom(roomCode);
+  }
+
+  Future<void> sendRpsChoice(RpsChoice choice) async {
+    AppLogger.info('Sending RPS choice via SocketActionHandler: ${choice.name}', tag: 'SocketActionHandler');
+    await _roomHandler.sendRpsChoice(choice);
   }
 
   /// This method works under the assumption that when the opponent makes a move,
-  /// this message will include "Opponent move".
+  /// the message will be of type "move".
   ///
   @override
   Future<String?> getOpponentsMove() async {
-    String action = await _controller.stream.firstWhere((action) {
-      return action.toString().contains(_opponentMoveSign);
+    AppLogger.info('Waiting for opponent move from socket', tag: 'SocketActionHandler');
+    final message = await _roomHandler.messageStream.firstWhere((message) {
+      return message['type'] == 'move' &&
+          message['data'] != null &&
+          message['data']['move_notation'] != null;
     });
 
-    return action.split(" ").last;
+    final move = message['data']['move_notation'] as String?;
+    AppLogger.info('Received opponent move: $move', tag: 'SocketActionHandler');
+    return move;
   }
 
   @override
   Future<void> makeMove(String action) async {
-    sink = action;
+    AppLogger.info('Sending move via SocketActionHandler: $action', tag: 'SocketActionHandler');
+    await _roomHandler.sendMove(action);
   }
+
+  Stream<Map<String, dynamic>> get messageStream => _roomHandler.messageStream;
 
   @override
   Future<void> dispose() async {
-    for (final sub in _subs) {
-      sub.cancel();
-    }
-
-    await _channel.sink.close();
-    await _controller.close();
+    AppLogger.info('Disposing SocketActionHandler', tag: 'SocketActionHandler');
+    await _roomHandler.dispose();
   }
 }

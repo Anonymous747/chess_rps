@@ -7,11 +7,12 @@ import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:riverpod/riverpod.dart';
 
 part 'game_strategy.g.dart';
 
 @riverpod
-GameStrategy gameStrategy(GameStrategyRef ref) {
+GameStrategy gameStrategy(Ref ref) {
   switch (GameModesMediator.gameMode) {
     case GameMode.classical:
       return ClassicalGameStrategy();

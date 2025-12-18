@@ -18,8 +18,15 @@ class AvailableMove extends StatelessWidget {
         width: isAvailable ? constraints.maxWidth * 0.2 : 0,
         height: isAvailable ? constraints.maxWidth * 0.2 : 0,
         decoration: BoxDecoration(
-          color: Palette.green300,
+          color: Palette.purple400,
           borderRadius: BorderRadius.circular(constraints.maxWidth),
+          boxShadow: [
+            BoxShadow(
+              color: Palette.purple400.withOpacity(0.5),
+              blurRadius: 8,
+              spreadRadius: 2,
+            ),
+          ],
         ),
       );
     });

@@ -29,7 +29,10 @@ dependencies:
   melos: ^3.1.1
 
   dio: ^5.3.3
+  pretty_dio_logger: ^1.3.1
   web_socket_channel: ^2.4.0
+  flutter_secure_storage: ^9.0.0
+  go_router: ^14.0.0
 
 dev_dependencies:
   flutter_test:
@@ -47,5 +50,25 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/figures/black/
-    - assets/images/figures/white/
+    - assets/images/figures/ancient/white/
+    - assets/images/figures/ancient/black/
+    - assets/images/figures/california/white/
+    - assets/images/figures/california/black/
+    - assets/images/figures/cardinal/white/
+    - assets/images/figures/cardinal/black/
+    - assets/images/figures/celtic/white/
+    - assets/images/figures/celtic/black/
+    - assets/images/figures/condal/white/
+    - assets/images/figures/condal/black/
+    - assets/images/figures/metal/white/
+    - assets/images/figures/metal/black/
+    - assets/images/figures/modern/white/
+    - assets/images/figures/modern/black/
+    - assets/images/figures/stone/white/
+    - assets/images/figures/stone/black/
+    - assets/images/figures/tournament/white/
+    - assets/images/figures/tournament/black/
+    - assets/images/figures/vintage/white/
+    - assets/images/figures/vintage/black/
+    - assets/images/figures/wood/white/
+    - assets/images/figures/wood/black/

@@ -1,10 +1,20 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
 from src.game.router import router as router_game
+from src.auth.router import router as router_auth
+from src.auth.settings_router import router as router_settings
+from src.collection.router import router as router_collection
 from src.database import get_async_session, engine
 from src.database import Base
+
+# Import models to register them with Base.metadata
+from src.game.models import Messages, GameRoom, GamePlayer, GameMove, RpsRound  # noqa: F401
+from src.auth.models import User, Token  # noqa: F401
+from src.auth.settings_models import UserSettings  # noqa: F401
+from src.collection.models import CollectionItem, UserCollection  # noqa: F401
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +24,15 @@ app = FastAPI(
     title="Chess RPS API",
     description="A chess game API with Rock Paper Scissors mechanics",
     version="1.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -63,6 +82,9 @@ async def simple_health():
     """Simple health check without database dependency."""
     return {"status": "ok"}
 
-# Include game router
+# Include routers
+app.include_router(router_auth, prefix="/api/v1")
+app.include_router(router_settings, prefix="/api/v1")
 app.include_router(router_game, prefix="/api/v1", tags=["games"])
+app.include_router(router_collection, prefix="/api/v1")
 

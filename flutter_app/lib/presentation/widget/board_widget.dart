@@ -34,18 +34,26 @@ class BoardWidget extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-              color: Palette.brown600,
+              color: Palette.backgroundTertiary,
               border: Border.all(
-                  width: _parentBorderWidth, color: Palette.brown600),
-              borderRadius: BorderRadius.circular(6)),
+                  width: _parentBorderWidth, color: Palette.backgroundTertiary),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Palette.black50,
+                  blurRadius: 30,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 15),
+                ),
+              ]),
           height: width,
           width: width,
           child: Container(
             decoration: BoxDecoration(
-                color: Palette.brown400,
+                color: Palette.backgroundElevated,
                 border: Border.all(
-                    width: _childBorderWidth, color: Palette.brown400),
-                borderRadius: BorderRadius.circular(6)),
+                    width: _childBorderWidth, color: Palette.glassBorder),
+                borderRadius: BorderRadius.circular(16)),
             child: GridView.count(
               crossAxisCount: 8,
               children: _buildCells(),
