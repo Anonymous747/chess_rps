@@ -25,15 +25,18 @@ class CollectionController extends _$CollectionController {
   }
 
   Future<void> refreshItems({CollectionCategory? category}) async {
-    state = const AsyncValue.loading();
     try {
       final service = ref.read(collectionServiceProvider);
       final items = await service.getCollectionItems(category: category);
       state = AsyncValue.data(items);
       AppLogger.info('Collection items refreshed', tag: 'CollectionController');
-    } catch (e) {
+    } catch (e, stackTrace) {
       AppLogger.error('Error refreshing collection items', tag: 'CollectionController', error: e);
-      state = AsyncValue.error(e, StackTrace.current);
+      // Only update to error if we don't have previous data
+      final previousState = state;
+      if (!previousState.hasValue) {
+        state = AsyncValue.error(e, stackTrace);
+      }
     }
   }
 }
@@ -53,15 +56,18 @@ class UserCollectionController extends _$UserCollectionController {
   }
 
   Future<void> refreshCollection({CollectionCategory? category, bool ownedOnly = false}) async {
-    state = const AsyncValue.loading();
     try {
       final service = ref.read(collectionServiceProvider);
       final items = await service.getMyCollection(category: category, ownedOnly: ownedOnly);
       state = AsyncValue.data(items);
       AppLogger.info('User collection refreshed', tag: 'UserCollectionController');
-    } catch (e) {
+    } catch (e, stackTrace) {
       AppLogger.error('Error refreshing user collection', tag: 'UserCollectionController', error: e);
-      state = AsyncValue.error(e, StackTrace.current);
+      // Only update to error if we don't have previous data
+      final previousState = state;
+      if (!previousState.hasValue) {
+        state = AsyncValue.error(e, stackTrace);
+      }
     }
   }
 

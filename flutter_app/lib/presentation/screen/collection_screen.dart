@@ -3,6 +3,8 @@ import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/collection/collection_service.dart';
 import 'package:chess_rps/presentation/controller/collection_controller.dart';
 import 'package:chess_rps/presentation/utils/collection_utils.dart';
+import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
+import 'package:chess_rps/presentation/widget/collection/piece_pack_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -114,9 +116,12 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                         child: _buildTabButton(_tabs[index], index == _selectedTab, () {
                           setState(() {
                             _selectedTab = index;
-                            // Refresh collection when tab changes
-                            ref.read(userCollectionControllerProvider.notifier)
-                                .refreshCollection(category: _tabs[index]);
+                            // Only refresh collection for non-PIECES categories
+                            // PIECES category uses assets directly, not backend
+                            if (_tabs[index] != CollectionCategory.PIECES) {
+                              ref.read(userCollectionControllerProvider.notifier)
+                                  .refreshCollection(category: _tabs[index]);
+                            }
                           });
                         }),
                       ),
@@ -229,6 +234,13 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
 
   Widget _buildCollectionContent() {
     final currentCategory = _tabs[_selectedTab];
+    
+    // For PIECES category, show all available piece packs from assets
+    if (currentCategory == CollectionCategory.PIECES) {
+      return _buildPiecePacksGrid();
+    }
+    
+    // For other categories, use the backend collection items
     final userCollectionAsync = ref.watch(userCollectionControllerProvider);
     final allItemsAsync = ref.watch(collectionControllerProvider);
     
@@ -725,6 +737,129 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPiecePacksGrid() {
+    final piecePacks = PiecePackUtils.getKnownPiecePacks();
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
+          Text(
+            'Available Piece Sets (${piecePacks.length})',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Palette.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.75,
+            ),
+            itemCount: piecePacks.length,
+            itemBuilder: (context, index) {
+              final packName = piecePacks[index];
+              return _buildPiecePackCard(packName);
+            },
+          ),
+          const SizedBox(height: 100),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPiecePackCard(String packName) {
+    final queenImagePath = PiecePackUtils.getQueenImagePath(packName, isWhite: true);
+    
+    return GestureDetector(
+      onTap: () {
+        // Show overlay with all pieces
+        showDialog(
+          context: context,
+          builder: (context) => PiecePackOverlay(packName: packName),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Palette.backgroundTertiary,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Palette.glassBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Palette.backgroundSecondary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Image.asset(
+                          queenImagePath,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.extension,
+                              size: 48,
+                              color: Palette.textTertiary,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Icon(
+                        Icons.visibility,
+                        color: Palette.purpleAccent.withOpacity(0.7),
+                        size: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              PiecePackUtils.formatPackName(packName),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Palette.textPrimary,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Tap to view all pieces',
+              style: TextStyle(
+                fontSize: 10,
+                color: Palette.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
