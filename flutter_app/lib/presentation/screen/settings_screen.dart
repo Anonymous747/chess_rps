@@ -1,7 +1,11 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/data/service/settings/settings_service.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
+import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/widget/settings/piece_set_selection_dialog.dart';
+import 'package:chess_rps/presentation/widget/settings/theme_selection_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -71,11 +75,11 @@ class SettingsScreen extends HookConsumerWidget {
                     children: [
                       _buildAccountSection(context, ref),
                       const SizedBox(height: 24),
-                      _buildGameplaySection(),
+                      _buildGameplaySection(context, ref),
                       const SizedBox(height: 24),
-                      _buildAudioSection(),
+                      _buildAudioSection(context, ref),
                       const SizedBox(height: 24),
-                      _buildPrivacySection(),
+                      _buildPrivacySection(context, ref),
                       const SizedBox(height: 24),
                       _buildLogoutButton(context, ref),
                       const SizedBox(height: 24),
@@ -188,7 +192,39 @@ class SettingsScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildGameplaySection() {
+  Widget _buildGameplaySection(BuildContext context, WidgetRef ref) {
+    final settingsAsync = ref.watch(settingsControllerProvider);
+    
+    return settingsAsync.when(
+      data: (settings) => _buildGameplaySectionContent(context, ref, settings),
+      loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+      error: (error, stack) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'GAMEPLAY',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Palette.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Palette.backgroundTertiary,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Palette.error),
+            ),
+            child: Text('Error loading settings', style: TextStyle(color: Palette.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameplaySectionContent(BuildContext context, WidgetRef ref, UserSettings settings) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -209,13 +245,63 @@ class SettingsScreen extends HookConsumerWidget {
           ),
           child: Column(
             children: [
-              _buildSettingItem(Icons.palette, 'Board Theme', 'Glass Dark', Icons.chevron_right),
+              _buildSettingItem(
+                Icons.palette,
+                'Board Theme',
+                _formatThemeName(settings.boardTheme),
+                Icons.chevron_right,
+                onTap: () {
+                  AppLogger.info('Theme selection tapped', tag: 'SettingsScreen');
+                  showDialog(
+                    context: context,
+                    builder: (context) => ThemeSelectionDialog(
+                      currentTheme: settings.boardTheme,
+                      onThemeSelected: (theme) {
+                        ref.read(settingsControllerProvider.notifier).updateBoardTheme(theme);
+                      },
+                    ),
+                  );
+                },
+              ),
               Divider(color: Palette.glassBorder, height: 1),
-              _buildSettingItem(Icons.extension, 'Piece Set', 'Neon 3D', Icons.chevron_right),
+              _buildSettingItem(
+                Icons.extension,
+                'Piece Set',
+                _formatPieceSetName(settings.pieceSet),
+                Icons.chevron_right,
+                onTap: () {
+                  AppLogger.info('Piece set selection tapped', tag: 'SettingsScreen');
+                  showDialog(
+                    context: context,
+                    builder: (context) => PieceSetSelectionDialog(
+                      currentPieceSet: settings.pieceSet,
+                      onPieceSetSelected: (pieceSet) {
+                        ref.read(settingsControllerProvider.notifier).updatePieceSet(pieceSet);
+                      },
+                    ),
+                  );
+                },
+              ),
               Divider(color: Palette.glassBorder, height: 1),
-              _buildToggleItem(Icons.auto_awesome, 'Auto-Queen', 'Automatically promote to Queen', true),
+              _buildToggleItem(
+                Icons.auto_awesome,
+                'Auto-Queen',
+                'Automatically promote to Queen',
+                settings.autoQueen,
+                onChanged: (value) {
+                  ref.read(settingsControllerProvider.notifier).updateAutoQueen(value);
+                },
+              ),
               Divider(color: Palette.glassBorder, height: 1),
-              _buildToggleItem(Icons.check_circle, 'Confirm Moves', '', false),
+              _buildToggleItem(
+                Icons.check_circle,
+                'Confirm Moves',
+                '',
+                settings.confirmMoves,
+                onChanged: (value) {
+                  ref.read(settingsControllerProvider.notifier).updateConfirmMoves(value);
+                },
+              ),
             ],
           ),
         ),
@@ -223,7 +309,39 @@ class SettingsScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildAudioSection() {
+  Widget _buildAudioSection(BuildContext context, WidgetRef ref) {
+    final settingsAsync = ref.watch(settingsControllerProvider);
+    
+    return settingsAsync.when(
+      data: (settings) => _buildAudioSectionContent(context, ref, settings),
+      loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+      error: (error, stack) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'AUDIO & SYNC',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Palette.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Palette.backgroundTertiary,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Palette.error),
+            ),
+            child: Text('Error loading settings', style: TextStyle(color: Palette.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAudioSectionContent(BuildContext context, WidgetRef ref, UserSettings settings) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -257,7 +375,7 @@ class SettingsScreen extends HookConsumerWidget {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: Palette.purpleAccentLight.withOpacity(0.1),
+                                color: Palette.purpleAccentLight.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(Icons.volume_up, color: Palette.purpleAccentLight, size: 20),
@@ -280,7 +398,7 @@ class SettingsScreen extends HookConsumerWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            '80%',
+                            '${(settings.masterVolume * 100).toInt()}%',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -292,8 +410,10 @@ class SettingsScreen extends HookConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     Slider(
-                      value: 0.8,
-                      onChanged: (value) {},
+                      value: settings.masterVolume,
+                      onChanged: (value) {
+                        ref.read(settingsControllerProvider.notifier).updateMasterVolume(value);
+                      },
                       activeColor: Palette.purpleAccent,
                       inactiveColor: Palette.backgroundSecondary,
                     ),
@@ -301,7 +421,15 @@ class SettingsScreen extends HookConsumerWidget {
                 ),
               ),
               Divider(color: Palette.glassBorder, height: 1),
-              _buildToggleItem(Icons.notifications_active, 'Push Notifications', '', true),
+              _buildToggleItem(
+                Icons.notifications_active,
+                'Push Notifications',
+                '',
+                settings.pushNotifications,
+                onChanged: (value) {
+                  ref.read(settingsControllerProvider.notifier).updatePushNotifications(value);
+                },
+              ),
             ],
           ),
         ),
@@ -309,7 +437,39 @@ class SettingsScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildPrivacySection() {
+  Widget _buildPrivacySection(BuildContext context, WidgetRef ref) {
+    final settingsAsync = ref.watch(settingsControllerProvider);
+    
+    return settingsAsync.when(
+      data: (settings) => _buildPrivacySectionContent(context, ref, settings),
+      loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+      error: (error, stack) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'PRIVACY',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Palette.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Palette.backgroundTertiary,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Palette.error),
+            ),
+            child: Text('Error loading settings', style: TextStyle(color: Palette.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrivacySectionContent(BuildContext context, WidgetRef ref, UserSettings settings) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -330,9 +490,26 @@ class SettingsScreen extends HookConsumerWidget {
           ),
           child: Column(
             children: [
-              _buildSettingItem(Icons.lock, 'Privacy Policy', null, Icons.open_in_new),
+              _buildSettingItem(
+                Icons.lock,
+                'Privacy Policy',
+                null,
+                Icons.open_in_new,
+                onTap: () {
+                  // TODO: Open privacy policy URL
+                  AppLogger.info('Privacy policy tapped', tag: 'SettingsScreen');
+                },
+              ),
               Divider(color: Palette.glassBorder, height: 1),
-              _buildToggleItem(Icons.visibility, 'Online Status', 'Visible to friends only', true),
+              _buildToggleItem(
+                Icons.visibility,
+                'Online Status',
+                'Visible to friends only',
+                settings.onlineStatusVisible,
+                onChanged: (value) {
+                  ref.read(settingsControllerProvider.notifier).updateOnlineStatusVisible(value);
+                },
+              ),
             ],
           ),
         ),
@@ -340,13 +517,20 @@ class SettingsScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildSettingItem(IconData icon, String title, String? subtitle, IconData trailing) {
+  Widget _buildSettingItem(
+    IconData icon,
+    String title,
+    String? subtitle,
+    IconData trailing, {
+    VoidCallback? onTap,
+  }) {
     return ListTile(
+      onTap: onTap,
       leading: Container(
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: Palette.purpleAccent.withOpacity(0.1),
+          color: Palette.purpleAccent.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: Palette.purpleAccent, size: 20),
@@ -369,13 +553,19 @@ class SettingsScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildToggleItem(IconData icon, String title, String subtitle, bool value) {
+  Widget _buildToggleItem(
+    IconData icon,
+    String title,
+    String subtitle,
+    bool value, {
+    ValueChanged<bool>? onChanged,
+  }) {
     return ListTile(
       leading: Container(
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: Palette.purpleAccent.withOpacity(0.1),
+          color: Palette.purpleAccent.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: Palette.purpleAccent, size: 20),
@@ -396,8 +586,15 @@ class SettingsScreen extends HookConsumerWidget {
           : null,
       trailing: Switch(
         value: value,
-        onChanged: (newValue) {},
-        activeColor: Palette.purpleAccent,
+        onChanged: onChanged,
+        activeTrackColor: Palette.purpleAccent,
+        activeThumbColor: Palette.textPrimary,
+        thumbColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+          if (states.contains(WidgetState.selected)) {
+            return Palette.textPrimary;
+          }
+          return Palette.textSecondary;
+        }),
       ),
     );
   }
@@ -413,12 +610,12 @@ class SettingsScreen extends HookConsumerWidget {
           }
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Palette.error.withOpacity(0.1),
+          backgroundColor: Palette.error.withValues(alpha: 0.1),
           foregroundColor: Palette.error,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Palette.error.withOpacity(0.2)),
+            side: BorderSide(color: Palette.error.withValues(alpha: 0.2)),
           ),
         ),
         child: Text(
@@ -431,4 +628,21 @@ class SettingsScreen extends HookConsumerWidget {
       ),
     );
   }
+
+  String _formatThemeName(String theme) {
+    // Convert snake_case to Title Case
+    return theme.split('_').map((word) {
+      if (word.isEmpty) return '';
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
+  String _formatPieceSetName(String pieceSet) {
+    // Convert snake_case to Title Case
+    return pieceSet.split('_').map((word) {
+      if (word.isEmpty) return '';
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
 }
+

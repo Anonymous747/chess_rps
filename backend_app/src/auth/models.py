@@ -2,8 +2,12 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from typing import TYPE_CHECKING
 
 from src.database import Base
+
+if TYPE_CHECKING:
+    from src.auth.settings_models import UserSettings
 
 
 class User(Base):
@@ -18,6 +22,8 @@ class User(Base):
 
     # Relationship to tokens
     tokens = relationship("Token", back_populates="user", cascade="all, delete-orphan")
+    # Relationship to settings (defined in settings_models.py)
+    settings = relationship("UserSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
 
 class Token(Base):
@@ -32,13 +38,3 @@ class Token(Base):
 
     # Relationship to user
     user = relationship("User", back_populates="tokens")
-
-
-
-
-
-
-
-
-
-

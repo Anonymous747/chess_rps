@@ -12,6 +12,7 @@ import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/domain/service/action_handler.dart';
 import 'package:chess_rps/domain/service/game_strategy.dart';
 import 'package:chess_rps/domain/service/logger.dart';
+import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
@@ -361,8 +362,12 @@ class GameController extends _$GameController {
       return false;
     }
 
+    // Get auto-queen setting
+    final settingsAsync = ref.read(settingsControllerProvider);
+    final autoQueen = settingsAsync.valueOrNull?.autoQueen ?? true;
+
     final updatedBoard = state.board
-      ..makeMove(selectedCell, targetCell)
+      ..makeMove(selectedCell, targetCell, autoQueen: autoQueen)
       ..removeSelection();
 
     // Determine new current order (opposite side)

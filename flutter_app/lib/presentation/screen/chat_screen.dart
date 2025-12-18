@@ -90,13 +90,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _buildChannelTab('Global Lobby', 0, true),
+                          _buildChannelTab('Global Lobby', 0, _selectedChannel == 0),
                           const SizedBox(width: 12),
-                          _buildChannelTab('Clan', 1, false),
+                          _buildChannelTab('Clan', 1, _selectedChannel == 1),
                           const SizedBox(width: 12),
-                          _buildChannelTab('Friends', 2, false, hasNotification: true),
+                          _buildChannelTab('Friends', 2, _selectedChannel == 2, hasNotification: true),
                           const SizedBox(width: 12),
-                          _buildChannelTab('Mentions', 3, false),
+                          _buildChannelTab('Mentions', 3, _selectedChannel == 3),
                         ],
                       ),
                     ),
@@ -488,3 +488,4 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
+

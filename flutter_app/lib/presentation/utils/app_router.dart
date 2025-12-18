@@ -10,7 +10,6 @@ import 'package:chess_rps/presentation/screen/collection_screen.dart';
 import 'package:chess_rps/presentation/screen/events_screen.dart';
 import 'package:chess_rps/presentation/screen/friends_screen.dart';
 import 'package:chess_rps/presentation/screen/login_screen.dart';
-import 'package:chess_rps/presentation/screen/main_menu_screen.dart';
 import 'package:chess_rps/presentation/screen/main_navigation_screen.dart';
 import 'package:chess_rps/presentation/screen/mode_selector.dart';
 import 'package:chess_rps/presentation/screen/opponent_selector.dart';

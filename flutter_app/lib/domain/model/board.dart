@@ -65,18 +65,30 @@ class Board {
 
   /// Execute from [from] cell to [to] cell
   /// Update state of [board]
+  /// [autoQueen] if true, automatically promotes pawn to queen on promotion
   ///
-  void makeMove(Cell from, Cell to) {
+  void makeMove(Cell from, Cell to, {bool autoQueen = true}) {
     if (from.figure == null) throw Exception("From cell figure can't be null");
 
     // Check for pawn promotion (when pawn reaches the 8th rank)
     if (from.figure!.role == Role.pawn && (to.position.row == 0 || to.position.row == 7)) {
-      // Promote pawn to queen (standard promotion choice)
-      final promotedPiece = Queen(
-        side: from.figure!.side,
-        position: to.position,
-      );
-      _updateCellFigure(to.row, to.col, promotedPiece);
+      if (autoQueen) {
+        // Promote pawn to queen (standard promotion choice)
+        final promotedPiece = Queen(
+          side: from.figure!.side,
+          position: to.position,
+        );
+        _updateCellFigure(to.row, to.col, promotedPiece);
+      } else {
+        // If auto-queen is disabled, user should choose promotion piece
+        // For now, default to queen but this should trigger a dialog in the UI
+        // TODO: Implement promotion piece selection dialog
+        final promotedPiece = Queen(
+          side: from.figure!.side,
+          position: to.position,
+        );
+        _updateCellFigure(to.row, to.col, promotedPiece);
+      }
     } else {
       _updateCellFigure(
           to.row, to.col, from.figure!.copyWith(position: to.position));
