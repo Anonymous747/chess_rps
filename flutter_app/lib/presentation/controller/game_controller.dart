@@ -367,7 +367,8 @@ class GameController extends _$GameController {
         '${selectedCell.position.algebraicPosition}${target.position.algebraicPosition}';
     AppLogger.info('Making move: $action', tag: 'GameController');
 
-    final success = await _makeMoveViaAction(action, selectedCell, target);
+    // Capture is already handled by moveFigure, so skip it in _makeMoveViaAction
+    final success = await _makeMoveViaAction(action, selectedCell, target, skipCapture: true);
     if (success) {
       AppLogger.info('Move executed successfully: $action', tag: 'GameController');
     } else {
@@ -379,7 +380,7 @@ class GameController extends _$GameController {
   /// Get [action] and make move according to it
   ///
   Future<bool> _makeMoveViaAction(
-      String action, Cell selectedCell, Cell targetCell) async {
+      String action, Cell selectedCell, Cell targetCell, {bool skipCapture = false}) async {
     AppLogger.debug('Executing move via action: $action', tag: 'GameController');
     try {
       await actionHandler.makeMove(action);
@@ -392,6 +393,19 @@ class GameController extends _$GameController {
     // Get auto-queen setting
     final settingsAsync = ref.read(settingsControllerProvider);
     final autoQueen = settingsAsync.valueOrNull?.autoQueen ?? true;
+
+    // Handle capture before making the move (only if not already handled by moveFigure)
+    if (!skipCapture) {
+      // Check if target cell has a piece that will be captured
+      final capturedFigure = targetCell.isOccupied ? targetCell.figure : null;
+      if (capturedFigure != null) {
+        state.board.pushKnockedFigure(capturedFigure);
+        AppLogger.info(
+          'Piece captured: ${capturedFigure.role} (${capturedFigure.side})',
+          tag: 'GameController',
+        );
+      }
+    }
 
     final updatedBoard = state.board
       ..makeMove(selectedCell, targetCell, autoQueen: autoQueen)

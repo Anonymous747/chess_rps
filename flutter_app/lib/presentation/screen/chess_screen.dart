@@ -17,26 +17,20 @@ class ChessScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(gameControllerProvider.notifier);
-    final board =
-        ref.watch(gameControllerProvider.select((state) => state.board));
-    final showRpsOverlay =
-        ref.read(gameControllerProvider.select((state) => state.showRpsOverlay));
-    final waitingForRpsResult = ref.read(
-        gameControllerProvider.select((state) => state.waitingForRpsResult));
-    final opponentRpsChoice = ref.read(
-        gameControllerProvider.select((state) => state.opponentRpsChoice));
-    final playerWonRps =
-        ref.read(gameControllerProvider.select((state) => state.playerWonRps));
-    final lightPlayerTime = ref.watch(
-        gameControllerProvider.select((state) => state.lightPlayerTimeSeconds));
-    final darkPlayerTime = ref.watch(
-        gameControllerProvider.select((state) => state.darkPlayerTimeSeconds));
-    final currentOrder = ref.watch(
-        gameControllerProvider.select((state) => state.currentOrder));
-    final playerSide = ref.watch(
-        gameControllerProvider.select((state) => state.playerSide));
-    final moveHistory = ref.watch(
-        gameControllerProvider.select((state) => state.moveHistory));
+    final board = ref.watch(gameControllerProvider.select((state) => state.board));
+    final showRpsOverlay = ref.read(gameControllerProvider.select((state) => state.showRpsOverlay));
+    final waitingForRpsResult =
+        ref.read(gameControllerProvider.select((state) => state.waitingForRpsResult));
+    final opponentRpsChoice =
+        ref.read(gameControllerProvider.select((state) => state.opponentRpsChoice));
+    final playerWonRps = ref.read(gameControllerProvider.select((state) => state.playerWonRps));
+    final lightPlayerTime =
+        ref.watch(gameControllerProvider.select((state) => state.lightPlayerTimeSeconds));
+    final darkPlayerTime =
+        ref.watch(gameControllerProvider.select((state) => state.darkPlayerTimeSeconds));
+    final currentOrder = ref.watch(gameControllerProvider.select((state) => state.currentOrder));
+    final playerSide = ref.watch(gameControllerProvider.select((state) => state.playerSide));
+    final moveHistory = ref.watch(gameControllerProvider.select((state) => state.moveHistory));
 
     return Scaffold(
       body: Container(
@@ -81,10 +75,10 @@ class ChessScreen extends HookConsumerWidget {
                                   Icons.arrow_back,
                                   color: Palette.textPrimary,
                                 ),
-                              onPressed: () {
-                                controller.dispose();
-                                context.pop();
-                              },
+                                onPressed: () {
+                                  controller.dispose();
+                                  context.pop();
+                                },
                               ),
                             ),
                             Expanded(
@@ -251,26 +245,7 @@ class ChessScreen extends HookConsumerWidget {
         ),
       );
     } else {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: Palette.backgroundTertiary,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Palette.glassBorder,
-            width: 1,
-          ),
-        ),
-        child: Text(
-          'Chess Game',
-          style: TextStyle(
-            color: Palette.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-            letterSpacing: 0.5,
-          ),
-        ),
-      );
+      return const SizedBox();
     }
   }
 }
