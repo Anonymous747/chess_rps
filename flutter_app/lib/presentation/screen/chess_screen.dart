@@ -48,10 +48,11 @@ class ChessScreen extends HookConsumerWidget {
         child: SafeArea(
           child: Stack(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Top bar with back button, timer, and status
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                  // Top bar with finish button and timers in one row
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
@@ -59,8 +60,15 @@ class ChessScreen extends HookConsumerWidget {
                     ),
                     child: Column(
                       children: [
+                        // Status text row
+                        Center(
+                          child: _buildStatusText(playerWonRps),
+                        ),
+                        const SizedBox(height: 12),
+                        // Row with finish button and timers
                         Row(
                           children: [
+                            // Finish game button
                             Container(
                               decoration: BoxDecoration(
                                 color: Palette.backgroundTertiary,
@@ -70,31 +78,28 @@ class ChessScreen extends HookConsumerWidget {
                                   width: 1,
                                 ),
                               ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.arrow_back,
-                                  color: Palette.textPrimary,
+                              child: TextButton(
+                                onPressed: () => _showFinishGameDialog(context, controller),
+                                child: Text(
+                                  'Завершить игру',
+                                  style: TextStyle(
+                                    color: Palette.textPrimary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                                onPressed: () {
-                                  controller.dispose();
-                                  context.pop();
-                                },
                               ),
                             ),
+                            const SizedBox(width: 12),
+                            // Timer widget
                             Expanded(
-                              child: Center(
-                                child: _buildStatusText(playerWonRps),
+                              child: TimerWidget(
+                                lightPlayerTimeSeconds: lightPlayerTime,
+                                darkPlayerTimeSeconds: darkPlayerTime,
+                                currentTurn: currentOrder,
                               ),
                             ),
-                            const SizedBox(width: 56), // Balance for back button
                           ],
-                        ),
-                        const SizedBox(height: 12),
-                        // Timer widget
-                        TimerWidget(
-                          lightPlayerTimeSeconds: lightPlayerTime,
-                          darkPlayerTimeSeconds: darkPlayerTime,
-                          currentTurn: currentOrder,
                         ),
                       ],
                     ),
@@ -122,13 +127,10 @@ class ChessScreen extends HookConsumerWidget {
                     ),
                   ),
                   // Board area
-                  Expanded(
-                    flex: 3,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: BoardWidget(board: board),
-                      ),
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: BoardWidget(board: board),
                     ),
                   ),
                   // Player's captured pieces (below board)
@@ -154,17 +156,16 @@ class ChessScreen extends HookConsumerWidget {
                     ),
                   ),
                   // Move history at the bottom
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      child: MoveHistoryWidget(
-                        moveHistory: moveHistory,
-                        board: board,
-                      ),
+                  Container(
+                    height: 200,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    child: MoveHistoryWidget(
+                      moveHistory: moveHistory,
+                      board: board,
                     ),
                   ),
-                ],
+                  ],
+                ),
               ),
               if (showRpsOverlay)
                 RpsOverlay(
@@ -247,5 +248,66 @@ class ChessScreen extends HookConsumerWidget {
     } else {
       return const SizedBox();
     }
+  }
+
+  void _showFinishGameDialog(BuildContext context, GameController controller) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: Palette.backgroundTertiary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: Palette.glassBorder,
+              width: 1,
+            ),
+          ),
+          title: Text(
+            'Завершить игру?',
+            style: TextStyle(
+              color: Palette.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          content: Text(
+            'Вы действительно хотите завершить игру? Результат будет потерян.',
+            style: TextStyle(
+              color: Palette.textSecondary,
+              fontSize: 14,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text(
+                'Нет',
+                style: TextStyle(
+                  color: Palette.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                controller.dispose();
+                context.pop();
+              },
+              child: Text(
+                'Да',
+                style: TextStyle(
+                  color: Palette.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

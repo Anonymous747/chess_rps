@@ -86,7 +86,24 @@ class AuthController extends _$AuthController {
         }
       }
       
-      return null;
+      // TODO: Remove this temporary auto-login. This is a temporary solution for development.
+      // If no saved user found, automatically log in with test credentials: +375291111111 / 11111111
+      AppLogger.info('No saved user found, attempting auto-login with test credentials', tag: 'AuthController');
+      try {
+        final testUser = await _authService!.login(
+          phoneNumber: '+375291111111',
+          password: '11111111',
+        );
+        
+        // Save the logged in user
+        await _authStorage!.saveAuthUser(testUser);
+        AppLogger.info('Auto-login successful with test credentials', tag: 'AuthController');
+        return testUser;
+      } catch (autoLoginError) {
+        AppLogger.error('Auto-login failed, user will need to log in manually', tag: 'AuthController', error: autoLoginError);
+        // Return null if auto-login fails - user can still log in manually
+        return null;
+      }
     } catch (e) {
       AppLogger.error('Error in AuthController build', tag: 'AuthController', error: e);
       // Return null on any error to prevent infinite loading

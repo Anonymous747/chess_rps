@@ -30,6 +30,24 @@ class LoginScreen extends HookConsumerWidget {
       }
     });
 
+    // TODO: Remove this temporary auto-login. This is a temporary solution to skip the login screen.
+    // Auto-login with test credentials: +375291111111 / 1111111
+    useEffect(() {
+      Future.microtask(() async {
+        try {
+          AppLogger.info('Auto-login with temporary credentials', tag: 'LoginScreen');
+          await authController.login(
+            phoneNumber: '+375291111111',
+            password: '1111111',
+          );
+        } catch (e) {
+          AppLogger.error('Auto-login failed: $e', tag: 'LoginScreen', error: e);
+          // If auto-login fails, user can still use the form
+        }
+      });
+      return null;
+    }, []);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(

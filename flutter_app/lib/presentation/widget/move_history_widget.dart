@@ -1,9 +1,14 @@
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/domain/model/board.dart';
+import 'package:chess_rps/domain/model/figure.dart';
+import 'package:chess_rps/domain/model/position.dart';
+import 'package:chess_rps/presentation/controller/settings_controller.dart';
+import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class MoveHistoryWidget extends StatefulWidget {
+class MoveHistoryWidget extends ConsumerStatefulWidget {
   final List<String> moveHistory;
   final Board? board; // Optional board for better notation conversion
   final int? currentMoveIndex; // Index of currently selected/highlighted move
@@ -16,10 +21,11 @@ class MoveHistoryWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<MoveHistoryWidget> createState() => _MoveHistoryWidgetState();
+  ConsumerState<MoveHistoryWidget> createState() => _MoveHistoryWidgetState();
 }
 
-class _MoveHistoryWidgetState extends State<MoveHistoryWidget> {
+class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
+  static const String _imagesPath = 'assets/images/figures';
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -45,26 +51,74 @@ class _MoveHistoryWidgetState extends State<MoveHistoryWidget> {
     super.dispose();
   }
 
-  /// Convert algebraic notation (e2e4) to standard chess notation (e4, Nf3, etc.)
-  /// Simplified version - shows destination square for now
-  /// Full implementation would detect piece type, captures, special moves
-  String _convertToStandardNotation(String algebraicMove, {bool isWhiteMove = true}) {
-    if (algebraicMove.length != 4) return algebraicMove;
-    
-    final from = algebraicMove.substring(0, 2);
-    final to = algebraicMove.substring(2, 4);
-    
-    // For castling (king moves more than 1 square horizontally)
-    if (from[0] == 'e' && to[0] == 'g' && from[1] == to[1]) {
-      return 'O-O'; // Kingside castling
+  /// Parse move string to get from and to positions
+  Map<String, String> _parseMove(String algebraicMove) {
+    if (algebraicMove.length != 4) {
+      return {'from': '', 'to': ''};
     }
-    if (from[0] == 'e' && to[0] == 'c' && from[1] == to[1]) {
-      return 'O-O-O'; // Queenside castling
+    return {
+      'from': algebraicMove.substring(0, 2),
+      'to': algebraicMove.substring(2, 4),
+    };
+  }
+
+  /// Get piece that was moved (tries to get from current board state at destination)
+  /// Note: This works best for recent moves, as board state changes
+  Figure? _getMovedPiece(String fromPos, String toPos, bool isWhiteMove) {
+    if (widget.board == null || fromPos.length != 2 || toPos.length != 2) {
+      return null;
     }
     
-    // For now, show destination square
-    // TODO: Enhance to show piece symbols (N, B, R, Q, K) and detect captures
-    return to;
+    try {
+      final toPosition = toPos.convertToPosition();
+      
+      // Validate position is within board bounds
+      if (toPosition.row < 0 || toPosition.row >= 8 || 
+          toPosition.col < 0 || toPosition.col >= 8) {
+        return null;
+      }
+      
+      final cell = widget.board!.getCellAt(toPosition.row, toPosition.col);
+      
+      // The piece at the destination is the one that moved (unless it was captured)
+      if (cell.figure != null && cell.figure!.side.isLight == isWhiteMove) {
+        return cell.figure;
+      }
+    } catch (e) {
+      // If we can't determine, return null silently
+      // This is expected for older moves where board state has changed
+    }
+    
+    return null;
+  }
+
+  /// Build piece icon widget
+  Widget? _buildPieceIcon(Figure? figure, String pieceSet) {
+    if (figure == null) return null;
+    
+    try {
+      final side = figure.side.toString(); // Returns 'black' or 'white'
+      final role = figure.role.toString().split('.').last.toLowerCase();
+      final safePieceSet = pieceSet.isNotEmpty ? pieceSet : 'cardinal';
+      final imagePath = '$_imagesPath/$safePieceSet/$side/$role.png';
+      
+      return Container(
+        width: 20,
+        height: 20,
+        margin: const EdgeInsets.only(right: 6),
+        child: Image.asset(
+          imagePath,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            // Return empty container if image fails to load
+            return const SizedBox.shrink();
+          },
+        ),
+      );
+    } catch (e) {
+      // Return null if there's any error building the icon
+      return null;
+    }
   }
 
   /// Generate PGN format from move history
@@ -80,12 +134,14 @@ class _MoveHistoryWidgetState extends State<MoveHistoryWidget> {
       
       // White move
       if (i < moveHistory.length) {
-        buffer.write(_convertToStandardNotation(moveHistory[i], isWhiteMove: true));
+        final move = _parseMove(moveHistory[i]);
+        buffer.write('${move['from']}${move['to']}');
       }
       
       // Black move
       if (i + 1 < moveHistory.length) {
-        buffer.write(' ${_convertToStandardNotation(moveHistory[i + 1], isWhiteMove: false)}');
+        final move = _parseMove(moveHistory[i + 1]);
+        buffer.write(' ${move['from']}${move['to']}');
       }
       
       buffer.write(' ');
@@ -120,8 +176,20 @@ class _MoveHistoryWidgetState extends State<MoveHistoryWidget> {
   @override
   Widget build(BuildContext context) {
     final moveHistory = widget.moveHistory;
-    // final board = widget.board; // Reserved for future full notation conversion
     final currentMoveIndex = widget.currentMoveIndex;
+    
+    // Get piece set from settings
+    final settingsAsync = ref.watch(settingsControllerProvider);
+    String pieceSet = 'cardinal'; // Default fallback
+    if (settingsAsync.hasValue && settingsAsync.value != null) {
+      final requestedPieceSet = settingsAsync.value!.pieceSet;
+      if (requestedPieceSet.isNotEmpty) {
+        final knownPacks = PiecePackUtils.getKnownPiecePacks();
+        pieceSet = knownPacks.contains(requestedPieceSet) 
+            ? requestedPieceSet 
+            : 'cardinal';
+      }
+    }
     return Container(
       decoration: BoxDecoration(
         color: Palette.backgroundTertiary,
@@ -242,11 +310,27 @@ class _MoveHistoryWidgetState extends State<MoveHistoryWidget> {
                       final whiteMoveIndex = index * 2;
                       final blackMoveIndex = index * 2 + 1;
                       
-                      final whiteMove = whiteMoveIndex < moveHistory.length
-                          ? _convertToStandardNotation(moveHistory[whiteMoveIndex], isWhiteMove: true)
+                      final whiteMoveStr = whiteMoveIndex < moveHistory.length
+                          ? moveHistory[whiteMoveIndex]
                           : null;
-                      final blackMove = blackMoveIndex < moveHistory.length
-                          ? _convertToStandardNotation(moveHistory[blackMoveIndex], isWhiteMove: false)
+                      final blackMoveStr = blackMoveIndex < moveHistory.length
+                          ? moveHistory[blackMoveIndex]
+                          : null;
+                      
+                      final whiteMove = whiteMoveStr != null && whiteMoveStr.length == 4
+                          ? _parseMove(whiteMoveStr)
+                          : null;
+                      final blackMove = blackMoveStr != null && blackMoveStr.length == 4
+                          ? _parseMove(blackMoveStr)
+                          : null;
+                      
+                      final whitePiece = whiteMove != null && 
+                          whiteMove['from']!.isNotEmpty && whiteMove['to']!.isNotEmpty
+                          ? _getMovedPiece(whiteMove['from']!, whiteMove['to']!, true)
+                          : null;
+                      final blackPiece = blackMove != null && 
+                          blackMove['from']!.isNotEmpty && blackMove['to']!.isNotEmpty
+                          ? _getMovedPiece(blackMove['from']!, blackMove['to']!, false)
                           : null;
                       
                       final isCurrentMove = currentMoveIndex != null &&
@@ -274,22 +358,26 @@ class _MoveHistoryWidgetState extends State<MoveHistoryWidget> {
                                 ),
                               ),
                               Expanded(
-                                child: Text(
-                                  whiteMove ?? '-',
-                                  style: TextStyle(
-                                    color: Palette.textPrimary,
-                                    fontSize: 13,
-                                    fontFamily: 'monospace',
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        blackMove ?? '-',
+                                child: whiteMove != null && 
+                                    whiteMove['from']!.isNotEmpty && 
+                                    whiteMove['to']!.isNotEmpty
+                                    ? Row(
+                                        children: [
+                                          if (_buildPieceIcon(whitePiece, pieceSet) != null)
+                                            _buildPieceIcon(whitePiece, pieceSet)!,
+                                          Text(
+                                            '${whiteMove['from']} → ${whiteMove['to']}',
+                                            style: TextStyle(
+                                              color: Palette.textPrimary,
+                                              fontSize: 13,
+                                              fontFamily: 'monospace',
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : Text(
+                                        '-',
                                         style: TextStyle(
                                           color: Palette.textPrimary,
                                           fontSize: 13,
@@ -297,9 +385,35 @@ class _MoveHistoryWidgetState extends State<MoveHistoryWidget> {
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
+                              ),
+                              Expanded(
+                                child: blackMove != null && 
+                                    blackMove['from']!.isNotEmpty && 
+                                    blackMove['to']!.isNotEmpty
+                                    ? Row(
+                                        children: [
+                                          if (_buildPieceIcon(blackPiece, pieceSet) != null)
+                                            _buildPieceIcon(blackPiece, pieceSet)!,
+                                          Text(
+                                            '${blackMove['from']} → ${blackMove['to']}',
+                                            style: TextStyle(
+                                              color: Palette.textPrimary,
+                                              fontSize: 13,
+                                              fontFamily: 'monospace',
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : Text(
+                                        '-',
+                                        style: TextStyle(
+                                          color: Palette.textPrimary,
+                                          fontSize: 13,
+                                          fontFamily: 'monospace',
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
                               ),
                             ],
                           ),
