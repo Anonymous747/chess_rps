@@ -1,11 +1,16 @@
+import 'package:chess_rps/common/enum.dart';
+import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
+import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/widget/board_widget.dart';
 import 'package:chess_rps/presentation/widget/captured_pieces_widget.dart';
+import 'package:chess_rps/presentation/widget/game_over_dialog.dart';
 import 'package:chess_rps/presentation/widget/move_history_widget.dart';
 import 'package:chess_rps/presentation/widget/rps_overlay.dart';
 import 'package:chess_rps/presentation/widget/timer_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -31,6 +36,35 @@ class ChessScreen extends HookConsumerWidget {
     final currentOrder = ref.watch(gameControllerProvider.select((state) => state.currentOrder));
     final playerSide = ref.watch(gameControllerProvider.select((state) => state.playerSide));
     final moveHistory = ref.watch(gameControllerProvider.select((state) => state.moveHistory));
+    
+    // Watch for game over state
+    final gameOver = ref.watch(gameControllerProvider.select((state) => state.gameOver));
+    final winner = ref.watch(gameControllerProvider.select((state) => state.winner));
+    final isCheckmate = ref.watch(gameControllerProvider.select((state) => state.isCheckmate));
+    final isStalemate = ref.watch(gameControllerProvider.select((state) => state.isStalemate));
+    
+    // Track if dialog has been shown to prevent multiple showings
+    final dialogShown = useRef(false);
+    
+    // Show game over dialog when game ends (only once)
+    useEffect(() {
+      if (gameOver && !dialogShown.value && context.mounted) {
+        dialogShown.value = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            _showGameOverDialog(
+              context,
+              controller,
+              winner: winner,
+              playerSide: playerSide,
+              isCheckmate: isCheckmate,
+              isStalemate: isStalemate,
+            );
+          }
+        });
+      }
+      return null;
+    }, [gameOver, winner, playerSide, isCheckmate, isStalemate]);
 
     return Scaffold(
       body: Container(
@@ -309,5 +343,81 @@ class ChessScreen extends HookConsumerWidget {
         );
       },
     );
+  }
+
+  void _showGameOverDialog(
+    BuildContext context,
+    GameController controller, {
+    required Side? winner,
+    required Side playerSide,
+    required bool isCheckmate,
+    required bool isStalemate,
+  }) {
+    // Prevent showing dialog multiple times
+    if (!context.mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder: (BuildContext dialogContext) {
+        return GameOverDialog(
+          winner: winner,
+          playerSide: playerSide,
+          isCheckmate: isCheckmate,
+          isStalemate: isStalemate,
+          onReturnToMenu: () {
+            _handleGameOver(context, controller, winner, playerSide, isCheckmate, isStalemate);
+          },
+        );
+      },
+    );
+  }
+
+  void _handleGameOver(
+    BuildContext context,
+    GameController controller,
+    Side? winner,
+    Side playerSide,
+    bool isCheckmate,
+    bool isStalemate,
+  ) {
+    // Log analytics
+    final playerWon = winner == playerSide;
+    final isDraw = isStalemate || winner == null;
+    
+    AppLogger.info(
+      'Game Over Analytics:',
+      tag: 'ChessScreen',
+    );
+    AppLogger.info(
+      '  - Result: ${isDraw ? "Draw" : (playerWon ? "Win" : "Loss")}',
+      tag: 'ChessScreen',
+    );
+    AppLogger.info(
+      '  - End Type: ${isCheckmate ? "Checkmate" : (isStalemate ? "Stalemate" : "Other")}',
+      tag: 'ChessScreen',
+    );
+    AppLogger.info(
+      '  - Player Side: ${playerSide.name}',
+      tag: 'ChessScreen',
+    );
+    AppLogger.info(
+      '  - Winner: ${winner?.name ?? "None"}',
+      tag: 'ChessScreen',
+    );
+    
+    // TODO: Send analytics to backend when analytics service is implemented
+    // Example:
+    // await analyticsService.recordGameResult(
+    //   result: isDraw ? GameResult.draw : (playerWon ? GameResult.win : GameResult.loss),
+    //   endType: isCheckmate ? GameEndType.checkmate : (isStalemate ? GameEndType.stalemate : GameEndType.other),
+    //   playerSide: playerSide,
+    // );
+    
+    // Dispose controller and navigate to main menu
+    controller.dispose();
+    if (context.mounted) {
+      context.go(AppRoutes.mainMenu);
+    }
   }
 }
