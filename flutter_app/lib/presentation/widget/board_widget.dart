@@ -22,21 +22,20 @@ class BoardWidget extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
 
     final sideSize = _calculateCellWidth(context, width);
-    final letters = PlayerSideMediator.playerSide.isLight
-        ? boardLetters
-        : boardLetters.reversed.toList();
+    final letters =
+        PlayerSideMediator.playerSide.isLight ? boardLetters : boardLetters.reversed.toList();
 
-    final numbers = PlayerSideMediator.playerSide.isLight
-        ? boardNumbers
-        : boardNumbers.reversed.toList();
+    final numbers =
+        PlayerSideMediator.playerSide.isLight ? boardNumbers : boardNumbers.reversed.toList();
 
     return Stack(
+      alignment: Alignment.center,
       children: [
         Container(
+          alignment: Alignment.center,
           decoration: BoxDecoration(
               color: Palette.backgroundTertiary,
-              border: Border.all(
-                  width: _parentBorderWidth, color: Palette.backgroundTertiary),
+              border: Border.all(width: _parentBorderWidth, color: Palette.backgroundTertiary),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -46,13 +45,13 @@ class BoardWidget extends StatelessWidget {
                   offset: const Offset(0, 15),
                 ),
               ]),
-          height: width,
+          height: width - 30,
           width: width,
           child: Container(
+            alignment: Alignment.center,
             decoration: BoxDecoration(
                 color: Palette.backgroundElevated,
-                border: Border.all(
-                    width: _childBorderWidth, color: Palette.glassBorder),
+                border: Border.all(width: _childBorderWidth, color: Palette.glassBorder),
                 borderRadius: BorderRadius.circular(16)),
             child: GridView.count(
               crossAxisCount: 8,
@@ -113,5 +112,5 @@ class BoardWidget extends StatelessWidget {
   }
 
   double _calculateCellWidth(BuildContext context, double width) =>
-      (width - _parentBorderWidth * 2 - _childBorderWidth * 2) / 8;
+      (width - _parentBorderWidth * 2 - _childBorderWidth * 2) / 8 - 4;
 }

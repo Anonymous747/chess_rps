@@ -9,11 +9,26 @@ class Rook extends Figure {
   Rook({
     required Side side,
     required Position position,
+    bool isMoved = false,
   }) : super(
           side: side,
           position: position,
           role: Role.rook,
-        );
+        ) {
+    _isMoved = isMoved;
+  }
+
+  /// Did rook make moves (needed for castling rules)
+  ///
+  bool _isMoved = false;
+
+  bool get hasMoved => _isMoved;
+
+  @override
+  void moveTo(Cell to) {
+    super.moveTo(to);
+    _isMoved = true;
+  }
 
   @override
   bool availableForMove(Board board, Cell to) {
@@ -32,10 +47,11 @@ class Rook extends Figure {
   }
 
   @override
-  Figure copyWith({Side? side, Position? position}) {
+  Figure copyWith({Side? side, Position? position, bool? isMoved}) {
     return Rook(
       side: side ?? this.side,
       position: position ?? this.position,
+      isMoved: isMoved ?? _isMoved,
     );
   }
 }

@@ -82,6 +82,7 @@ class GameController extends _$GameController {
     Future.microtask(() async {
       AppLogger.debug('Executing initial game strategy action', tag: 'GameController');
       await gameStrategy.initialAction(this, state);
+      AppLogger.info('Game fully initialized and ready', tag: 'GameController');
     });
 
     AppLogger.info('GameController initialized successfully', tag: 'GameController');
@@ -223,6 +224,20 @@ class GameController extends _$GameController {
       final position = hash.toPosition();
       final target = state.board.getCellAt(position.row, position.col);
 
+      // CRITICAL: Never mark a cell as available if it contains our own piece
+      if (target.isOccupied &&
+          target.figure != null &&
+          fromCell.figure != null &&
+          target.figure!.side == fromCell.figure!.side) {
+        AppLogger.warning(
+          'Skipping marking own piece cell as available: '
+          'from=${fromCell.positionHash} (${fromCell.figure?.role}) -> '
+          'target=${target.positionHash} (${target.figure?.role})',
+          tag: 'GameController'
+        );
+        continue; // Skip this cell - don't mark it as available
+      }
+
       final canBeKnockedDown = fromCell.calculateCanBeKnockedDown(target);
 
       // Opposite figure available to knock
@@ -239,20 +254,117 @@ class GameController extends _$GameController {
   /// Display all available figure's actions on the board
   ///
   void showAvailableActions(Cell fromCell) {
+    AppLogger.info(
+      '=== GameController.showAvailableActions START ===',
+      tag: 'GameController'
+    );
+    AppLogger.info(
+      'fromCell: ${fromCell.position.algebraicPosition}, '
+      'role: ${fromCell.figure?.role}, '
+      'isSelected: ${fromCell.isSelected}',
+      tag: 'GameController'
+    );
+    AppLogger.info(
+      'Current selectedFigure before: ${state.selectedFigure}',
+      tag: 'GameController'
+    );
+    
     // Wipe selected cells before follow action
     if (state.selectedFigure != null) {
+      AppLogger.info(
+        'Clearing previous selection: ${state.selectedFigure}',
+        tag: 'GameController'
+      );
+      
+      // Get the previously selected cell to log what we're clearing
+      final prevSelectedHash = state.selectedFigure!;
+      // Parse position hash (format: "row-col")
+      final parts = prevSelectedHash.split('-');
+      final prevSelectedRow = int.parse(parts[0]);
+      final prevSelectedCol = int.parse(parts[1]);
+      final prevSelectedCell = state.board.getCellAt(prevSelectedRow, prevSelectedCol);
+      AppLogger.info(
+        'Previous selection details: position=${prevSelectedHash}, '
+        'role=${prevSelectedCell.figure?.role}, '
+        'isSelected=${prevSelectedCell.isSelected}, '
+        'isAvailable=${prevSelectedCell.isAvailable}',
+        tag: 'GameController'
+      );
+      
+      // Clear selection state first
       state = state.copyWith(selectedFigure: null);
+      
+      // Then clear board visual indicators
       state.board.removeSelection();
+      
+      AppLogger.info(
+        'After removeSelection: checking if board state was cleared',
+        tag: 'GameController'
+      );
+      
+      // Verify the board was cleared
+      final afterClearCell = state.board.getCellAt(prevSelectedRow, prevSelectedCol);
+      AppLogger.info(
+        'After clearing - prev cell state: isSelected=${afterClearCell.isSelected}, '
+        'isAvailable=${afterClearCell.isAvailable}, '
+        'canBeKnockedDown=${afterClearCell.canBeKnockedDown}',
+        tag: 'GameController'
+      );
+      
+      // Also check the new cell we're about to select
+      AppLogger.info(
+        'New cell to select - before: isSelected=${fromCell.isSelected}, '
+        'isAvailable=${fromCell.isAvailable}, '
+        'canBeKnockedDown=${fromCell.canBeKnockedDown}',
+        tag: 'GameController'
+      );
     }
 
-    if (!fromCell.isSelected) {
-      _displayAvailableCells(fromCell);
+    // Get fresh cell state after clearing (in case it changed)
+    final freshFromCell = state.board.getCellAt(fromCell.row, fromCell.col);
+    AppLogger.info(
+      'Fresh cell state after clearing: isSelected=${freshFromCell.isSelected}, '
+      'isAvailable=${freshFromCell.isAvailable}, '
+      'figure=${freshFromCell.figure?.role}',
+      tag: 'GameController'
+    );
+    
+    if (!freshFromCell.isSelected) {
+      AppLogger.info(
+        'Cell not selected, displaying available moves',
+        tag: 'GameController'
+      );
+      _displayAvailableCells(freshFromCell);
+    } else {
+      AppLogger.info(
+        'Cell already selected, deselecting',
+        tag: 'GameController'
+      );
     }
 
-    state.board.updateCell(fromCell.row, fromCell.col,
-        (cell) => cell.copyWith(isSelected: !fromCell.isSelected));
-    state = state.copyWith(
-        selectedFigure: !fromCell.isSelected ? fromCell.positionHash : null);
+    // Update selection state
+    final willBeSelected = !freshFromCell.isSelected;
+    state.board.updateCell(freshFromCell.row, freshFromCell.col,
+        (cell) => cell.copyWith(isSelected: willBeSelected));
+    final newSelectedFigure = willBeSelected ? freshFromCell.positionHash : null;
+    state = state.copyWith(selectedFigure: newSelectedFigure);
+    
+    // Verify final state
+    final finalCell = state.board.getCellAt(freshFromCell.row, freshFromCell.col);
+    AppLogger.info(
+      'Final cell state: isSelected=${finalCell.isSelected}, '
+      'isAvailable=${finalCell.isAvailable}, '
+      'figure=${finalCell.figure?.role}',
+      tag: 'GameController'
+    );
+    AppLogger.info(
+      'New selectedFigure after: ${state.selectedFigure}',
+      tag: 'GameController'
+    );
+    AppLogger.info(
+      '=== GameController.showAvailableActions END ===',
+      tag: 'GameController'
+    );
   }
 
   /// Return the result is Opponents move has a correct status
@@ -343,23 +455,121 @@ class GameController extends _$GameController {
   /// Helps to define selected cell
   ///
   Cell _getSelectedCell(Board board, Cell target, {Cell? from}) {
-    if (from == null) {
-      final selectedPosition = state.selectedFigure!.toPosition();
-      return board.getCellAt(selectedPosition.row, selectedPosition.col);
+    AppLogger.info(
+      '=== GameController._getSelectedCell START ===',
+      tag: 'GameController'
+    );
+    AppLogger.info(
+      'from parameter: ${from?.positionHash}, '
+      'target: ${target.positionHash}, '
+      'selectedFigure: ${state.selectedFigure}',
+      tag: 'GameController'
+    );
+    
+    if (from != null) {
+      AppLogger.info(
+        'Using from parameter: ${from.positionHash}, role=${from.figure?.role}',
+        tag: 'GameController'
+      );
+      AppLogger.info(
+        '=== GameController._getSelectedCell END (from param) ===',
+        tag: 'GameController'
+      );
+      return from;
     }
 
-    return from;
+    if (state.selectedFigure != null) {
+      // Parse position hash (format: "row-col")
+      final parts = state.selectedFigure!.split('-');
+      final selectedRow = int.parse(parts[0]);
+      final selectedCol = int.parse(parts[1]);
+      final selectedCell = board.getCellAt(selectedRow, selectedCol);
+      
+      AppLogger.info(
+        'Using selectedFigure: ${state.selectedFigure} -> '
+        'row=$selectedRow, col=$selectedCol, '
+        'role=${selectedCell.figure?.role}, '
+        'side=${selectedCell.figure?.side}',
+        tag: 'GameController'
+      );
+      AppLogger.info(
+        '=== GameController._getSelectedCell END (selectedFigure) ===',
+        tag: 'GameController'
+      );
+      return selectedCell;
+    }
+
+    AppLogger.info(
+      'No selection, using target: ${target.positionHash}, role=${target.figure?.role}',
+      tag: 'GameController'
+    );
+    AppLogger.info(
+      '=== GameController._getSelectedCell END (target) ===',
+      tag: 'GameController'
+    );
+    return target;
   }
 
   /// Return the result is Opponents move has a correct status
   ///
   Future<bool> makeMove(Cell target, {Cell? from}) async {
+    AppLogger.info(
+      '=== GameController.makeMove START ===',
+      tag: 'GameController'
+    );
+    AppLogger.info(
+      'target: ${target.position.algebraicPosition}, '
+      'from parameter: ${from?.position.algebraicPosition}, '
+      'selectedFigure: ${state.selectedFigure}',
+      tag: 'GameController'
+    );
+    
     final board = state.board;
     final selectedCell = _getSelectedCell(board, target, from: from);
+    
+    AppLogger.info(
+      'selectedCell: ${selectedCell.position.algebraicPosition}, '
+      'role: ${selectedCell.figure?.role}, '
+      'side: ${selectedCell.figure?.side}',
+      tag: 'GameController'
+    );
+    AppLogger.info(
+      'target cell isAvailable: ${target.isAvailable}, '
+      'canBeKnockedDown: ${target.canBeKnockedDown}, '
+      'isOccupied: ${target.isOccupied}, '
+      'targetPiece: ${target.figure?.role}, '
+      'targetPieceSide: ${target.figure?.side}',
+      tag: 'GameController'
+    );
+
+    // CRITICAL SAFETY CHECK: Never allow moving to a cell with our own piece
+    if (target.isOccupied &&
+        target.figure != null &&
+        selectedCell.figure != null &&
+        target.figure!.side == selectedCell.figure!.side) {
+      AppLogger.error(
+        'BLOCKED INVALID MOVE: Attempting to move ${selectedCell.figure!.role} '
+        'from ${selectedCell.position.algebraicPosition} to ${target.position.algebraicPosition} '
+        'which contains own piece ${target.figure!.role}!',
+        tag: 'GameController'
+      );
+      AppLogger.info(
+        '=== GameController.makeMove END (blocked - own piece) ===',
+        tag: 'GameController'
+      );
+      return false;
+    }
 
     final isMoveAvailable = selectedCell.moveFigure(board, target);
     if (!isMoveAvailable) {
-      AppLogger.debug('Move not available', tag: 'GameController');
+      AppLogger.warning(
+        'Move not available: ${selectedCell.position.algebraicPosition} -> ${target.position.algebraicPosition}',
+        tag: 'GameController'
+      );
+      AppLogger.info(
+        '=== GameController.makeMove END (not available) ===',
+        tag: 'GameController'
+      );
       return false;
     }
 
@@ -374,6 +584,10 @@ class GameController extends _$GameController {
     } else {
       AppLogger.warning('Failed to execute move: $action', tag: 'GameController');
     }
+    AppLogger.info(
+      '=== GameController.makeMove END (success: $success) ===',
+      tag: 'GameController'
+    );
     return success;
   }
 

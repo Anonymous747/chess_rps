@@ -101,8 +101,15 @@ class Board {
   }
 
   /// King castling mechanism
+  /// This is ONLY called when the KING moves 2 squares (castling)
+  /// It should NEVER be called when moving a rook
   ///
   void _handleKingCastling(Cell from, Cell to) {
+    // Ensure this is only called for king moves
+    if (from.figure?.role != Role.king) {
+      throw Exception("Castling can only be performed by moving the king, not other pieces");
+    }
+    
     // Determine which side we're castling to (kingside or queenside)
     final isKingside = to.position.col > from.position.col;
     final rookCol = isKingside ? 7 : 0;
@@ -114,7 +121,14 @@ class Board {
     
     // Rook moves to the square next to the king (on the opposite side)
     final rookNewCol = isKingside ? to.position.col - 1 : to.position.col + 1;
-    final rook = rookCell.figure!.copyWith(position: Position(row: from.row, col: rookNewCol));
+    final rookNewPosition = Position(row: from.row, col: rookNewCol);
+    
+    // Create new rook at new position and mark it as moved (castling counts as a rook move)
+    // We need to cast to Rook to access the isMoved parameter
+    final rookFigure = rookCell.figure!;
+    final rook = rookFigure is Rook
+        ? rookFigure.copyWith(position: rookNewPosition, isMoved: true)
+        : rookFigure.copyWith(position: rookNewPosition);
 
     _updateCellFigure(from.row, rookNewCol, rook);
     _updateCellFigure(from.row, rookCol, null);

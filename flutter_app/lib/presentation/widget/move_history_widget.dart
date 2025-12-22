@@ -68,18 +68,17 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
     if (widget.board == null || fromPos.length != 2 || toPos.length != 2) {
       return null;
     }
-    
+
     try {
       final toPosition = toPos.convertToPosition();
-      
+
       // Validate position is within board bounds
-      if (toPosition.row < 0 || toPosition.row >= 8 || 
-          toPosition.col < 0 || toPosition.col >= 8) {
+      if (toPosition.row < 0 || toPosition.row >= 8 || toPosition.col < 0 || toPosition.col >= 8) {
         return null;
       }
-      
+
       final cell = widget.board!.getCellAt(toPosition.row, toPosition.col);
-      
+
       // The piece at the destination is the one that moved (unless it was captured)
       if (cell.figure != null && cell.figure!.side.isLight == isWhiteMove) {
         return cell.figure;
@@ -88,20 +87,20 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
       // If we can't determine, return null silently
       // This is expected for older moves where board state has changed
     }
-    
+
     return null;
   }
 
   /// Build piece icon widget
   Widget? _buildPieceIcon(Figure? figure, String pieceSet) {
     if (figure == null) return null;
-    
+
     try {
       final side = figure.side.toString(); // Returns 'black' or 'white'
       final role = figure.role.toString().split('.').last.toLowerCase();
       final safePieceSet = pieceSet.isNotEmpty ? pieceSet : 'cardinal';
       final imagePath = '$_imagesPath/$safePieceSet/$side/$role.png';
-      
+
       return Container(
         width: 20,
         height: 20,
@@ -125,29 +124,29 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
   String _generatePGN() {
     final moveHistory = widget.moveHistory;
     if (moveHistory.isEmpty) return '';
-    
+
     final buffer = StringBuffer();
     int moveNumber = 1;
-    
+
     for (int i = 0; i < moveHistory.length; i += 2) {
       buffer.write('$moveNumber. ');
-      
+
       // White move
       if (i < moveHistory.length) {
         final move = _parseMove(moveHistory[i]);
         buffer.write('${move['from']}${move['to']}');
       }
-      
+
       // Black move
       if (i + 1 < moveHistory.length) {
         final move = _parseMove(moveHistory[i + 1]);
         buffer.write(' ${move['from']}${move['to']}');
       }
-      
+
       buffer.write(' ');
       moveNumber++;
     }
-    
+
     return buffer.toString().trim();
   }
 
@@ -162,7 +161,7 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
       );
       return;
     }
-    
+
     Clipboard.setData(ClipboardData(text: pgn));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -177,7 +176,7 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
   Widget build(BuildContext context) {
     final moveHistory = widget.moveHistory;
     final currentMoveIndex = widget.currentMoveIndex;
-    
+
     // Get piece set from settings
     final settingsAsync = ref.watch(settingsControllerProvider);
     String pieceSet = 'cardinal'; // Default fallback
@@ -185,9 +184,7 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
       final requestedPieceSet = settingsAsync.value!.pieceSet;
       if (requestedPieceSet.isNotEmpty) {
         final knownPacks = PiecePackUtils.getKnownPiecePacks();
-        pieceSet = knownPacks.contains(requestedPieceSet) 
-            ? requestedPieceSet 
-            : 'cardinal';
+        pieceSet = knownPacks.contains(requestedPieceSet) ? requestedPieceSet : 'cardinal';
       }
     }
     return Container(
@@ -202,42 +199,6 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header with title and export button
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Move History',
-                  style: TextStyle(
-                    color: Palette.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => _exportPGN(context),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    backgroundColor: Palette.accent.withOpacity(0.2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: Text(
-                    'EXPORT PGN',
-                    style: TextStyle(
-                      color: Palette.accent,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           // Table header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -309,38 +270,38 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
                       final moveNumber = index + 1;
                       final whiteMoveIndex = index * 2;
                       final blackMoveIndex = index * 2 + 1;
-                      
-                      final whiteMoveStr = whiteMoveIndex < moveHistory.length
-                          ? moveHistory[whiteMoveIndex]
-                          : null;
-                      final blackMoveStr = blackMoveIndex < moveHistory.length
-                          ? moveHistory[blackMoveIndex]
-                          : null;
-                      
+
+                      final whiteMoveStr =
+                          whiteMoveIndex < moveHistory.length ? moveHistory[whiteMoveIndex] : null;
+                      final blackMoveStr =
+                          blackMoveIndex < moveHistory.length ? moveHistory[blackMoveIndex] : null;
+
                       final whiteMove = whiteMoveStr != null && whiteMoveStr.length == 4
                           ? _parseMove(whiteMoveStr)
                           : null;
                       final blackMove = blackMoveStr != null && blackMoveStr.length == 4
                           ? _parseMove(blackMoveStr)
                           : null;
-                      
-                      final whitePiece = whiteMove != null && 
-                          whiteMove['from']!.isNotEmpty && whiteMove['to']!.isNotEmpty
+
+                      final whitePiece = whiteMove != null &&
+                              whiteMove['from']!.isNotEmpty &&
+                              whiteMove['to']!.isNotEmpty
                           ? _getMovedPiece(whiteMove['from']!, whiteMove['to']!, true)
                           : null;
-                      final blackPiece = blackMove != null && 
-                          blackMove['from']!.isNotEmpty && blackMove['to']!.isNotEmpty
+                      final blackPiece = blackMove != null &&
+                              blackMove['from']!.isNotEmpty &&
+                              blackMove['to']!.isNotEmpty
                           ? _getMovedPiece(blackMove['from']!, blackMove['to']!, false)
                           : null;
-                      
+
                       final isCurrentMove = currentMoveIndex != null &&
-                          (currentMoveIndex == whiteMoveIndex || currentMoveIndex == blackMoveIndex);
-                      
+                          (currentMoveIndex == whiteMoveIndex ||
+                              currentMoveIndex == blackMoveIndex);
+
                       return Container(
                         decoration: BoxDecoration(
-                          color: isCurrentMove
-                              ? Palette.accent.withOpacity(0.1)
-                              : Colors.transparent,
+                          color:
+                              isCurrentMove ? Palette.accent.withOpacity(0.1) : Colors.transparent,
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -358,9 +319,9 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
                                 ),
                               ),
                               Expanded(
-                                child: whiteMove != null && 
-                                    whiteMove['from']!.isNotEmpty && 
-                                    whiteMove['to']!.isNotEmpty
+                                child: whiteMove != null &&
+                                        whiteMove['from']!.isNotEmpty &&
+                                        whiteMove['to']!.isNotEmpty
                                     ? Row(
                                         children: [
                                           if (_buildPieceIcon(whitePiece, pieceSet) != null)
@@ -387,9 +348,9 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
                                       ),
                               ),
                               Expanded(
-                                child: blackMove != null && 
-                                    blackMove['from']!.isNotEmpty && 
-                                    blackMove['to']!.isNotEmpty
+                                child: blackMove != null &&
+                                        blackMove['from']!.isNotEmpty &&
+                                        blackMove['to']!.isNotEmpty
                                     ? Row(
                                         children: [
                                           if (_buildPieceIcon(blackPiece, pieceSet) != null)

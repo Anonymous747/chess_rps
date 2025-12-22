@@ -4,6 +4,7 @@ import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/figure.dart';
+import 'package:chess_rps/domain/model/figures/rook.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
 
@@ -56,10 +57,16 @@ class King extends Figure {
     final rookCol = isKingside ? 7 : 0;
     final rookCell = board.getCellAt(position.row, rookCol);
 
-    // 1. Check if rook exists and hasn't moved (rook must be at starting position)
+    // 1. Check if rook exists, hasn't moved, and is at starting position
     if (rookCell.figure == null || 
         rookCell.figure!.role != Role.rook || 
         rookCell.figure!.side != side) {
+      return false;
+    }
+    
+    // Check if rook has moved (castling requires rook to be unmoved)
+    final rook = rookCell.figure!;
+    if (rook is Rook && rook.hasMoved) {
       return false;
     }
 
@@ -77,46 +84,44 @@ class King extends Figure {
       }
     }
 
-    // 4. Check if king passes through check (squares king moves through must not be under attack)
-    // King moves 2 squares, so check the square it passes through
+    // 4. Check if squares the king moves through are under attack
+    // King moves 2 squares, so check both the square it passes through and the final square
     final kingPassThroughCol = position.col + (isKingside ? 1 : -1);
-    final passThroughCell = board.getCellAt(position.row, kingPassThroughCol);
+    final kingFinalCol = to.position.col;
     
-    // Temporarily move king to pass-through square to check if it would be in check
-    final originalKing = board.getCellAt(position.row, position.col).figure;
-    board.updateCell(position.row, kingPassThroughCol, (cell) => 
-      cell.copyWith(figure: originalKing?.copyWith(position: passThroughCell.position)));
-    board.updateCell(position.row, position.col, (cell) => cell.copyWith(figure: null));
-    
-    final wouldBeInCheck = ActionChecker.isKingInCheck(board, side);
-    
-    // Restore king
-    board.updateCell(position.row, position.col, (cell) => 
-      cell.copyWith(figure: originalKing));
-    board.updateCell(position.row, kingPassThroughCol, (cell) => cell.copyWith(figure: null));
-    
-    if (wouldBeInCheck) {
+    // Check if the square the king passes through is under attack
+    if (_isSquareUnderAttack(board, position.row, kingPassThroughCol, side)) {
       return false;
     }
-
-    // 5. Check if final position would put king in check
-    final originalKingFinal = board.getCellAt(position.row, position.col).figure;
-    board.updateCell(to.position.row, to.position.col, (cell) => 
-      cell.copyWith(figure: originalKingFinal?.copyWith(position: to.position)));
-    board.updateCell(position.row, position.col, (cell) => cell.copyWith(figure: null));
     
-    final finalWouldBeInCheck = ActionChecker.isKingInCheck(board, side);
-    
-    // Restore king
-    board.updateCell(position.row, position.col, (cell) => 
-      cell.copyWith(figure: originalKingFinal));
-    board.updateCell(to.position.row, to.position.col, (cell) => cell.copyWith(figure: null));
-    
-    if (finalWouldBeInCheck) {
+    // 5. Check if the final square the king lands on is under attack
+    if (_isSquareUnderAttack(board, position.row, kingFinalCol, side)) {
       return false;
     }
 
     return true;
+  }
+
+  /// Check if a square is under attack by opponent pieces
+  /// This is used to verify castling squares are safe
+  bool _isSquareUnderAttack(Board board, int row, int col, Side defendingSide) {
+    final opponentSide = defendingSide.opposite;
+    final targetCell = board.getCellAt(row, col);
+    
+    // Check if any opponent piece can attack this square
+    for (int r = 0; r < 8; r++) {
+      for (int c = 0; c < 8; c++) {
+        final cell = board.getCellAt(r, c);
+        if (cell.figure != null && cell.figure!.side == opponentSide) {
+          // Check if this opponent piece can attack the target square
+          if (cell.figure!.availableForMove(board, targetCell)) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    return false;
   }
 
   @override

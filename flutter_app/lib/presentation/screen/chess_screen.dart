@@ -2,15 +2,21 @@ import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
+import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/utils/avatar_utils.dart';
+import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
 import 'package:chess_rps/presentation/widget/board_widget.dart';
 import 'package:chess_rps/presentation/widget/captured_pieces_widget.dart';
+import 'package:chess_rps/presentation/widget/finish_game_dialog.dart';
+import 'package:chess_rps/presentation/widget/game_loading_screen.dart';
 import 'package:chess_rps/presentation/widget/game_over_dialog.dart';
 import 'package:chess_rps/presentation/widget/move_history_widget.dart';
 import 'package:chess_rps/presentation/widget/rps_overlay.dart';
 import 'package:chess_rps/presentation/widget/timer_widget.dart';
+import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -24,37 +30,207 @@ class ChessScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(gameControllerProvider.notifier);
-    final board = ref.watch(gameControllerProvider.select((state) => state.board));
-    final showRpsOverlay = ref.read(gameControllerProvider.select((state) => state.showRpsOverlay));
-    final waitingForRpsResult =
-        ref.read(gameControllerProvider.select((state) => state.waitingForRpsResult));
-    final opponentRpsChoice =
-        ref.read(gameControllerProvider.select((state) => state.opponentRpsChoice));
-    final playerWonRps = ref.read(gameControllerProvider.select((state) => state.playerWonRps));
-    final lightPlayerTime =
-        ref.watch(gameControllerProvider.select((state) => state.lightPlayerTimeSeconds));
-    final darkPlayerTime =
-        ref.watch(gameControllerProvider.select((state) => state.darkPlayerTimeSeconds));
-    final currentOrder = ref.watch(gameControllerProvider.select((state) => state.currentOrder));
-    final playerSide = ref.watch(gameControllerProvider.select((state) => state.playerSide));
-    final moveHistory = ref.watch(gameControllerProvider.select((state) => state.moveHistory));
+    final gameState = ref.watch(gameControllerProvider);
+    final settingsAsync = ref.watch(settingsControllerProvider);
     
-    // Watch for game over state
-    final gameOver = ref.watch(gameControllerProvider.select((state) => state.gameOver));
-    final winner = ref.watch(gameControllerProvider.select((state) => state.winner));
-    final isCheckmate = ref.watch(gameControllerProvider.select((state) => state.isCheckmate));
-    final isStalemate = ref.watch(gameControllerProvider.select((state) => state.isStalemate));
+    // Track image precaching state (use useState to trigger rebuilds)
+    final imagesPrecachedState = useState(false);
+    final precachingInProgress = useRef(false);
+    final lastGameKeyRef = useRef<String?>(null);
+    
+    // Show loading screen until game is fully initialized
+    // Check if board is ready: all pieces must be loaded and board must be properly initialized
+    final board = gameState.board;
+    final hasBoardCells = board.cells.isNotEmpty && board.cells.length == 8;
+    
+    // Get current piece set
+    String currentPieceSet = 'cardinal'; // Default fallback
+    if (settingsAsync.hasValue && settingsAsync.value != null) {
+      final requestedPieceSet = settingsAsync.value!.pieceSet;
+      if (requestedPieceSet.isNotEmpty) {
+        final knownPacks = PiecePackUtils.getKnownPiecePacks();
+        currentPieceSet = knownPacks.contains(requestedPieceSet) 
+            ? requestedPieceSet 
+            : 'cardinal';
+      }
+    }
+    
+    // Count pieces to ensure all are loaded (should be 32 pieces total: 16 per side)
+    int pieceCount = 0;
+    if (hasBoardCells) {
+      for (final row in board.cells) {
+        for (final cell in row) {
+          if (cell.figure != null) {
+            pieceCount++;
+          }
+        }
+      }
+    }
+    
+    // Create a unique game key that changes when a new game starts
+    // This key is based on: piece set, move history length, and initial timer state
+    // When a new game starts, move history is empty and timer is reset to 600
+    final currentMoveHistoryLength = gameState.moveHistory.length;
+    final isFreshGame = pieceCount == 32 && 
+                        currentMoveHistoryLength == 0 && 
+                        gameState.lightPlayerTimeSeconds == 600 &&
+                        gameState.darkPlayerTimeSeconds == 600;
+    final currentGameKey = '${currentPieceSet}_${currentMoveHistoryLength}_${gameState.lightPlayerTimeSeconds}_${gameState.darkPlayerTimeSeconds}';
+    
+    // Reset precaching state when a new game is detected
+    // A new game is detected when:
+    // 1. Game key changes (different game session)
+    // 2. AND we have a fresh game state (32 pieces, no moves, 600s timers)
+    //    OR the previous game had moves and now we're at 0 moves (game reset)
+    int previousMoveHistoryLength = -1;
+    if (lastGameKeyRef.value != null) {
+      final parts = lastGameKeyRef.value!.split('_');
+      if (parts.length >= 2) {
+        previousMoveHistoryLength = int.tryParse(parts[1]) ?? -1;
+      }
+    }
+    final isNewGame = lastGameKeyRef.value != null && 
+                      lastGameKeyRef.value != currentGameKey &&
+                      (isFreshGame || (previousMoveHistoryLength > 0 && currentMoveHistoryLength == 0));
+    
+    // Reset precaching state for new game
+    useEffect(() {
+      if (isNewGame || (lastGameKeyRef.value == null && isFreshGame)) {
+        AppLogger.info(
+          'New game detected: gameKey=${lastGameKeyRef.value} -> $currentGameKey. Resetting image precaching state.',
+          tag: 'ChessScreen'
+        );
+        imagesPrecachedState.value = false;
+        precachingInProgress.value = false;
+      }
+      lastGameKeyRef.value = currentGameKey;
+      return null;
+    }, [currentGameKey, isFreshGame, currentMoveHistoryLength]);
+    
+    // Game is fully ready when ALL of the following are true:
+    // 1. Board has 8 rows (full board structure)
+    // 2. Timers are initialized (lightPlayerTimeSeconds > 0 indicates game started)
+    // 3. Settings are loaded (piece set and board theme available)
+    // 4. Game state is initialized (playerSide and currentOrder are set)
+    // 5. All images are precached
+    // Note: We don't check pieceCount >= 32 because pieces get captured during gameplay,
+    // so the count will drop below 32. The board structure being initialized is sufficient.
+    final settingsReady = settingsAsync.hasValue && settingsAsync.value != null;
+    // playerSide and currentOrder are non-nullable in GameState, so they're always set
+    final gameStateReady = true;
+    final boardReady = hasBoardCells && 
+                       gameState.lightPlayerTimeSeconds > 0 &&
+                       gameState.darkPlayerTimeSeconds > 0;
+    
+    // All active game information must be loaded
+    final allGameInfoReady = boardReady && 
+                             settingsReady && 
+                             gameStateReady;
+    
+    // Precache all piece images when all game info is ready but images aren't precached yet
+    useEffect(() {
+      if (allGameInfoReady && !imagesPrecachedState.value && !precachingInProgress.value && context.mounted) {
+        precachingInProgress.value = true;
+        AppLogger.info('Starting image precaching...', tag: 'ChessScreen');
+        
+        // Use current piece set (already determined above)
+        final pieceSet = currentPieceSet;
+        
+        // Collect all unique piece images needed (all 6 piece types for both sides)
+        final Set<String> imagePaths = {};
+        // Add all piece types for both sides to ensure complete precaching
+        final pieceTypes = ['king', 'queen', 'rook', 'bishop', 'knight', 'pawn'];
+        final sides = ['white', 'black'];
+        for (final side in sides) {
+          for (final pieceType in pieceTypes) {
+            final imagePath = 'assets/images/figures/$pieceSet/$side/$pieceType.png';
+            imagePaths.add(imagePath);
+          }
+        }
+        
+        AppLogger.info(
+          'Precaching ${imagePaths.length} piece images for piece set: $pieceSet',
+          tag: 'ChessScreen'
+        );
+        
+        // Precache all images
+        Future(() async {
+          try {
+            int successCount = 0;
+            int failCount = 0;
+            for (final imagePath in imagePaths) {
+              try {
+                await precacheImage(AssetImage(imagePath), context);
+                successCount++;
+              } catch (e) {
+                failCount++;
+                AppLogger.warning(
+                  'Failed to precache image: $imagePath - $e',
+                  tag: 'ChessScreen'
+                );
+              }
+            }
+            AppLogger.info(
+              'Image precaching complete: $successCount succeeded, $failCount failed',
+              tag: 'ChessScreen'
+            );
+            if (context.mounted) {
+              imagesPrecachedState.value = true;
+            }
+            precachingInProgress.value = false;
+          } catch (e) {
+            AppLogger.error(
+              'Error during image precaching: $e',
+              tag: 'ChessScreen',
+              error: e,
+            );
+            // Still mark as precached to avoid infinite loading
+            if (context.mounted) {
+              imagesPrecachedState.value = true;
+            }
+            precachingInProgress.value = false;
+          }
+        });
+      }
+      return null;
+    }, [allGameInfoReady]);
+    
+    // Watch for game over state FIRST - check this before rendering game board
+    final gameOver = gameState.gameOver;
+    final winner = gameState.winner;
+    final isCheckmate = gameState.isCheckmate;
+    final isStalemate = gameState.isStalemate;
+    final playerSide = gameState.playerSide;
     
     // Track if dialog has been shown to prevent multiple showings
     final dialogShown = useRef(false);
+    final previousGameOver = useRef(false);
     
     // Capture context for use in useEffect
     final buildContext = context;
     
-    // Show game over dialog when game ends (only once)
+    // Show game over dialog IMMEDIATELY when game ends (only once)
+    // This must happen FIRST, before any other UI updates or game board rendering
     useEffect(() {
-      if (gameOver && !dialogShown.value) {
+      // Reset dialogShown when gameOver transitions from true to false (new game started)
+      if (previousGameOver.value && !gameOver) {
+        AppLogger.info(
+          'GameOver state reset - resetting dialogShown flag for new game',
+          tag: 'ChessScreen'
+        );
+        dialogShown.value = false;
+      }
+      previousGameOver.value = gameOver;
+      
+      if (gameOver && !dialogShown.value && buildContext.mounted) {
         dialogShown.value = true;
+        AppLogger.info(
+          'Game ended - showing win/loss dialog immediately. '
+          'winner=${winner?.name}, playerSide=${playerSide.name}, '
+          'isCheckmate=$isCheckmate, isStalemate=$isStalemate',
+          tag: 'ChessScreen'
+        );
+        // Use WidgetsBinding to ensure dialog shows even during build phase
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (buildContext.mounted) {
             _showGameOverDialog(
@@ -71,6 +247,33 @@ class ChessScreen extends HookConsumerWidget {
       }
       return null;
     }, [gameOver, winner, playerSide, isCheckmate, isStalemate]);
+    
+    // Game is ready when all information is loaded AND images are precached
+    final isReady = allGameInfoReady && imagesPrecachedState.value;
+    
+    if (!isReady) {
+      AppLogger.debug(
+        'Game not ready yet: '
+        'hasBoardCells=$hasBoardCells, '
+        'pieceCount=$pieceCount, '
+        'lightTime=${gameState.lightPlayerTimeSeconds}, '
+        'darkTime=${gameState.darkPlayerTimeSeconds}, '
+        'settingsReady=$settingsReady, '
+        'gameStateReady=$gameStateReady, '
+        'imagesPrecached=${imagesPrecachedState.value}',
+        tag: 'ChessScreen'
+      );
+      return const GameLoadingScreen();
+    }
+    
+    final showRpsOverlay = gameState.showRpsOverlay;
+    final waitingForRpsResult = gameState.waitingForRpsResult;
+    final opponentRpsChoice = gameState.opponentRpsChoice;
+    final playerWonRps = gameState.playerWonRps;
+    final lightPlayerTime = gameState.lightPlayerTimeSeconds;
+    final darkPlayerTime = gameState.darkPlayerTimeSeconds;
+    final currentOrder = gameState.currentOrder;
+    final moveHistory = gameState.moveHistory;
 
     return Scaffold(
       body: Container(
@@ -105,41 +308,12 @@ class ChessScreen extends HookConsumerWidget {
                           child: _buildStatusText(playerWonRps),
                         ),
                         const SizedBox(height: 12),
-                        // Row with finish button and timers
-                        Row(
-                          children: [
-                            // Finish game button
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Palette.backgroundTertiary,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Palette.glassBorder,
-                                  width: 1,
-                                ),
-                              ),
-                              child: TextButton(
-                                onPressed: () => _showFinishGameDialog(context, controller),
-                                child: Text(
-                                  'Завершить игру',
-                                  style: TextStyle(
-                                    color: Palette.textPrimary,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Timer widget
-                            Expanded(
-                              child: TimerWidget(
-                                lightPlayerTimeSeconds: lightPlayerTime,
-                                darkPlayerTimeSeconds: darkPlayerTime,
-                                currentTurn: currentOrder,
-                              ),
-                            ),
-                          ],
+                        // Timer widget with finish button
+                        TimerWidget(
+                          lightPlayerTimeSeconds: lightPlayerTime,
+                          darkPlayerTimeSeconds: darkPlayerTime,
+                          currentTurn: currentOrder,
+                          onFinishGame: () => _showFinishGameDialog(context, controller),
                         ),
                       ],
                     ),
@@ -150,13 +324,23 @@ class ChessScreen extends HookConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Opponent\'s Captures',
-                          style: TextStyle(
-                            color: Palette.textSecondary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Row(
+                          children: [
+                            // Opponent avatar
+                            UserAvatarByIconWidget(
+                              avatarIconName: _getOpponentAvatarIconName(),
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Opponent\'s Captures',
+                              style: TextStyle(
+                                color: Palette.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         CapturedPiecesWidget(
@@ -179,13 +363,22 @@ class ChessScreen extends HookConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Your Captures',
-                          style: TextStyle(
-                            color: Palette.textSecondary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Row(
+                          children: [
+                            // Current user avatar
+                            UserAvatarWidget(
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Your Captures',
+                              style: TextStyle(
+                                color: Palette.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         CapturedPiecesWidget(
@@ -227,10 +420,10 @@ class ChessScreen extends HookConsumerWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: Palette.success.withOpacity(0.2),
+          color: Palette.success.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Palette.success.withOpacity(0.5),
+            color: Palette.success.withValues(alpha: 0.5),
             width: 1.5,
           ),
         ),
@@ -258,10 +451,10 @@ class ChessScreen extends HookConsumerWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: Palette.warning.withOpacity(0.2),
+          color: Palette.warning.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Palette.warning.withOpacity(0.5),
+            color: Palette.warning.withValues(alpha: 0.5),
             width: 1.5,
           ),
         ),
@@ -293,59 +486,17 @@ class ChessScreen extends HookConsumerWidget {
   void _showFinishGameDialog(BuildContext context, GameController controller) {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: Palette.backgroundTertiary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: Palette.glassBorder,
-              width: 1,
-            ),
-          ),
-          title: Text(
-            'Завершить игру?',
-            style: TextStyle(
-              color: Palette.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          content: Text(
-            'Вы действительно хотите завершить игру? Результат будет потерян.',
-            style: TextStyle(
-              color: Palette.textSecondary,
-              fontSize: 14,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(
-                'Нет',
-                style: TextStyle(
-                  color: Palette.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                controller.dispose();
-                context.pop();
-              },
-              child: Text(
-                'Да',
-                style: TextStyle(
-                  color: Palette.error,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
+        return FinishGameDialog(
+          onCancel: () {
+            Navigator.of(dialogContext).pop();
+          },
+          onConfirm: () {
+            Navigator.of(dialogContext).pop();
+            controller.dispose();
+            context.pop();
+          },
         );
       },
     );
@@ -361,23 +512,47 @@ class ChessScreen extends HookConsumerWidget {
     required bool isStalemate,
   }) {
     // Prevent showing dialog multiple times
-    if (!context.mounted) return;
+    if (!context.mounted) {
+      AppLogger.warning(
+        'Cannot show game over dialog - context not mounted',
+        tag: 'ChessScreen'
+      );
+      return;
+    }
     
-    showDialog(
-      context: context,
-      barrierDismissible: false, // Prevent dismissing by tapping outside
-      builder: (BuildContext dialogContext) {
-        return GameOverDialog(
-          winner: winner,
-          playerSide: playerSide,
-          isCheckmate: isCheckmate,
-          isStalemate: isStalemate,
-          onReturnToMenu: () {
-            _handleGameOver(context, controller, ref, winner, playerSide, isCheckmate, isStalemate);
-          },
-        );
-      },
+    AppLogger.info(
+      'Showing game over dialog: winner=${winner?.name}, playerSide=${playerSide.name}, isCheckmate=$isCheckmate, isStalemate=$isStalemate',
+      tag: 'ChessScreen'
     );
+    
+    try {
+      // Show dialog with highest priority - it blocks all other interactions
+      showDialog(
+        context: context,
+        barrierDismissible: false, // Prevent dismissing by tapping outside
+        barrierColor: Colors.black.withValues(alpha: 0.7), // Dark overlay to focus attention
+        useSafeArea: true, // Ensure dialog is within safe area
+        builder: (BuildContext dialogContext) {
+          return GameOverDialog(
+            winner: winner,
+            playerSide: playerSide,
+            isCheckmate: isCheckmate,
+            isStalemate: isStalemate,
+            onReturnToMenu: () {
+              _handleGameOver(context, controller, ref, winner, playerSide, isCheckmate, isStalemate);
+            },
+          );
+        },
+      );
+      AppLogger.info('Game over dialog shown successfully', tag: 'ChessScreen');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Failed to show game over dialog: $e',
+        tag: 'ChessScreen',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   void _handleGameOver(
@@ -445,5 +620,18 @@ class ChessScreen extends HookConsumerWidget {
     if (context.mounted) {
       context.go(AppRoutes.mainMenu);
     }
+  }
+
+  /// Get opponent avatar icon name
+  /// For AI, returns a consistent avatar (avatar_2 for AI)
+  /// For real opponent, returns a default one (avatar_3)
+  static String? _getOpponentAvatarIconName() {
+    if (GameModesMediator.opponentMode.isAI) {
+      // Use a consistent avatar for AI (avatar_2 - "Cool Dude")
+      return AvatarUtils.getAvatarIconName(2);
+    }
+    // For real opponents, we could fetch their avatar from backend
+    // For now, use a default one (avatar_3)
+    return AvatarUtils.getAvatarIconName(3);
   }
 }
