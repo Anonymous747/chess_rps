@@ -3,6 +3,7 @@ import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:chess_rps/presentation/screen/chat_screen.dart';
 import 'package:chess_rps/presentation/screen/chess_screen.dart';
@@ -178,20 +179,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.chess,
         name: 'chess',
         builder: (context, state) {
-          Side playerSide = Side.light;
-          
           final sideParam = state.uri.queryParameters['side'];
-          if (sideParam != null) {
-            playerSide = sideParam == 'dark' ? Side.dark : Side.light;
-            PlayerSideMediator.changePlayerSide(playerSide);
-          }
           
-          return ProviderScope(
-            overrides: [
-              gameControllerProvider.overrideWith(() => GameController()),
-            ],
-            child: const ChessScreen(),
-          );
+          if (sideParam != null) {
+            final playerSide = sideParam == 'dark' ? Side.dark : Side.light;
+            PlayerSideMediator.changePlayerSide(playerSide);
+            
+            // Side is selected, create GameController
+            return ProviderScope(
+              overrides: [
+                gameControllerProvider.overrideWith(() => GameController()),
+              ],
+              child: const ChessScreen(),
+            );
+          } else {
+            // No side parameter - check if we need side selection for AI games
+            final isAIGame = GameModesMediator.opponentMode.isAI;
+            
+            if (isAIGame) {
+              // For AI games without side, show screen which will display side selection dialog
+              // Don't create GameController yet - it will be created after side selection
+              return const ChessScreen();
+            } else {
+              // For non-AI games, create GameController immediately
+              return ProviderScope(
+                overrides: [
+                  gameControllerProvider.overrideWith(() => GameController()),
+                ],
+                child: const ChessScreen(),
+              );
+            }
+          }
         },
       ),
       GoRoute(

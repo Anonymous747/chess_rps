@@ -5,6 +5,7 @@ import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
+import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/utils/avatar_utils.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
@@ -14,6 +15,7 @@ import 'package:chess_rps/presentation/widget/finish_game_dialog.dart';
 import 'package:chess_rps/presentation/widget/game_loading_screen.dart';
 import 'package:chess_rps/presentation/widget/game_over_dialog.dart';
 import 'package:chess_rps/presentation/widget/move_history_widget.dart';
+import 'package:chess_rps/presentation/widget/player_side_selection_dialog.dart';
 import 'package:chess_rps/presentation/widget/rps_overlay.dart';
 import 'package:chess_rps/presentation/widget/timer_widget.dart';
 import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
@@ -29,6 +31,47 @@ class ChessScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isAIGame = GameModesMediator.opponentMode.isAI;
+    
+    // Check if side was set via query parameter (from router) - check in build, not useEffect
+    Side? sideFromRoute;
+    try {
+      final currentRoute = GoRouterState.of(context).uri;
+      final sideParam = currentRoute.queryParameters['side'];
+      if (sideParam != null) {
+        sideFromRoute = sideParam == 'dark' ? Side.dark : Side.light;
+      }
+    } catch (e) {
+      // If we can't access route yet, assume no side parameter
+      sideFromRoute = null;
+    }
+    
+    // Track if side selection dialog has been shown for AI games
+    final sideSelectionShown = useRef(false);
+    
+    // Show side selection dialog for AI games if no side is selected
+    useEffect(() {
+      if (isAIGame && 
+          !sideSelectionShown.value && 
+          sideFromRoute == null && 
+          context.mounted) {
+        sideSelectionShown.value = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            _showPlayerSideSelectionDialog(context, ref);
+          }
+        });
+      }
+      return null;
+    }, [isAIGame, sideFromRoute]);
+    
+    // For AI games, if no side is selected, show loading screen while dialog is shown
+    // The dialog will navigate with side parameter, which will create the GameController
+    if (isAIGame && sideFromRoute == null) {
+      return const GameLoadingScreen();
+    }
+    
+    // Game controller is available, proceed with normal build
     final controller = ref.read(gameControllerProvider.notifier);
     final gameState = ref.watch(gameControllerProvider);
     final settingsAsync = ref.watch(settingsControllerProvider);
@@ -606,6 +649,13 @@ class ChessScreen extends HookConsumerWidget {
         endType: endType,
       );
       AppLogger.info('Game result submitted successfully', tag: 'ChessScreen');
+      
+      // Invalidate leaderboard to refresh with updated ratings
+      // We invalidate all common limits to ensure standings are always up-to-date
+      ref.invalidate(leaderboardProvider(3));
+      ref.invalidate(leaderboardProvider(10));
+      ref.invalidate(leaderboardProvider(50));
+      AppLogger.info('Leaderboard invalidated to refresh standings', tag: 'ChessScreen');
     } catch (e) {
       AppLogger.error(
         'Failed to submit game result: $e',
@@ -633,5 +683,43 @@ class ChessScreen extends HookConsumerWidget {
     // For real opponents, we could fetch their avatar from backend
     // For now, use a default one (avatar_3)
     return AvatarUtils.getAvatarIconName(3);
+  }
+
+  void _showPlayerSideSelectionDialog(BuildContext context, WidgetRef ref) {
+    if (!context.mounted) return;
+    
+    AppLogger.info(
+      'Showing player side selection dialog for AI game',
+      tag: 'ChessScreen'
+    );
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing - must select a side
+      builder: (BuildContext dialogContext) {
+        return PlayerSideSelectionDialog(
+          onSideSelected: (Side selectedSide) {
+            AppLogger.info(
+              'Player selected side: ${selectedSide.name}',
+              tag: 'ChessScreen'
+            );
+            
+            // Close the dialog
+            Navigator.of(dialogContext).pop();
+            
+            // Navigate to chess screen with side parameter
+            // This will create the GameController with the selected side
+            final sideParam = selectedSide == Side.light ? 'light' : 'dark';
+            if (context.mounted) {
+              context.go('${AppRoutes.chess}?side=$sideParam');
+              AppLogger.info(
+                'Navigated to chess screen with side: ${selectedSide.name}',
+                tag: 'ChessScreen'
+              );
+            }
+          },
+        );
+      },
+    );
   }
 }

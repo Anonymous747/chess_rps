@@ -409,8 +409,9 @@ class ProfileScreen extends HookConsumerWidget {
         final winRateText = stats.totalGames > 0 ? '${stats.winRate.toStringAsFixed(1)}%' : '0%';
         final totalGamesText = '${stats.totalGames} Games';
 
-        final streakText =
-            stats.currentStreak >= 0 ? '${stats.currentStreak}' : '${stats.currentStreak}';
+        // Win streak can't be negative - show 0 if current streak is negative
+        final winStreak = stats.currentStreak > 0 ? stats.currentStreak : 0;
+        final streakText = '$winStreak';
 
         return Row(
           children: [

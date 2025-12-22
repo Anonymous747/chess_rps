@@ -14,15 +14,29 @@ ActionHandler actionHandler(Ref ref) {
   final opponentMode = GameModesMediator.opponentMode;
   AppLogger.info('Creating ActionHandler. Opponent mode: $opponentMode', tag: 'ActionHandlerProvider');
   
+  ActionHandler handler;
   switch (opponentMode) {
     case OpponentMode.ai:
       AppLogger.info('Creating AIActionHandler with Stockfish interpreter', tag: 'ActionHandlerProvider');
-      return AIActionHandler(
+      handler = AIActionHandler(
           StockfishInterpreter(parameters: {}, isLoggerSwitchOn: true));
+      break;
     case OpponentMode.socket:
       AppLogger.info('Creating SocketActionHandler for online play', tag: 'ActionHandlerProvider');
-      return SocketActionHandler();
+      handler = SocketActionHandler();
+      break;
   }
+  
+  // Keep the provider alive to prevent disposal during Stockfish initialization
+  ref.keepAlive();
+  
+  // Ensure handler is disposed when provider is disposed
+  ref.onDispose(() {
+    AppLogger.info('Disposing ActionHandler', tag: 'ActionHandlerProvider');
+    handler.dispose();
+  });
+  
+  return handler;
 }
 
 /// Define opponents behaviour during a game

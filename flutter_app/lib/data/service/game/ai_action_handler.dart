@@ -16,6 +16,28 @@ class AIActionHandler extends ActionHandler {
       AppLogger.info('Stockfish state: ${_stockfishInterpreter.state}', tag: 'AIActionHandler');
       AppLogger.info('Stockfish is ready: ${_stockfishInterpreter.state == "ready"}', tag: 'AIActionHandler');
       
+      // Check Stockfish state and wait if needed
+      final currentState = _stockfishInterpreter.state;
+      AppLogger.info('Stockfish state before wait: $currentState', tag: 'AIActionHandler');
+      
+      // If disposed, this is an error - Stockfish should not be disposed yet
+      if (currentState == "disposed") {
+        AppLogger.error('Stockfish is already disposed - this should not happen', tag: 'AIActionHandler');
+        return null;
+      }
+      
+      // Wait for Stockfish to be ready if it's not already
+      if (currentState != "ready") {
+        AppLogger.info('Waiting for Stockfish to be ready (current state: $currentState)...', tag: 'AIActionHandler');
+        try {
+          await _stockfishInterpreter.waitForReady();
+          AppLogger.info('Stockfish is now ready', tag: 'AIActionHandler');
+        } catch (e) {
+          AppLogger.error('Failed to wait for Stockfish to be ready: $e', tag: 'AIActionHandler');
+          return null;
+        }
+      }
+      
       // Get current FEN position to verify board state is synced
       AppLogger.info('Step 1: Getting current FEN position from Stockfish', tag: 'AIActionHandler');
       final fenPosition = await _stockfishInterpreter.getFenPosition();
