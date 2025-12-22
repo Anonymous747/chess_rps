@@ -2,6 +2,8 @@ import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
+import 'package:chess_rps/presentation/controller/stats_controller.dart';
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/widget/board_widget.dart';
 import 'package:chess_rps/presentation/widget/captured_pieces_widget.dart';
@@ -46,15 +48,19 @@ class ChessScreen extends HookConsumerWidget {
     // Track if dialog has been shown to prevent multiple showings
     final dialogShown = useRef(false);
     
+    // Capture context for use in useEffect
+    final buildContext = context;
+    
     // Show game over dialog when game ends (only once)
     useEffect(() {
-      if (gameOver && !dialogShown.value && context.mounted) {
+      if (gameOver && !dialogShown.value) {
         dialogShown.value = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) {
+          if (buildContext.mounted) {
             _showGameOverDialog(
-              context,
+              buildContext,
               controller,
+              ref,
               winner: winner,
               playerSide: playerSide,
               isCheckmate: isCheckmate,
@@ -347,7 +353,8 @@ class ChessScreen extends HookConsumerWidget {
 
   void _showGameOverDialog(
     BuildContext context,
-    GameController controller, {
+    GameController controller,
+    WidgetRef ref, {
     required Side? winner,
     required Side playerSide,
     required bool isCheckmate,
@@ -366,7 +373,7 @@ class ChessScreen extends HookConsumerWidget {
           isCheckmate: isCheckmate,
           isStalemate: isStalemate,
           onReturnToMenu: () {
-            _handleGameOver(context, controller, winner, playerSide, isCheckmate, isStalemate);
+            _handleGameOver(context, controller, ref, winner, playerSide, isCheckmate, isStalemate);
           },
         );
       },
@@ -376,43 +383,62 @@ class ChessScreen extends HookConsumerWidget {
   void _handleGameOver(
     BuildContext context,
     GameController controller,
+    WidgetRef ref,
     Side? winner,
     Side playerSide,
     bool isCheckmate,
     bool isStalemate,
-  ) {
-    // Log analytics
+  ) async {
+    // Determine game result
     final playerWon = winner == playerSide;
     final isDraw = isStalemate || winner == null;
+    final result = isDraw ? "draw" : (playerWon ? "win" : "loss");
+    
+    // Determine end type
+    String? endType;
+    if (isCheckmate) {
+      endType = "checkmate";
+    } else if (isStalemate) {
+      endType = "stalemate";
+    }
+    
+    // Get game mode
+    final gameMode = GameModesMediator.gameMode.name; // "classical" or "rps"
     
     AppLogger.info(
       'Game Over Analytics:',
       tag: 'ChessScreen',
     );
     AppLogger.info(
-      '  - Result: ${isDraw ? "Draw" : (playerWon ? "Win" : "Loss")}',
+      '  - Result: $result',
       tag: 'ChessScreen',
     );
     AppLogger.info(
-      '  - End Type: ${isCheckmate ? "Checkmate" : (isStalemate ? "Stalemate" : "Other")}',
+      '  - End Type: $endType',
       tag: 'ChessScreen',
     );
     AppLogger.info(
-      '  - Player Side: ${playerSide.name}',
-      tag: 'ChessScreen',
-    );
-    AppLogger.info(
-      '  - Winner: ${winner?.name ?? "None"}',
+      '  - Game Mode: $gameMode',
       tag: 'ChessScreen',
     );
     
-    // TODO: Send analytics to backend when analytics service is implemented
-    // Example:
-    // await analyticsService.recordGameResult(
-    //   result: isDraw ? GameResult.draw : (playerWon ? GameResult.win : GameResult.loss),
-    //   endType: isCheckmate ? GameEndType.checkmate : (isStalemate ? GameEndType.stalemate : GameEndType.other),
-    //   playerSide: playerSide,
-    // );
+    // Submit game result to backend
+    try {
+      final statsController = ref.read(statsControllerProvider.notifier);
+      await statsController.recordGameResult(
+        result: result,
+        gameMode: gameMode,
+        endType: endType,
+      );
+      AppLogger.info('Game result submitted successfully', tag: 'ChessScreen');
+    } catch (e) {
+      AppLogger.error(
+        'Failed to submit game result: $e',
+        tag: 'ChessScreen',
+        error: e,
+      );
+      // Continue even if submission fails
+    }
     
     // Dispose controller and navigate to main menu
     controller.dispose();

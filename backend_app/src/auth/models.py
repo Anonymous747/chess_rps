@@ -16,6 +16,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     phone_number = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    profile_name = Column(String, default="Player", nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -26,6 +27,11 @@ class User(Base):
     settings = relationship("UserSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
     # Relationship to collections (defined in collection/models.py)
     collections = relationship("UserCollection", back_populates="user", cascade="all, delete-orphan")
+    # Relationship to stats (defined in stats/models.py)
+    stats = relationship("UserStats", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    # Relationship to friendships (defined in friends/models.py)
+    friendships_sent = relationship("Friendship", foreign_keys="Friendship.requester_id", back_populates="requester", cascade="all, delete-orphan")
+    friendships_received = relationship("Friendship", foreign_keys="Friendship.addressee_id", back_populates="addressee", cascade="all, delete-orphan")
 
 
 class Token(Base):

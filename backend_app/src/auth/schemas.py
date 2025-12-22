@@ -52,11 +52,16 @@ class RefreshTokenRequest(BaseModel):
 class UserResponse(BaseModel):
     id: int
     phone_number: str
+    profile_name: str
     is_active: bool
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class UpdateProfileNameRequest(BaseModel):
+    profile_name: str = Field(..., min_length=1, max_length=50, description="User profile name (1-50 characters)")
 
 
 

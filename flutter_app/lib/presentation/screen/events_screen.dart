@@ -1,13 +1,16 @@
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/presentation/controller/stats_controller.dart';
+import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class EventsScreen extends StatelessWidget {
+class EventsScreen extends HookConsumerWidget {
   static const routeName = '/events';
 
   const EventsScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -246,7 +249,7 @@ class EventsScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       _buildClubWarsCard(),
                       const SizedBox(height: 16),
-                      _buildStandingsSection(),
+                      _buildStandingsSection(context, ref),
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -585,7 +588,9 @@ class EventsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStandingsSection() {
+  Widget _buildStandingsSection(BuildContext context, WidgetRef ref) {
+    final leaderboardAsync = ref.watch(leaderboardProvider(3));
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -610,37 +615,100 @@ class EventsScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: Palette.backgroundTertiary,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Palette.glassBorder),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
+        leaderboardAsync.when(
+          data: (leaderboard) {
+            if (leaderboard.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
+                  color: Palette.backgroundTertiary,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Palette.glassBorder),
+                ),
+                child: Center(
+                  child: Text(
+                    'No standings available',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Palette.textSecondary,
+                    ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    SizedBox(width: 24, child: Text('#', style: TextStyle(fontSize: 12, color: Palette.textSecondary))),
-                    Expanded(child: Text('Player', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
-                    SizedBox(width: 64, child: Text('Points', textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
-                  ],
+              );
+            }
+            
+            return Container(
+              decoration: BoxDecoration(
+                color: Palette.backgroundTertiary,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Palette.glassBorder),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(width: 24, child: Text('#', style: TextStyle(fontSize: 12, color: Palette.textSecondary))),
+                        Expanded(child: Text('Player', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
+                        SizedBox(width: 64, child: Text('Rating', textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
+                      ],
+                    ),
+                  ),
+                  ...leaderboard.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final player = entry.value;
+                    final isFirst = index == 0;
+                    return Column(
+                      children: [
+                        if (index > 0) Divider(color: Palette.glassBorder, height: 1),
+                        _buildStandingRow(
+                          player.rank,
+                          player.username,
+                          player.rating,
+                          isFirst,
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ],
+              ),
+            );
+          },
+          loading: () => Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Palette.backgroundTertiary,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Palette.glassBorder),
+            ),
+            child: Center(
+              child: CircularProgressIndicator(color: Palette.purpleAccent),
+            ),
+          ),
+          error: (error, stack) => Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Palette.backgroundTertiary,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Palette.glassBorder),
+            ),
+            child: Center(
+              child: Text(
+                'Failed to load standings',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Palette.error,
                 ),
               ),
-              _buildStandingRow(1, 'GrandmasterX', 2450, true),
-              Divider(color: Palette.glassBorder, height: 1),
-              _buildStandingRow(2, 'TacticalPawn', 2310, false),
-              Divider(color: Palette.glassBorder, height: 1),
-              _buildStandingRow(3, 'RookToE4', 2180, false),
-            ],
+            ),
           ),
         ),
       ],
@@ -662,17 +730,18 @@ class EventsScreen extends StatelessWidget {
       ),
       title: Row(
         children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              gradient: isFirst
-                  ? LinearGradient(colors: [Palette.purpleAccent, Palette.purpleAccentDark])
-                  : null,
-              color: isFirst ? null : Palette.backgroundSecondary,
-              shape: BoxShape.circle,
-              border: Border.all(color: Palette.glassBorder),
-            ),
+          UserAvatarByIconWidget(
+            size: 32,
+            border: isFirst
+                ? Border.all(color: Palette.gold, width: 2)
+                : Border.all(color: Palette.glassBorder, width: 1),
+            shadow: isFirst
+                ? BoxShadow(
+                    color: Palette.gold.withOpacity(0.5),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  )
+                : null,
           ),
           const SizedBox(width: 8),
           Text(
@@ -696,5 +765,6 @@ class EventsScreen extends StatelessWidget {
     );
   }
 }
+
 
 

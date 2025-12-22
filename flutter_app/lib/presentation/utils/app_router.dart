@@ -9,6 +9,7 @@ import 'package:chess_rps/presentation/screen/chess_screen.dart';
 import 'package:chess_rps/presentation/screen/collection_screen.dart';
 import 'package:chess_rps/presentation/screen/events_screen.dart';
 import 'package:chess_rps/presentation/screen/friends_screen.dart';
+import 'package:chess_rps/presentation/screen/levels_screen.dart';
 import 'package:chess_rps/presentation/screen/login_screen.dart';
 import 'package:chess_rps/presentation/screen/main_navigation_screen.dart';
 import 'package:chess_rps/presentation/screen/mode_selector.dart';
@@ -39,6 +40,7 @@ class AppRoutes {
   static const events = '/events';
   static const chat = '/chat';
   static const profile = '/profile';
+  static const levels = '/levels';
 }
 
 // ValueNotifier to trigger router refresh when auth state changes
@@ -226,6 +228,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.profile,
         name: 'profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.levels,
+        name: 'levels',
+        builder: (context, state) => const LevelsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

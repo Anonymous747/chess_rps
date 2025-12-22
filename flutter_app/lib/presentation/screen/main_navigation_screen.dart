@@ -1,10 +1,12 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
+import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/screen/chat_screen.dart';
 import 'package:chess_rps/presentation/screen/events_screen.dart';
 import 'package:chess_rps/presentation/screen/profile_screen.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -191,9 +193,7 @@ class MainMenuContent extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authUser = ref.watch(authControllerProvider).valueOrNull;
     final username = authUser?.phoneNumber ?? 'Player';
-    final level = 42;
-    final rating = 1250;
-    final progress = 0.65;
+    final statsAsync = ref.watch(statsControllerProvider);
     final onlineFriends = 3;
 
     return Container(
@@ -212,11 +212,36 @@ class MainMenuContent extends HookConsumerWidget {
         child: Column(
           children: [
             // User Profile Header
-            _MainMenuContentHelper._buildUserProfileHeader(
-              context,
-              username: username,
-              level: level,
-              progress: progress,
+            statsAsync.when(
+              data: (stats) {
+                final level = stats.level;
+                final levelName = stats.levelName ?? 'Novice';
+                final levelProgress = stats.levelProgress;
+                final progress = levelProgress != null && levelProgress.xpForNextLevel > 0
+                    ? levelProgress.currentLevelXp / levelProgress.xpForNextLevel
+                    : 0.0;
+                return _MainMenuContentHelper._buildUserProfileHeader(
+                  context,
+                  username: username,
+                  level: level,
+                  levelName: levelName,
+                  progress: progress,
+                );
+              },
+              loading: () => _MainMenuContentHelper._buildUserProfileHeader(
+                context,
+                username: username,
+                level: 0,
+                levelName: 'Novice',
+                progress: 0.0,
+              ),
+              error: (_, __) => _MainMenuContentHelper._buildUserProfileHeader(
+                context,
+                username: username,
+                level: 0,
+                levelName: 'Novice',
+                progress: 0.0,
+              ),
             ),
             
             // Main Content
@@ -236,10 +261,22 @@ class MainMenuContent extends HookConsumerWidget {
                     const SizedBox(height: 24),
                     
                     // Info Cards Grid
-                    _MainMenuContentHelper._buildInfoCardsGrid(
-                      context,
-                      rating: rating,
-                      onlineFriends: onlineFriends,
+                    statsAsync.when(
+                      data: (stats) => _MainMenuContentHelper._buildInfoCardsGrid(
+                        context,
+                        rating: stats.rating,
+                        onlineFriends: onlineFriends,
+                      ),
+                      loading: () => _MainMenuContentHelper._buildInfoCardsGrid(
+                        context,
+                        rating: 1200,
+                        onlineFriends: onlineFriends,
+                      ),
+                      error: (_, __) => _MainMenuContentHelper._buildInfoCardsGrid(
+                        context,
+                        rating: 1200,
+                        onlineFriends: onlineFriends,
+                      ),
                     ),
                     
                     const SizedBox(height: 100), // Space for bottom nav
@@ -261,6 +298,7 @@ class _MainMenuContentHelper {
     BuildContext context, {
     required String username,
     required int level,
+    required String levelName,
     required double progress,
   }) {
     return Container(
@@ -269,28 +307,11 @@ class _MainMenuContentHelper {
         children: [
           Stack(
             children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Palette.purpleAccent,
-                      Palette.purpleAccentDark,
-                    ],
-                  ),
-                  border: Border.all(
-                    color: Palette.purpleAccentLight,
-                    width: 2,
-                  ),
-                ),
-                child: Icon(
-                  Icons.person,
-                  color: Palette.textPrimary,
-                  size: 32,
+              UserAvatarWidget(
+                size: 60,
+                border: Border.all(
+                  color: Palette.purpleAccentLight,
+                  width: 2,
                 ),
               ),
               Positioned(
@@ -317,7 +338,7 @@ class _MainMenuContentHelper {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Grandmaster',
+                  levelName,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -326,7 +347,7 @@ class _MainMenuContentHelper {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Level $level Strategist',
+                  'Level $level',
                   style: TextStyle(
                     fontSize: 14,
                     color: Palette.textSecondary,
@@ -764,5 +785,6 @@ class _MainMenuContentHelper {
     );
   }
 }
+
 
 
