@@ -3,6 +3,7 @@ import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/settings/settings_service.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
+import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/widget/settings/piece_set_selection_dialog.dart';
 import 'package:chess_rps/presentation/widget/settings/theme_selection_dialog.dart';
@@ -104,6 +105,23 @@ class SettingsScreen extends HookConsumerWidget {
 
   Widget _buildAccountSection(BuildContext context, WidgetRef ref) {
     final authUser = ref.watch(authControllerProvider).valueOrNull;
+    final leaderboardAsync = ref.watch(leaderboardProvider(1000)); // Fetch large leaderboard to find user position
+    
+    // Find user's position in leaderboard
+    int? userPosition;
+    if (authUser != null && leaderboardAsync.hasValue) {
+      final leaderboard = leaderboardAsync.value!;
+      try {
+        final userEntry = leaderboard.firstWhere(
+          (entry) => entry.userId == authUser.userId,
+        );
+        userPosition = userEntry.rank;
+      } catch (e) {
+        // User not found in leaderboard (might not be in top 1000)
+        userPosition = null;
+      }
+    }
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -161,9 +179,45 @@ class SettingsScreen extends HookConsumerWidget {
                     color: Palette.textPrimary,
                   ),
                 ),
-                subtitle: Text(
-                  authUser?.phoneNumber ?? 'user@chessrps.com',
-                  style: TextStyle(color: Palette.textSecondary),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      authUser?.phoneNumber ?? 'user@chessrps.com',
+                      style: TextStyle(color: Palette.textSecondary),
+                    ),
+                    if (userPosition != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.leaderboard,
+                            size: 14,
+                            color: Palette.purpleAccent,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Rating Position: #$userPosition',
+                            style: TextStyle(
+                              color: Palette.purpleAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ] else if (leaderboardAsync.isLoading) ...[
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Palette.purpleAccent),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 trailing: Icon(Icons.chevron_right, color: Palette.textSecondary),
               ),

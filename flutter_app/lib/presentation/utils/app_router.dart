@@ -75,34 +75,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   
   // Create a router that will redirect based on auth state
   // The redirect function will handle navigation once auth is loaded
-  // TODO: Remove this temporary development bypass. This is a temporary solution to skip authentication.
-  // During development, start at main menu instead of login (user: +375291111111 / 11111111)
-  // ignore: prefer_const_declarations
-  final bool isDevelopmentMode = true; // Set to false when ready for production
-  
   final router = GoRouter(
-    initialLocation: isDevelopmentMode ? AppRoutes.mainMenu : AppRoutes.login, // ignore: dead_code
+    initialLocation: AppRoutes.login, // Always start at login - will redirect if authenticated
     debugLogDiagnostics: true,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
-      // TODO: Remove this temporary development bypass. This is a temporary solution to skip authentication.
-      // During development, always treat user as authenticated (user: +375291111111 / 11111111)
-      // ignore: prefer_const_declarations
-      final bool isDevelopmentMode = true; // Set to false when ready for production
-      
-      // In development mode, skip auth checks and redirect from login to main menu
-      if (isDevelopmentMode) {
-        final isAuthRoute = state.matchedLocation == AppRoutes.login || 
-                           state.matchedLocation == AppRoutes.signup;
-        if (isAuthRoute) {
-          AppLogger.info('Development mode: Redirecting from auth route to main menu', tag: 'AppRouter');
-          return AppRoutes.mainMenu;
-        }
-        return null; // Allow access to all routes
-      }
-      
-      // Production mode: normal authentication checks
-      // ignore: dead_code
       final isAuthenticated = authState.valueOrNull?.isAuthenticated ?? false;
       final isLoading = authState.isLoading;
       final isAuthRoute = state.matchedLocation == AppRoutes.login || 
@@ -115,13 +92,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       
       // Redirect to login if not authenticated and trying to access protected route
       if (!isAuthenticated && !isAuthRoute) {
-        AppLogger.info('Redirecting to login - not authenticated', tag: 'AppRouter');
+        AppLogger.info('Redirecting to login - no valid token found', tag: 'AppRouter');
         return AppRoutes.login;
       }
       
       // Redirect to main menu if authenticated and on auth route
       // This handles the case when user opens app with valid token
-      // ignore: dead_code
       if (isAuthenticated && isAuthRoute) {
         AppLogger.info('Redirecting to main menu - authenticated user on auth route', tag: 'AppRouter');
         return AppRoutes.mainMenu;

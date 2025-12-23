@@ -58,8 +58,22 @@ class ProfileScreen extends HookConsumerWidget {
                       ),
                     ),
                     IconButton(
-                      onPressed: () {},
-                      icon: Icon(Icons.share, color: Palette.textSecondary),
+                      onPressed: () async {
+                        // Logout and navigate to login screen
+                        await ref.read(authControllerProvider.notifier).logout();
+                        if (context.mounted) {
+                          context.go(AppRoutes.login);
+                        }
+                      },
+                      icon: Icon(Icons.logout, color: Palette.error),
+                      tooltip: 'Logout',
+                      style: IconButton.styleFrom(
+                        backgroundColor: Palette.error.withValues(alpha: 0.1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Palette.error.withValues(alpha: 0.3)),
+                        ),
+                      ),
                     ),
                   ],
                 ),
