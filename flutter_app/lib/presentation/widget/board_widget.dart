@@ -99,6 +99,10 @@ class BoardWidget extends StatelessWidget {
     final cells = board.cells;
     var widgets = <Widget>[];
 
+    // Build cells in standard order - rotation is handled by:
+    // 1. Reversed letters/numbers labels (already done above)
+    // 2. Position conversion in convertToPosition() method
+    // The GridView fills left-to-right, top-to-bottom, and the labels + conversion handle perspective
     for (int i = 0; i < cells.length; i++) {
       for (int j = 0; j < cells[i].length; j++) {
         widgets.add(CellWidget(

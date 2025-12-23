@@ -5,7 +5,6 @@ import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
-import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/utils/avatar_utils.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
@@ -111,28 +110,53 @@ class ChessScreen extends HookConsumerWidget {
     }
     
     // Create a unique game key that changes when a new game starts
-    // This key is based on: piece set, move history length, and initial timer state
-    // When a new game starts, move history is empty and timer is reset to 600
+    // This key is based on: piece set and move history length
+    // Note: We DON'T include timer values because timers tick during gameplay,
+    // which would cause false "new game" detections. Timers are not part of game identity.
     final currentMoveHistoryLength = gameState.moveHistory.length;
     final isFreshGame = pieceCount == 32 && 
                         currentMoveHistoryLength == 0 && 
                         gameState.lightPlayerTimeSeconds == 600 &&
                         gameState.darkPlayerTimeSeconds == 600;
-    final currentGameKey = '${currentPieceSet}_${currentMoveHistoryLength}_${gameState.lightPlayerTimeSeconds}_${gameState.darkPlayerTimeSeconds}';
+    
+    // GameKey should only change when piece set or move count changes
+    // NOT when timers tick (that's normal gameplay)
+    final currentGameKey = '${currentPieceSet}_${currentMoveHistoryLength}';
     
     // Reset precaching state when a new game is detected
     // A new game is detected when:
-    // 1. Game key changes (different game session)
+    // 1. Game key changes (different piece set OR move count changed from >0 to 0)
     // 2. AND we have a fresh game state (32 pieces, no moves, 600s timers)
     //    OR the previous game had moves and now we're at 0 moves (game reset)
+    // For online games, don't treat piece set loading as a new game
     int previousMoveHistoryLength = -1;
+    String? previousPieceSet;
     if (lastGameKeyRef.value != null) {
       final parts = lastGameKeyRef.value!.split('_');
+      if (parts.isNotEmpty) {
+        previousPieceSet = parts[0];
+      }
       if (parts.length >= 2) {
         previousMoveHistoryLength = int.tryParse(parts[1]) ?? -1;
       }
     }
-    final isNewGame = lastGameKeyRef.value != null && 
+    
+    // For online games, if only the piece set changed (from default 'cardinal' to actual piece set),
+    // and we're still at 0 moves, don't treat it as a new game - it's just settings loading
+    final isOnlyPieceSetChange = GameModesMediator.opponentMode == OpponentMode.socket &&
+                                 lastGameKeyRef.value != null &&
+                                 previousPieceSet != null &&
+                                 previousPieceSet != currentPieceSet &&
+                                 currentMoveHistoryLength == 0 &&
+                                 previousMoveHistoryLength == 0;
+    
+    // A new game is detected if:
+    // 1. GameKey changed (piece set or move count changed)
+    // 2. AND it's either:
+    //    - A fresh game (0 moves, 600s timers, 32 pieces) - new game started
+    //    - Move count reset from >0 to 0 - game was reset
+    final isNewGame = !isOnlyPieceSetChange &&
+                      lastGameKeyRef.value != null && 
                       lastGameKeyRef.value != currentGameKey &&
                       (isFreshGame || (previousMoveHistoryLength > 0 && currentMoveHistoryLength == 0));
     
@@ -674,14 +698,26 @@ class ChessScreen extends HookConsumerWidget {
 
   /// Get opponent avatar icon name
   /// For AI, returns a consistent avatar (avatar_2 for AI)
-  /// For real opponent, returns a default one (avatar_3)
+  /// For real opponent, returns the opponent's equipped avatar from backend
   static String? _getOpponentAvatarIconName() {
     if (GameModesMediator.opponentMode.isAI) {
       // Use a consistent avatar for AI (avatar_2 - "Cool Dude")
       return AvatarUtils.getAvatarIconName(2);
     }
-    // For real opponents, we could fetch their avatar from backend
-    // For now, use a default one (avatar_3)
+    // For real opponents, get avatar from stored opponent info
+    final opponentInfo = GameModesMediator.opponentInfo;
+    if (opponentInfo != null && opponentInfo['avatar_icon'] != null) {
+      final avatarIcon = opponentInfo['avatar_icon'] as String;
+      // avatarIcon is in format "avatar_X", extract number
+      final match = RegExp(r'avatar_(\d+)').firstMatch(avatarIcon);
+      if (match != null) {
+        final avatarIndex = int.tryParse(match.group(1) ?? '3');
+        if (avatarIndex != null) {
+          return AvatarUtils.getAvatarIconName(avatarIndex);
+        }
+      }
+    }
+    // Fallback to default avatar if opponent info not available
     return AvatarUtils.getAvatarIconName(3);
   }
 

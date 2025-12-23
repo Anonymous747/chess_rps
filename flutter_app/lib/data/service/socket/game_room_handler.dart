@@ -47,18 +47,24 @@ class GameRoomHandler {
         },
         onError: (error) {
           AppLogger.error('WebSocket error: $error', tag: 'GameRoomHandler');
+          // Don't set _isConnected = false on error - connection might still be alive
+          // Only add error message, don't close the stream controller
           _messageController.add({
             'type': 'error',
             'data': {'message': error.toString()},
           });
         },
         onDone: () {
-          AppLogger.info('WebSocket connection closed', tag: 'GameRoomHandler');
+          AppLogger.info('WebSocket connection closed (onDone)', tag: 'GameRoomHandler');
           _isConnected = false;
-          _messageController.add({
-            'type': 'disconnected',
-            'data': {},
-          });
+          // Only add disconnected message, don't close the stream controller
+          // This allows other listeners to handle the disconnection gracefully
+          if (!_messageController.isClosed) {
+            _messageController.add({
+              'type': 'disconnected',
+              'data': {},
+            });
+          }
         },
       ));
 
@@ -95,6 +101,78 @@ class GameRoomHandler {
       final roomCode = DateTime.now().millisecondsSinceEpoch.toString().substring(7);
       AppLogger.info('Using fallback room code: $roomCode', tag: 'GameRoomHandler');
       return roomCode;
+    }
+  }
+
+  /// Find a match - checks for available rooms first (for logging), then joins/creates via matchmake
+  /// The matchmake endpoint handles the actual atomic matching with proper locking
+  Future<String> findMatch(String gameMode) async {
+    AppLogger.info('Finding match with game mode: $gameMode', tag: 'GameRoomHandler');
+    try {
+      final dio = Dio()..interceptors.add(DioLoggerInterceptor());
+      
+      // STEP 1: Check for available rooms first (GET request - read-only check for logging/visibility)
+      // This is informational only - the matchmake endpoint will do the actual atomic matching
+      AppLogger.info('Step 1: Checking for available rooms (informational)...', tag: 'GameRoomHandler');
+      AppLogger.debug('Sending GET request to: ${Endpoint.checkAvailableRoom}?game_mode=$gameMode', tag: 'GameRoomHandler');
+      
+      bool foundAvailableRoom = false;
+      try {
+        final checkResponse = await dio.get(
+          Endpoint.checkAvailableRoom,
+          queryParameters: {'game_mode': gameMode},
+        );
+        
+        if (checkResponse.statusCode == 200 && checkResponse.data != null) {
+          final roomData = checkResponse.data as Map<String, dynamic>;
+          final roomCode = roomData['room_code'] as String;
+          final status = roomData['status'] as String?;
+          AppLogger.info('✅ Found available room (check): $roomCode, status: $status', tag: 'GameRoomHandler');
+          foundAvailableRoom = true;
+        } else {
+          AppLogger.info('No available room found in check (response: ${checkResponse.statusCode})', tag: 'GameRoomHandler');
+        }
+      } catch (e) {
+        // If check fails or returns null, proceed to matchmake anyway
+        AppLogger.info('No available room found in check (null/error): $e', tag: 'GameRoomHandler');
+      }
+      
+      // STEP 2: Join existing room or create new one via matchmake
+      // This endpoint uses SELECT FOR UPDATE with proper locking to atomically match users
+      // It will find available rooms and reserve slots, or create new rooms if needed
+      if (foundAvailableRoom) {
+        AppLogger.info('Step 2: Attempting to join available room via matchmake...', tag: 'GameRoomHandler');
+      } else {
+        AppLogger.info('Step 2: No room found in check, attempting matchmake (will find or create)...', tag: 'GameRoomHandler');
+      }
+      
+      AppLogger.debug('Sending POST request to: ${Endpoint.matchmakeRoom}', tag: 'GameRoomHandler');
+      
+      final response = await dio.post(
+        Endpoint.matchmakeRoom,
+        data: {'game_mode': gameMode},
+      );
+      
+      if (response.statusCode == 200) {
+        final roomData = response.data as Map<String, dynamic>;
+        final roomCode = roomData['room_code'] as String;
+        final status = roomData['status'] as String?;
+        
+        if (foundAvailableRoom && status == 'waiting') {
+          AppLogger.info('✅ Joined available room via matchmake: $roomCode, status: $status', tag: 'GameRoomHandler');
+        } else if (status == 'in_progress') {
+          AppLogger.info('✅ Matched to room via matchmake: $roomCode, status: $status (room is full)', tag: 'GameRoomHandler');
+        } else {
+          AppLogger.info('✅ Created new room via matchmake: $roomCode, status: $status', tag: 'GameRoomHandler');
+        }
+        return roomCode;
+      } else {
+        AppLogger.error('Failed to join/create match: ${response.statusCode}', tag: 'GameRoomHandler');
+        throw Exception('Failed to join/create match: ${response.statusCode}');
+      }
+    } catch (e) {
+      AppLogger.error('Error finding match: $e', tag: 'GameRoomHandler', error: e);
+      rethrow;
     }
   }
 

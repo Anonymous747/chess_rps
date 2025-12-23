@@ -27,7 +27,7 @@ class _OpponentSelectorState extends State<OpponentSelector> {
   Widget build(BuildContext context) {
     return LoadingOverlay(
       isLoading: _isCreatingRoom,
-      message: 'Creating room...',
+      message: 'Finding opponent...',
       child: Scaffold(
         body: Container(
           decoration: BoxDecoration(
@@ -156,7 +156,7 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                                   icon: Icons.people,
                                   color: Palette.purpleAccent,
                                   onPressed: () async {
-                                    AppLogger.info('Creating online game room',
+                                    AppLogger.info('Finding match for online play',
                                         tag: 'OpponentSelector');
                                     setState(() {
                                       _isCreatingRoom = true;
@@ -165,9 +165,9 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                                     try {
                                       AppLogger.info('User selected online opponent', tag: 'OpponentSelector');
                                       GameModesMediator.changeOpponentMode(OpponentMode.socket);
-                                      // Create room and navigate to waiting room
+                                      // Find match - either joins waiting room or creates new one
                                       final roomHandler = GameRoomHandler();
-                                      final roomCode = await roomHandler.createRoom(
+                                      final roomCode = await roomHandler.findMatch(
                                           GameModesMediator.gameMode == GameMode.classical
                                               ? 'classical'
                                               : 'rps');
@@ -182,7 +182,7 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                                         context.push('${AppRoutes.waitingRoom}?roomCode=$roomCode');
                                       }
                                     } catch (e) {
-                                      AppLogger.error('Failed to create room: $e',
+                                      AppLogger.error('Failed to find match: $e',
                                           tag: 'OpponentSelector', error: e);
                                       if (context.mounted) {
                                         setState(() {
@@ -190,7 +190,7 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                                         });
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('Failed to create room: $e'),
+                                            content: Text('Failed to find match: $e'),
                                             backgroundColor: Palette.error,
                                           ),
                                         );

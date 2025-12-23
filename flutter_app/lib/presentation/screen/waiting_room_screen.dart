@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/socket/game_room_handler.dart';
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
+import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +27,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
   bool _isWaiting = true;
   bool _isConnecting = true;
   String? _errorMessage;
+  bool _hasNavigated = false; // Track if we've navigated to chess screen
 
   @override
   void initState() {
@@ -51,8 +55,25 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
         final type = message['type'] as String?;
         AppLogger.debug('Received message type: $type', tag: 'WaitingRoom');
         
+        // Once we navigate to chess screen, stop processing messages here
+        // GameController will handle all game-related messages
+        if (_hasNavigated) {
+          AppLogger.debug('WaitingRoom: Ignoring message (already navigated): $type', tag: 'WaitingRoom');
+          return;
+        }
+        
         if (type == 'room_joined') {
-          // Room joined successfully
+          // Room joined successfully - set player side from server
+          // player_side is at the top level of the message, not in 'data'
+          final playerSideStr = message['player_side'] as String?;
+          if (playerSideStr != null) {
+            // Convert backend side ("light"/"dark") to Flutter Side enum
+            final playerSide = playerSideStr == 'light' ? Side.light : Side.dark;
+            PlayerSideMediator.changePlayerSide(playerSide);
+            AppLogger.info('Player side set to: ${playerSide.name} (from server)', tag: 'WaitingRoom');
+          } else {
+            AppLogger.warning('No player_side in room_joined message', tag: 'WaitingRoom');
+          }
           AppLogger.info('Room joined successfully', tag: 'WaitingRoom');
           setState(() {
             _isWaiting = true;
@@ -61,14 +82,32 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
         } else if (type == 'player_joined') {
           // Another player joined, start the game
           AppLogger.info('Opponent joined, starting game', tag: 'WaitingRoom');
+          
+          // Extract opponent info if available
+          final opponentInfo = message['opponent'] as Map<String, dynamic>?;
+          if (opponentInfo != null) {
+            GameModesMediator.setOpponentInfo(opponentInfo);
+            AppLogger.info('Stored opponent info: ${opponentInfo['username']}, avatar: ${opponentInfo['avatar_icon']}', tag: 'WaitingRoom');
+          }
+          
           setState(() {
             _isWaiting = false;
             _isConnecting = false;
           });
+          // Mark as navigated to prevent further message processing
+          _hasNavigated = true;
+          
           // Navigate to chess screen after a short delay
+          // Store room code and handler in mediator so GameController can reuse the connection
+          GameModesMediator.setRoomCode(widget.roomCode);
+          GameModesMediator.setSharedRoomHandler(_roomHandler);
+          AppLogger.info('Stored shared room handler for reuse', tag: 'WaitingRoom');
           Future.delayed(const Duration(milliseconds: 500), () {
             if (mounted) {
-              AppLogger.info('Navigating to chess screen', tag: 'WaitingRoom');
+              AppLogger.info('Navigating to chess screen with room: ${widget.roomCode}', tag: 'WaitingRoom');
+              // Cancel our subscription - GameController will handle messages now
+              _messageSubscription?.cancel();
+              _messageSubscription = null;
               context.push(AppRoutes.chess);
             }
           });
@@ -96,7 +135,14 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
   void dispose() {
     AppLogger.info('Disposing WaitingRoomScreen', tag: 'WaitingRoom');
     _messageSubscription?.cancel();
-    _roomHandler.dispose();
+    // Only dispose handler if it's not being reused by GameController
+    // If handler is shared, GameController will dispose it
+    if (GameModesMediator.sharedRoomHandler != _roomHandler) {
+      AppLogger.info('Disposing room handler (not shared)', tag: 'WaitingRoom');
+      _roomHandler.dispose();
+    } else {
+      AppLogger.info('Keeping room handler for reuse (it is shared)', tag: 'WaitingRoom');
+    }
     super.dispose();
   }
 
@@ -210,70 +256,14 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                               color: Palette.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 32),
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Palette.backgroundElevated,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Palette.accent.withOpacity(0.3),
-                                width: 2,
-                              ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'We are searching for an opponent for you...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Palette.textSecondary,
                             ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Room Code',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Palette.textSecondary,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 16,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Palette.background,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    widget.roomCode,
-                                    style: TextStyle(
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.bold,
-                                      color: Palette.accent,
-                                      letterSpacing: 6,
-                                      fontFamily: 'monospace',
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.share_outlined,
-                                      size: 16,
-                                      color: Palette.textTertiary,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Share this code with your opponent',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Palette.textTertiary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                            textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 32),
                           // Cancel button

@@ -1,6 +1,14 @@
+import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/common/piece_notation.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/figure.dart';
+import 'package:chess_rps/domain/model/figures/bishop.dart';
+import 'package:chess_rps/domain/model/figures/king.dart';
+import 'package:chess_rps/domain/model/figures/knight.dart';
+import 'package:chess_rps/domain/model/figures/pawn.dart';
+import 'package:chess_rps/domain/model/figures/queen.dart';
+import 'package:chess_rps/domain/model/figures/rook.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
@@ -51,20 +59,47 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
     super.dispose();
   }
 
-  /// Parse move string to get from and to positions
-  Map<String, String> _parseMove(String algebraicMove) {
-    if (algebraicMove.length != 4) {
-      return {'from': '', 'to': ''};
-    }
+  /// Parse move string to get piece, from and to positions
+  /// Supports both formats: "Pe2e4" (with piece) and "e2e4" (without piece)
+  Map<String, dynamic> _parseMove(String algebraicMove) {
+    final parsed = PieceNotation.parseMoveNotation(algebraicMove);
     return {
-      'from': algebraicMove.substring(0, 2),
-      'to': algebraicMove.substring(2, 4),
+      'piece': parsed['piece'],
+      'from': parsed['from'],
+      'to': parsed['to'],
     };
   }
 
-  /// Get piece that was moved (tries to get from current board state at destination)
-  /// Note: This works best for recent moves, as board state changes
-  Figure? _getMovedPiece(String fromPos, String toPos, bool isWhiteMove) {
+  /// Get piece that was moved
+  /// First tries to get from move notation (if piece type is included)
+  /// Falls back to current board state if piece type not in notation
+  Figure? _getMovedPiece(Role? pieceRole, String fromPos, String toPos, bool isWhiteMove) {
+    // If piece role is available from notation, create a figure object
+    if (pieceRole != null && widget.board != null) {
+      try {
+        final side = isWhiteMove ? Side.light : Side.dark;
+        // Create a temporary figure object for display purposes
+        // We just need the role and side to display the icon
+        switch (pieceRole) {
+          case Role.pawn:
+            return Pawn(side: side, position: Position(row: 0, col: 0));
+          case Role.rook:
+            return Rook(side: side, position: Position(row: 0, col: 0));
+          case Role.knight:
+            return Knight(side: side, position: Position(row: 0, col: 0));
+          case Role.bishop:
+            return Bishop(side: side, position: Position(row: 0, col: 0));
+          case Role.queen:
+            return Queen(side: side, position: Position(row: 0, col: 0));
+          case Role.king:
+            return King(side: side, position: Position(row: 0, col: 0));
+        }
+      } catch (e) {
+        // Fall through to board-based lookup
+      }
+    }
+
+    // Fallback: try to get from current board state at destination
     if (widget.board == null || fromPos.length != 2 || toPos.length != 2) {
       return null;
     }
@@ -118,58 +153,6 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
       // Return null if there's any error building the icon
       return null;
     }
-  }
-
-  /// Generate PGN format from move history
-  String _generatePGN() {
-    final moveHistory = widget.moveHistory;
-    if (moveHistory.isEmpty) return '';
-
-    final buffer = StringBuffer();
-    int moveNumber = 1;
-
-    for (int i = 0; i < moveHistory.length; i += 2) {
-      buffer.write('$moveNumber. ');
-
-      // White move
-      if (i < moveHistory.length) {
-        final move = _parseMove(moveHistory[i]);
-        buffer.write('${move['from']}${move['to']}');
-      }
-
-      // Black move
-      if (i + 1 < moveHistory.length) {
-        final move = _parseMove(moveHistory[i + 1]);
-        buffer.write(' ${move['from']}${move['to']}');
-      }
-
-      buffer.write(' ');
-      moveNumber++;
-    }
-
-    return buffer.toString().trim();
-  }
-
-  void _exportPGN(BuildContext context) {
-    final pgn = _generatePGN();
-    if (pgn.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('No moves to export'),
-          backgroundColor: Palette.error,
-        ),
-      );
-      return;
-    }
-
-    Clipboard.setData(ClipboardData(text: pgn));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('PGN copied to clipboard'),
-        backgroundColor: Palette.success,
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 
   @override
@@ -276,22 +259,29 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
                       final blackMoveStr =
                           blackMoveIndex < moveHistory.length ? moveHistory[blackMoveIndex] : null;
 
-                      final whiteMove = whiteMoveStr != null && whiteMoveStr.length == 4
+                      final whiteMove = whiteMoveStr != null && (whiteMoveStr.length == 4 || whiteMoveStr.length == 5)
                           ? _parseMove(whiteMoveStr)
                           : null;
-                      final blackMove = blackMoveStr != null && blackMoveStr.length == 4
+                      final blackMove = blackMoveStr != null && (blackMoveStr.length == 4 || blackMoveStr.length == 5)
                           ? _parseMove(blackMoveStr)
                           : null;
 
+                      final whiteFrom = whiteMove?['from'] as String? ?? '';
+                      final whiteTo = whiteMove?['to'] as String? ?? '';
+                      final whitePieceRole = whiteMove?['piece'] as Role?;
                       final whitePiece = whiteMove != null &&
-                              whiteMove['from']!.isNotEmpty &&
-                              whiteMove['to']!.isNotEmpty
-                          ? _getMovedPiece(whiteMove['from']!, whiteMove['to']!, true)
+                              whiteFrom.isNotEmpty &&
+                              whiteTo.isNotEmpty
+                          ? _getMovedPiece(whitePieceRole, whiteFrom, whiteTo, true)
                           : null;
+                          
+                      final blackFrom = blackMove?['from'] as String? ?? '';
+                      final blackTo = blackMove?['to'] as String? ?? '';
+                      final blackPieceRole = blackMove?['piece'] as Role?;
                       final blackPiece = blackMove != null &&
-                              blackMove['from']!.isNotEmpty &&
-                              blackMove['to']!.isNotEmpty
-                          ? _getMovedPiece(blackMove['from']!, blackMove['to']!, false)
+                              blackFrom.isNotEmpty &&
+                              blackTo.isNotEmpty
+                          ? _getMovedPiece(blackPieceRole, blackFrom, blackTo, false)
                           : null;
 
                       final isCurrentMove = currentMoveIndex != null &&
@@ -320,14 +310,14 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
                               ),
                               Expanded(
                                 child: whiteMove != null &&
-                                        whiteMove['from']!.isNotEmpty &&
-                                        whiteMove['to']!.isNotEmpty
+                                        whiteFrom.isNotEmpty &&
+                                        whiteTo.isNotEmpty
                                     ? Row(
                                         children: [
                                           if (_buildPieceIcon(whitePiece, pieceSet) != null)
                                             _buildPieceIcon(whitePiece, pieceSet)!,
                                           Text(
-                                            '${whiteMove['from']} → ${whiteMove['to']}',
+                                            '$whiteFrom → $whiteTo',
                                             style: TextStyle(
                                               color: Palette.textPrimary,
                                               fontSize: 13,
@@ -349,14 +339,14 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
                               ),
                               Expanded(
                                 child: blackMove != null &&
-                                        blackMove['from']!.isNotEmpty &&
-                                        blackMove['to']!.isNotEmpty
+                                        blackFrom.isNotEmpty &&
+                                        blackTo.isNotEmpty
                                     ? Row(
                                         children: [
                                           if (_buildPieceIcon(blackPiece, pieceSet) != null)
                                             _buildPieceIcon(blackPiece, pieceSet)!,
                                           Text(
-                                            '${blackMove['from']} → ${blackMove['to']}',
+                                            '$blackFrom → $blackTo',
                                             style: TextStyle(
                                               color: Palette.textPrimary,
                                               fontSize: 13,

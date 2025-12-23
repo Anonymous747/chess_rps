@@ -5,4 +5,6 @@ class Endpoint {
   static const apiBase = 'http://$_backendEndpoint';
   static const createRoom = '$apiBase/api/v1/game/rooms';
   static const getRoom = '$apiBase/api/v1/game/rooms';
+  static const checkAvailableRoom = '$apiBase/api/v1/game/rooms/available';
+  static const matchmakeRoom = '$apiBase/api/v1/game/rooms/matchmake';
 }

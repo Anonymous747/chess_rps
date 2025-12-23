@@ -5,16 +5,35 @@ import 'package:chess_rps/common/rps_choice.dart';
 import 'package:chess_rps/data/service/socket/game_room_handler.dart';
 import 'package:chess_rps/domain/service/action_handler.dart';
 
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
+
 class SocketActionHandler extends ActionHandler {
   late final GameRoomHandler _roomHandler;
+  bool _ownsHandler = false; // Track if we own the handler or if it's shared
 
   SocketActionHandler() {
     AppLogger.info('Creating SocketActionHandler', tag: 'SocketActionHandler');
-    _roomHandler = GameRoomHandler();
+    
+    // Try to reuse shared handler from WaitingRoomScreen
+    final sharedHandler = GameModesMediator.sharedRoomHandler;
+    if (sharedHandler != null) {
+      AppLogger.info('Reusing shared room handler from WaitingRoomScreen', tag: 'SocketActionHandler');
+      _roomHandler = sharedHandler;
+      _ownsHandler = false; // Don't dispose shared handler
+    } else {
+      AppLogger.info('Creating new room handler (no shared handler available)', tag: 'SocketActionHandler');
+      _roomHandler = GameRoomHandler();
+      _ownsHandler = true; // We own this handler, dispose it
+    }
   }
 
   Future<void> connectToRoom(String roomCode) async {
     AppLogger.info('Connecting to room via SocketActionHandler: $roomCode', tag: 'SocketActionHandler');
+    // Check if already connected
+    if (_roomHandler.isConnected && _roomHandler.roomCode == roomCode) {
+      AppLogger.info('Already connected to room $roomCode, skipping reconnection', tag: 'SocketActionHandler');
+      return;
+    }
     await _roomHandler.connectToRoom(roomCode);
   }
 
@@ -50,7 +69,17 @@ class SocketActionHandler extends ActionHandler {
 
   @override
   Future<void> dispose() async {
-    AppLogger.info('Disposing SocketActionHandler', tag: 'SocketActionHandler');
-    await _roomHandler.dispose();
+    AppLogger.info('Disposing SocketActionHandler (owns handler: $_ownsHandler)', tag: 'SocketActionHandler');
+    // Only dispose handler if we own it (not shared)
+    if (_ownsHandler) {
+      await _roomHandler.dispose();
+      AppLogger.info('Disposed owned room handler', tag: 'SocketActionHandler');
+    } else {
+      AppLogger.info('Skipping disposal of shared room handler', tag: 'SocketActionHandler');
+      // Clear shared reference
+      if (GameModesMediator.sharedRoomHandler == _roomHandler) {
+        GameModesMediator.clearSharedRoomHandler();
+      }
+    }
   }
 }

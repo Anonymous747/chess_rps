@@ -739,9 +739,17 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       : () async {
                           AppLogger.info('Equip item ${item.id}', tag: 'CollectionScreen');
                           try {
-                            await ref
-                                .read(userCollectionControllerProvider.notifier)
-                                .equipItem(item.id, item.category);
+                            // For avatars, use equip-avatar-by-icon endpoint which handles auto-unlocking better
+                            if (isAvatar && item.iconName != null) {
+                              await ref
+                                  .read(userCollectionControllerProvider.notifier)
+                                  .equipAvatarByIcon(item.iconName!);
+                            } else {
+                              // For other items, use the standard equipItem endpoint
+                              await ref
+                                  .read(userCollectionControllerProvider.notifier)
+                                  .equipItem(item.id, item.category);
+                            }
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -794,9 +802,17 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           if (!isEquipped) {
             AppLogger.info('Equip avatar ${item.id} by tapping', tag: 'CollectionScreen');
             try {
-              await ref
-                  .read(userCollectionControllerProvider.notifier)
-                  .equipItem(item.id, item.category);
+              // For avatars, always use equip-avatar-by-icon endpoint which handles auto-unlocking better
+              if (item.iconName != null) {
+                await ref
+                    .read(userCollectionControllerProvider.notifier)
+                    .equipAvatarByIcon(item.iconName!);
+              } else {
+                // Fallback to equipItem if iconName is not available
+                await ref
+                    .read(userCollectionControllerProvider.notifier)
+                    .equipItem(item.id, item.category);
+              }
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -1338,18 +1354,11 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           AppLogger.info('Selecting avatar $avatarIndex: $avatarName', tag: 'CollectionScreen');
 
           try {
-            // If avatar item doesn't exist in database, use the new endpoint that auto-creates it
-            if (avatarItem == null) {
-              // Use the new endpoint that auto-creates the item
-              await ref
-                  .read(userCollectionControllerProvider.notifier)
-                  .equipAvatarByIcon(iconName);
-            } else {
-              // Use the existing endpoint with item_id
-              await ref
-                  .read(userCollectionControllerProvider.notifier)
-                  .equipItem(avatarItem.id, CollectionCategory.AVATARS);
-            }
+            // Always use equip-avatar-by-icon for avatars - it handles auto-unlocking better
+            // This endpoint is more lenient and will auto-create/equip avatars even if not owned
+            await ref
+                .read(userCollectionControllerProvider.notifier)
+                .equipAvatarByIcon(iconName);
 
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(

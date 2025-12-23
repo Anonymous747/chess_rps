@@ -100,6 +100,16 @@ class UserAvatarWidget extends ConsumerWidget {
     Border? border,
     BoxShadow? shadow,
   }) {
+    final boxShadowList = shadow != null
+        ? <BoxShadow>[shadow]
+        : <BoxShadow>[
+            BoxShadow(
+              color: Palette.purpleAccent.withOpacity(0.2),
+              blurRadius: 8,
+              spreadRadius: 0,
+            ),
+          ];
+    
     final avatarWidget = Container(
       width: size,
       height: size,
@@ -110,15 +120,7 @@ class UserAvatarWidget extends ConsumerWidget {
               color: Palette.glassBorder,
               width: 2,
             ),
-        boxShadow: shadow != null
-            ? [shadow!]
-            : [
-                BoxShadow(
-                  color: Palette.purpleAccent.withOpacity(0.2),
-                  blurRadius: 8,
-                  spreadRadius: 0,
-                ),
-              ],
+        boxShadow: boxShadowList,
       ),
       child: ClipOval(
         child: Image.asset(
@@ -220,8 +222,8 @@ class UserAvatarByIconWidget extends StatelessWidget {
               width: 2,
             ),
         boxShadow: shadow != null
-            ? [shadow!]
-            : [
+            ? <BoxShadow>[shadow as BoxShadow]
+            : <BoxShadow>[
                 BoxShadow(
                   color: Palette.purpleAccent.withOpacity(0.2),
                   blurRadius: 8,
