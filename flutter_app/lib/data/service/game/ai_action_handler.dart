@@ -17,16 +17,33 @@ class AIActionHandler extends ActionHandler {
       AppLogger.info('Stockfish is ready: ${_stockfishInterpreter.state == "ready"}', tag: 'AIActionHandler');
       
       // Check Stockfish state and wait if needed
-      final currentState = _stockfishInterpreter.state;
+      var currentState = _stockfishInterpreter.state;
       AppLogger.info('Stockfish state before wait: $currentState', tag: 'AIActionHandler');
       
-      // If disposed, this is an error - Stockfish should not be disposed yet
+      // If disposed, try to reinitialize Stockfish
       if (currentState == "disposed") {
-        AppLogger.error('Stockfish is already disposed - this should not happen', tag: 'AIActionHandler');
-        return null;
+        AppLogger.warning('Stockfish is disposed - attempting to reinitialize', tag: 'AIActionHandler');
+        try {
+          _stockfishInterpreter.initEngine();
+          AppLogger.info('Stockfish reinitialized, waiting for ready state', tag: 'AIActionHandler');
+          await _stockfishInterpreter.waitForReady();
+          // Update state after reinitialization
+          currentState = _stockfishInterpreter.state;
+          AppLogger.info('Stockfish is now ready after reinitialization (state: $currentState)', tag: 'AIActionHandler');
+          
+          // After reinitialization, we need to sync the board state with Stockfish
+          // The board state might have changed, so we need to visualize it again
+          AppLogger.info('Syncing board state with Stockfish after reinitialization', tag: 'AIActionHandler');
+          await _stockfishInterpreter.visualizeBoard();
+          AppLogger.info('Board state synced after reinitialization', tag: 'AIActionHandler');
+        } catch (e) {
+          AppLogger.error('Failed to reinitialize Stockfish: $e', tag: 'AIActionHandler', error: e);
+          return null;
+        }
       }
       
       // Wait for Stockfish to be ready if it's not already
+      // Use currentState which may have been updated after reinitialization
       if (currentState != "ready") {
         AppLogger.info('Waiting for Stockfish to be ready (current state: $currentState)...', tag: 'AIActionHandler');
         try {

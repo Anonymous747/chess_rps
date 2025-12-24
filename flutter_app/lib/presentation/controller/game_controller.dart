@@ -45,7 +45,8 @@ class GameController extends _$GameController {
   @override
   GameState build() {
     AppLogger.info('Initializing GameController', tag: 'GameController');
-    actionHandler = ref.read(actionHandlerProvider);
+    // Use watch instead of read to keep the provider alive during the game
+    actionHandler = ref.watch(actionHandlerProvider);
     AppLogger.info(
       'ActionHandler type: ${actionHandler.runtimeType}, Opponent mode: ${GameModesMediator.opponentMode}',
       tag: 'GameController'
@@ -724,8 +725,9 @@ class GameController extends _$GameController {
     
     // Only allow selecting own pieces
     if (fromCell.figure == null || fromCell.figure!.side != state.playerSide) {
+      final pieceSideName = fromCell.figure?.side?.name ?? 'null';
       AppLogger.info(
-        'Cannot select piece - not player\'s piece. Piece side: ${fromCell.figure?.side?.name}, Player side: ${state.playerSide.name}',
+        'Cannot select piece - not player\'s piece. Piece side: $pieceSideName, Player side: ${state.playerSide.name}',
         tag: 'GameController'
       );
       AppLogger.info(
@@ -874,13 +876,14 @@ class GameController extends _$GameController {
         // Black pieces (player): FEN row 7-8 → internal row 6-7
         return fenRow - 1;
       } else {
-        // Middle rows (3-6): use standard conversion
-        // When player is black, internal board is NOT flipped, so we use the same formula as white
-        // FEN row 3 → internal row 5 (8-3=5, closer to player/black side)
-        // FEN row 4 → internal row 4 (8-4=4, middle)
-        // FEN row 5 → internal row 3 (8-5=3, closer to opponent/white side)
-        // FEN row 6 → internal row 2 (8-6=2, closer to opponent/white side)
-        return 8 - fenRow;
+        // Middle rows (3-6): linear mapping
+        // When player is black, the board is visually flipped but internal representation is linear
+        // FEN row 3 (closer to white in FEN) → internal row 2 (closer to white/opponent)
+        // FEN row 4 → internal row 3
+        // FEN row 5 → internal row 4
+        // FEN row 6 (closer to black in FEN) → internal row 5 (closer to black/player)
+        // The pattern: internalRow = fenRow - 1 (same as rows 1-2 and 7-8)
+        return fenRow - 1;
       }
     }
   }
@@ -1220,18 +1223,18 @@ class GameController extends _$GameController {
     // Get piece role BEFORE move (piece will move after makeMove)
     final pieceRole = selectedCell.figure!.role;
     
-    // For online games, use absolute notation (from white's perspective)
-    // This ensures both players interpret moves the same way
-    final fromPos = GameModesMediator.opponentMode == OpponentMode.socket
-        ? selectedCell.position.absoluteAlgebraicPosition
-        : selectedCell.position.algebraicPosition;
-    final toPos = GameModesMediator.opponentMode == OpponentMode.socket
-        ? target.position.absoluteAlgebraicPosition
-        : target.position.algebraicPosition;
+    // For AI games, use absolute notation for AI (no column reversal)
+    // For online games, use absolute notation (with column reversal for black)
+    final fromPos = GameModesMediator.opponentMode == OpponentMode.ai
+        ? selectedCell.position.absoluteAlgebraicPositionForAI
+        : selectedCell.position.absoluteAlgebraicPosition;
+    final toPos = GameModesMediator.opponentMode == OpponentMode.ai
+        ? target.position.absoluteAlgebraicPositionForAI
+        : target.position.absoluteAlgebraicPosition;
     
     // Create move notation with piece type: "Pe2e4", "Ne2f4", etc.
     final action = PieceNotation.createMoveNotation(pieceRole, fromPos, toPos);
-    AppLogger.info('Making move: $action (${GameModesMediator.opponentMode == OpponentMode.socket ? "absolute" : "relative"} notation, piece: ${pieceRole.name})', tag: 'GameController');
+    AppLogger.info('Making move: $action (absolute notation, piece: ${pieceRole.name})', tag: 'GameController');
 
     // Capture is already handled by moveFigure, so skip it in _makeMoveViaAction
     final success = await _makeMoveViaAction(action, selectedCell, target, skipCapture: true);

@@ -9,7 +9,7 @@ import 'package:stockfish_interpreter/stockfish/stockfish_interpreter.dart';
 
 part 'action_handler.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 ActionHandler actionHandler(Ref ref) {
   final opponentMode = GameModesMediator.opponentMode;
   AppLogger.info('Creating ActionHandler. Opponent mode: $opponentMode', tag: 'ActionHandlerProvider');
@@ -26,9 +26,6 @@ ActionHandler actionHandler(Ref ref) {
       handler = SocketActionHandler();
       break;
   }
-  
-  // Keep the provider alive to prevent disposal during Stockfish initialization
-  ref.keepAlive();
   
   // Ensure handler is disposed when provider is disposed
   ref.onDispose(() {

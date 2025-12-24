@@ -6,12 +6,14 @@ import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 
 class Pawn extends Figure {
-  bool _canDoubleMove = true;
+  bool _canDoubleMove;
 
   Pawn({
     required Side side,
     required Position position,
-  }) : super(position: position, side: side, role: Role.pawn);
+    bool canDoubleMove = true,
+  }) : _canDoubleMove = canDoubleMove,
+       super(position: position, side: side, role: Role.pawn);
 
   @override
   void moveTo(Cell to) {
@@ -33,6 +35,26 @@ class Pawn extends Figure {
     return false;
   }
 
+  /// Check if pawn is on its starting row
+  /// White pawns start at row 1 (from white's perspective)
+  /// Black pawns start at row 6 (from white's perspective)
+  /// In internal board: row 0-1 = opponent, row 6-7 = player
+  bool _isOnStartingRow() {
+    if (side == Side.light) {
+      // White pawn: starting row depends on player side
+      // If player is white: white pawns at row 6
+      // If player is black: white pawns at row 0 (opponent)
+      final playerSide = PlayerSideMediator.playerSide;
+      return playerSide == Side.light ? position.row == 6 : position.row == 0;
+    } else {
+      // Black pawn: starting row depends on player side
+      // If player is white: black pawns at row 1 (opponent)
+      // If player is black: black pawns at row 6 (player)
+      final playerSide = PlayerSideMediator.playerSide;
+      return playerSide == Side.light ? position.row == 1 : position.row == 6;
+    }
+  }
+
   bool _isPawnActionAvailable(Board board, Cell to) {
     if (to.figure?.side != null && side == to.figure!.side) return false;
 
@@ -47,7 +69,10 @@ class Pawn extends Figure {
       return true;
     }
 
-    if (_canDoubleMove) {
+    // Pawn can only move two squares on its first move
+    // Check both: the flag AND if pawn is on starting row
+    final isOnStartingRow = _isOnStartingRow();
+    if (_canDoubleMove && isOnStartingRow) {
       final doubleStep = isOpponent ? 2 : -2;
       final isDoubleStepMatch = to.position.row == position.row + doubleStep;
 
@@ -74,6 +99,7 @@ class Pawn extends Figure {
     return Pawn(
       side: side ?? this.side,
       position: position ?? this.position,
+      canDoubleMove: _canDoubleMove, // Preserve the double move state
     );
   }
 }

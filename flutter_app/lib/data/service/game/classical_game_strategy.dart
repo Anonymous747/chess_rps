@@ -19,7 +19,24 @@ class ClassicalGameStrategy extends GameStrategy {
     if (opponentMode == OpponentMode.ai && !PlayerSideMediator.playerSide.isLight) {
       AppLogger.info('Player is dark in AI game, triggering initial AI move',
           tag: 'ClassicalGameStrategy');
-      await controller.makeOpponentsMove();
+      // Retry the initial AI move up to 2 times if it fails (e.g., due to Stockfish initialization issues)
+      bool moveSucceeded = false;
+      for (int attempt = 1; attempt <= 2 && !moveSucceeded; attempt++) {
+        if (attempt > 1) {
+          AppLogger.info('Retrying initial AI move (attempt $attempt/2)', tag: 'ClassicalGameStrategy');
+          // Wait a bit before retrying to allow Stockfish to initialize
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
+        moveSucceeded = await controller.makeOpponentsMove();
+        if (moveSucceeded) {
+          AppLogger.info('Initial AI move succeeded on attempt $attempt', tag: 'ClassicalGameStrategy');
+        } else {
+          AppLogger.warning('Initial AI move failed on attempt $attempt', tag: 'ClassicalGameStrategy');
+        }
+      }
+      if (!moveSucceeded) {
+        AppLogger.error('Initial AI move failed after 2 attempts. Game may be stuck.', tag: 'ClassicalGameStrategy');
+      }
     } else {
       AppLogger.info('Player is light or online game, waiting for player/opponent move',
           tag: 'ClassicalGameStrategy');

@@ -1,5 +1,6 @@
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/rps_choice.dart';
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -34,7 +35,8 @@ class GameState with _$GameState {
 extension GameStateExtension on GameState {
   /// Get the last move positions from move history
   /// Returns a map with 'fromRow', 'fromCol', 'toRow', 'toCol' or null if no moves
-  /// Note: Moves are stored in algebraic notation from the perspective of PlayerSideMediator.playerSide
+  /// Note: For AI games, moves are stored in absolute notation (white's perspective)
+  ///       For online games, moves are stored from the player's perspective
   Map<String, int>? getLastMovePositions() {
     if (moveHistory.isEmpty) return null;
     
@@ -42,14 +44,34 @@ extension GameStateExtension on GameState {
     if (lastMove.length < 4) return null;
     
     try {
-      // Parse algebraic notation (e.g., "e2e4" -> from: e2, to: e4)
-      final fromNotation = lastMove.substring(0, 2);
-      final toNotation = lastMove.substring(2, 4);
+      // Parse algebraic notation - handle both "e2e4" and "Pe2e4" formats
+      String fromNotation, toNotation;
+      if (lastMove.length == 5) {
+        // Format with piece prefix: "Pe2e4"
+        fromNotation = lastMove.substring(1, 3);
+        toNotation = lastMove.substring(3, 5);
+      } else {
+        // Format without piece prefix: "e2e4"
+        fromNotation = lastMove.substring(0, 2);
+        toNotation = lastMove.substring(2, 4);
+      }
       
-      // Use the convertToPosition extension which handles the conversion
-      // based on PlayerSideMediator.playerSide (same as when moves were stored)
-      final fromPos = fromNotation.convertToPosition();
-      final toPos = toNotation.convertToPosition();
+      // For AI games: all moves are stored in absolute notation (from white's perspective)
+      //   - Opponent moves (from Stockfish): 4 characters, absolute notation (e.g., "e2e4")
+      //   - Player moves: 5 characters with piece prefix, absolute notation (e.g., "Pd7d5")
+      // For online games: all moves are in absolute notation from white's perspective
+      final isAIGame = GameModesMediator.opponentMode == OpponentMode.ai;
+      
+      // In AI games, all moves are in absolute notation, so always use absolute notation conversion
+      // For online games, moves are also in absolute notation
+      final isAbsoluteNotation = isAIGame;
+      
+      final fromPos = isAbsoluteNotation
+          ? fromNotation.convertFromAbsoluteNotationForAI()
+          : fromNotation.convertToPosition();
+      final toPos = isAbsoluteNotation
+          ? toNotation.convertFromAbsoluteNotationForAI()
+          : toNotation.convertToPosition();
       
       return {
         'fromRow': fromPos.row,

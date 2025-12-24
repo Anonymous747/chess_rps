@@ -81,6 +81,16 @@ class StockfishInterpreter {
   /// Need to execute if you pass [isImmediatelyStart] as false
   ///
   void initEngine() {
+    // Remove old listener if engine was already initialized
+    // Check state first to see if engine exists
+    final currentState = _stockfishHandler.getState();
+    if (currentState != 'disposed') {
+      try {
+        _stockfishHandler.stateListenable.removeListener(_stateListener);
+      } catch (e) {
+        // Ignore errors - listener might not have been added
+      }
+    }
     _stockfishHandler.initEngine();
     _stockfishHandler.stateListenable.addListener(_stateListener);
   }

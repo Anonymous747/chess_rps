@@ -95,6 +95,25 @@ extension PositionExtension on Position {
       return "${boardLetters[whiteCol]}${whiteRow}";
     }
   }
+
+  /// Convert to absolute algebraic notation for AI games (Stockfish perspective)
+  /// For AI games, columns are NOT reversed - the internal board structure matches Stockfish directly
+  /// This is different from online games where columns are reversed for visual display
+  String get absoluteAlgebraicPositionForAI {
+    final playerSide = PlayerSideMediator.playerSide;
+    
+    if (playerSide == Side.light) {
+      // White player: same as absoluteAlgebraicPosition
+      return "${boardLetters[col]}${row.reversed}";
+    } else {
+      // Black player: For AI games, columns map directly (no reversal)
+      // Internal col 0 = white's a, internal col 7 = white's h
+      // Row conversion: internal row 0 → white's row 1, internal row 7 → white's row 8
+      final whiteCol = col;  // Direct mapping, no reversal for AI games
+      final whiteRow = row + 1;   // Row 0→1, row 7→8
+      return "${boardLetters[whiteCol]}${whiteRow}";
+    }
+  }
 }
 
 extension ToPositionExtension on String {
@@ -164,6 +183,37 @@ extension ToPositionExtension on String {
       return Position(
           row: internalRow,
           col: internalCol);
+    }
+  }
+
+  /// Convert from absolute algebraic notation for AI games (Stockfish perspective)
+  /// This is used specifically for AI games where Stockfish always uses white's perspective
+  /// and columns are NOT reversed (unlike online games)
+  /// For AI games, the internal board structure matches Stockfish's perspective directly
+  Position convertFromAbsoluteNotationForAI() {
+    assert(
+        length == 2, "Position in algebraic notation should include 2 signs");
+
+    final col = boardLetters.indexOf(this[0]);
+    final row = int.parse(this[1]);
+
+    final playerSide = PlayerSideMediator.playerSide;
+    
+    if (playerSide == Side.light) {
+      // White player: row 1->7, row 2->6, ..., row 8->0 (same as convertFromAbsoluteNotation)
+      return Position(
+          row: row.reversed,  // Row 1->7, row 2->6, ..., row 8->0
+          col: col);
+    } else {
+      // Black player: For AI games, columns are NOT reversed
+      // - Row 0-1: White pieces (opponent, white's row 1-2) → row - 1
+      // - Row 6-7: Black pieces (player, white's row 7-8) → row - 1
+      // Formula: internalRow = row - 1 (for all rows)
+      // Columns: Direct mapping, no reversal (matching makeOpponentsMove logic)
+      final internalRow = row - 1;  // White's row 1->0, row 2->1, ..., row 8->7
+      return Position(
+          row: internalRow,
+          col: col);  // No column reversal for AI games
     }
   }
 }
