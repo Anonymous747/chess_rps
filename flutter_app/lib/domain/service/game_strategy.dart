@@ -57,9 +57,9 @@ abstract class GameStrategy {
     );
 
     // First check if the pressed cell is a piece of the current player
-    // If so, select it (this will clear any previous selection)
+    // Only allow selection if it's the player's turn
     if (pressedCell.isOccupied &&
-        pressedCell.figureSide == currentOrder &&
+        currentOrder == PlayerSideMediator.playerSide &&
         pressedCell.figure!.side == PlayerSideMediator.playerSide) {
       AppLogger.info(
         'Pressed cell is own piece - selecting it and clearing previous selection',

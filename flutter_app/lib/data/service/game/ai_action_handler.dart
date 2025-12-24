@@ -85,9 +85,23 @@ class AIActionHandler extends ActionHandler {
     AppLogger.info('=== AIActionHandler.makeMove() START: $action ===', tag: 'AIActionHandler');
     try {
       AppLogger.info('Stockfish state before move: ${_stockfishInterpreter.state}', tag: 'AIActionHandler');
-      AppLogger.info('Applying move to Stockfish: $action', tag: 'AIActionHandler');
       
-      await _stockfishInterpreter.makeMovesFromCurrentPosition([action]);
+      // Stockfish expects moves in format "e2e4" (without piece prefix)
+      // But our action format is "Pe2e4" (with piece prefix)
+      // Strip the piece prefix if present
+      String stockfishMove = action;
+      if (action.length == 5) {
+        // Format: "Pe2e4" -> extract "e2e4"
+        stockfishMove = action.substring(1);
+        AppLogger.info('Stripped piece prefix from move: $action -> $stockfishMove', tag: 'AIActionHandler');
+      } else if (action.length != 4) {
+        AppLogger.warning('Unexpected move format: $action (length: ${action.length})', tag: 'AIActionHandler');
+        AppLogger.warning('Expected format: "e2e4" (4 chars) or "Pe2e4" (5 chars)', tag: 'AIActionHandler');
+      }
+      
+      AppLogger.info('Applying move to Stockfish: $stockfishMove', tag: 'AIActionHandler');
+      
+      await _stockfishInterpreter.makeMovesFromCurrentPosition([stockfishMove]);
       
       AppLogger.info('Move applied successfully in Stockfish', tag: 'AIActionHandler');
       

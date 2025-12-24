@@ -67,27 +67,55 @@ class GameController extends _$GameController {
     );
 
     // Connect to WebSocket and set up listener for online games
-    if (actionHandler is SocketActionHandler) {
-      AppLogger.info('Setting up WebSocket connection for online game', tag: 'GameController');
-      final socketHandler = actionHandler as SocketActionHandler;
-      
-      // Get room code from mediator and connect
-      Future.microtask(() async {
-        try {
-          final roomCode = GameModesMediator.currentRoomCode;
-          if (roomCode != null && roomCode.isNotEmpty) {
-            AppLogger.info('Connecting SocketActionHandler to room: $roomCode', tag: 'GameController');
-            await socketHandler.connectToRoom(roomCode);
-            
-            // Setup listener after connection is established
-            _setupWebSocketTimerListener(socketHandler);
-          } else {
-            AppLogger.error('Room code not available! Cannot connect to WebSocket.', tag: 'GameController');
+    // Check both the actionHandler type AND the opponent mode to ensure we're in online mode
+    if (GameModesMediator.opponentMode == OpponentMode.socket) {
+      if (actionHandler is SocketActionHandler) {
+        AppLogger.info('Setting up WebSocket connection for online game', tag: 'GameController');
+        final socketHandler = actionHandler as SocketActionHandler;
+        
+        // Get room code from mediator and connect
+        Future.microtask(() async {
+          try {
+            final roomCode = GameModesMediator.currentRoomCode;
+            if (roomCode != null && roomCode.isNotEmpty) {
+              AppLogger.info('Connecting SocketActionHandler to room: $roomCode', tag: 'GameController');
+              await socketHandler.connectToRoom(roomCode);
+              
+              // Setup listener after connection is established
+              _setupWebSocketTimerListener(socketHandler);
+            } else {
+              AppLogger.error('Room code not available! Cannot connect to WebSocket.', tag: 'GameController');
+            }
+          } catch (e) {
+            AppLogger.error('Error setting up WebSocket connection: $e', tag: 'GameController', error: e);
           }
-        } catch (e) {
-          AppLogger.error('Error setting up WebSocket connection: $e', tag: 'GameController', error: e);
+        });
+      } else {
+        AppLogger.error(
+          'CRITICAL: Opponent mode is socket but ActionHandler is ${actionHandler.runtimeType}, not SocketActionHandler! '
+          'This indicates a provider caching issue. Attempting to use shared room handler.',
+          tag: 'GameController'
+        );
+        // Try to use the shared room handler directly
+        final sharedHandler = GameModesMediator.sharedRoomHandler;
+        if (sharedHandler != null) {
+          AppLogger.info('Using shared room handler to setup WebSocket listener', tag: 'GameController');
+          final socketHandler = SocketActionHandler(); // Create a new one that will reuse the shared handler
+          Future.microtask(() async {
+            try {
+              final roomCode = GameModesMediator.currentRoomCode;
+              if (roomCode != null && roomCode.isNotEmpty) {
+                await socketHandler.connectToRoom(roomCode);
+                _setupWebSocketTimerListener(socketHandler);
+              }
+            } catch (e) {
+              AppLogger.error('Error setting up WebSocket connection with shared handler: $e', tag: 'GameController', error: e);
+            }
+          });
+        } else {
+          AppLogger.error('No shared room handler available! Cannot setup WebSocket listener.', tag: 'GameController');
         }
-      });
+      }
     }
 
     // Start timer countdown after state is initialized
@@ -108,34 +136,51 @@ class GameController extends _$GameController {
   }
 
   void _setupWebSocketTimerListener(SocketActionHandler handler) {
+    // Double-check we're in online mode before setting up listener
+    if (GameModesMediator.opponentMode != OpponentMode.socket) {
+      AppLogger.warning('Attempted to setup WebSocket listener but not in online mode - skipping', tag: 'GameController');
+      return;
+    }
+    
+    AppLogger.info('Setting up WebSocket listener for online game', tag: 'GameController');
     _websocketSubscription = handler.messageStream.listen(
       (message) async {
         try {
             final type = message['type'] as String?;
           if (type == 'timer_update' || type == 'move' || type == 'room_joined' || type == 'player_left' || type == 'error' || type == 'surrender' || type == 'disconnected') {
             // Handle surrender - opponent surrendered, player wins
+            // Only process in online mode
             if (type == 'surrender') {
-              AppLogger.info('Received surrender message - opponent surrendered, player wins!', tag: 'GameController');
-              AppLogger.info('Current game state before surrender: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
-              // End game with player winning
-              final opponentSide = state.playerSide.opposite;
-              _endGameWithSurrender(opponentSide);
-              AppLogger.info('Game state after surrender: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
+              if (GameModesMediator.opponentMode == OpponentMode.socket) {
+                AppLogger.info('Received surrender message - opponent surrendered, player wins!', tag: 'GameController');
+                AppLogger.info('Current game state before surrender: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
+                // End game with player winning
+                final opponentSide = state.playerSide.opposite;
+                _endGameWithSurrender(opponentSide);
+                AppLogger.info('Game state after surrender: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
+              } else {
+                AppLogger.warning('Received surrender message but not in online mode - ignoring', tag: 'GameController');
+              }
               return;
             }
             
             // Handle player_left - opponent disconnected, player wins
+            // Only process in online mode
             if (type == 'player_left') {
-              AppLogger.info('Received player_left message - opponent disconnected, player wins!', tag: 'GameController');
-              AppLogger.info('Current game state before player_left: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
-              // Only end game if it's not already over
-              if (!state.gameOver) {
-                // End game with player winning
-                final opponentSide = state.playerSide.opposite;
-                _endGameWithSurrender(opponentSide);
-                AppLogger.info('Game state after player_left: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
+              if (GameModesMediator.opponentMode == OpponentMode.socket) {
+                AppLogger.info('Received player_left message - opponent disconnected, player wins!', tag: 'GameController');
+                AppLogger.info('Current game state before player_left: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
+                // Only end game if it's not already over
+                if (!state.gameOver) {
+                  // End game with player winning
+                  final opponentSide = state.playerSide.opposite;
+                  _endGameWithSurrender(opponentSide);
+                  AppLogger.info('Game state after player_left: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
+                } else {
+                  AppLogger.info('Game already over, ignoring player_left message', tag: 'GameController');
+                }
               } else {
-                AppLogger.info('Game already over, ignoring player_left message', tag: 'GameController');
+                AppLogger.warning('Received player_left message but not in online mode - ignoring', tag: 'GameController');
               }
               return;
             }
@@ -143,9 +188,14 @@ class GameController extends _$GameController {
             // Handle disconnected - WebSocket connection lost, opponent wins
             if (type == 'disconnected') {
               AppLogger.info('Received disconnected message - connection lost, opponent wins!', tag: 'GameController');
-              // End game with opponent winning (we lost connection)
-              final playerSide = state.playerSide;
-              _endGameWithSurrender(playerSide);
+              // Only end game if we're in online mode and game is not already over
+              if (GameModesMediator.opponentMode == OpponentMode.socket && !state.gameOver) {
+                // End game with opponent winning (we lost connection)
+                final playerSide = state.playerSide;
+                _endGameWithSurrender(playerSide);
+              } else {
+                AppLogger.info('Ignoring disconnected message - not in online mode or game already over', tag: 'GameController');
+              }
               return;
             }
             
@@ -229,11 +279,13 @@ class GameController extends _$GameController {
       onDone: () {
         AppLogger.warning('WebSocket stream closed (onDone)', tag: 'GameController');
         // When stream closes, end the game - opponent disconnected
-        // Only end game if it's not already over
-        if (!state.gameOver) {
+        // Only end game if it's not already over and we're in online mode
+        if (!state.gameOver && GameModesMediator.opponentMode == OpponentMode.socket) {
           AppLogger.info('WebSocket connection closed - ending game, opponent wins', tag: 'GameController');
           final playerSide = state.playerSide;
           _endGameWithSurrender(playerSide);
+        } else if (GameModesMediator.opponentMode != OpponentMode.socket) {
+          AppLogger.info('WebSocket onDone called but not in online mode - ignoring', tag: 'GameController');
         }
       },
       cancelOnError: false, // Don't cancel subscription on error
@@ -520,12 +572,19 @@ class GameController extends _$GameController {
       if (remaining <= 0) {
         timer.cancel();
         // Timeout - handle game end
-        AppLogger.warning('Time out for ${currentState.currentOrder}', tag: 'GameController');
+        final timeOutSide = currentState.currentOrder;
+        AppLogger.warning('Time out for ${timeOutSide.name} - ending game', tag: 'GameController');
+        
         // Set to 0 to avoid negative values
-        if (currentState.currentOrder == Side.light) {
+        if (timeOutSide == Side.light) {
           state = currentState.copyWith(lightPlayerTimeSeconds: 0);
         } else {
           state = currentState.copyWith(darkPlayerTimeSeconds: 0);
+        }
+        
+        // End the game - the player whose time expired loses, opponent wins
+        if (!currentState.gameOver) {
+          _endGameWithTimeOut(timeOutSide);
         }
         return;
       }
@@ -650,6 +709,32 @@ class GameController extends _$GameController {
       tag: 'GameController'
     );
     
+    // Only allow selecting pieces when it's the player's turn
+    if (state.currentOrder != state.playerSide) {
+      AppLogger.info(
+        'Cannot select piece - not player\'s turn. Current order: ${state.currentOrder.name}, Player side: ${state.playerSide.name}',
+        tag: 'GameController'
+      );
+      AppLogger.info(
+        '=== GameController.showAvailableActions END (not player\'s turn) ===',
+        tag: 'GameController'
+      );
+      return;
+    }
+    
+    // Only allow selecting own pieces
+    if (fromCell.figure == null || fromCell.figure!.side != state.playerSide) {
+      AppLogger.info(
+        'Cannot select piece - not player\'s piece. Piece side: ${fromCell.figure?.side?.name}, Player side: ${state.playerSide.name}',
+        tag: 'GameController'
+      );
+      AppLogger.info(
+        '=== GameController.showAvailableActions END (not player\'s piece) ===',
+        tag: 'GameController'
+      );
+      return;
+    }
+    
     // Wipe selected cells before follow action
     if (state.selectedFigure != null) {
       AppLogger.info(
@@ -748,6 +833,58 @@ class GameController extends _$GameController {
     );
   }
 
+  /// Convert FEN row (1-8, white's perspective) to internal row (0-7)
+  /// When player is black, the board is flipped: white pieces at rows 0-1, black at rows 6-7
+  int _convertFenRowToInternalRow(int fenRow, Side playerSide) {
+    if (playerSide == Side.light) {
+      // Player is white: simple conversion
+      // FEN row 1 (white back rank) → internal row 7 (player back rank)
+      // FEN row 8 (black back rank) → internal row 0 (opponent back rank)
+      return 8 - fenRow;
+    } else {
+      // Player is black: board is flipped
+      // Internal board: row 0-1 = white (opponent), row 6-7 = black (player)
+      // FEN notation: row 1-2 = white, row 7-8 = black
+      //
+      // The board is flipped, so we need to mirror the rows:
+      // FEN row 1 (white back) → internal row 0 (opponent back) = 1-1 = 0
+      // FEN row 2 (white pawn) → internal row 1 (opponent pawn) = 2-1 = 1
+      // FEN row 3 → internal row 5 (flipped: 8-3=5, but we need to account for flip)
+      // FEN row 4 → internal row 3 (flipped: 8-4=4, but we need to account for flip)
+      // FEN row 5 → internal row 2 (flipped: 8-5=3, but we need to account for flip)
+      // FEN row 6 → internal row 2 (flipped: 8-6=2, but we need to account for flip)
+      // FEN row 7 (black pawn) → internal row 6 (player pawn) = 7-1 = 6
+      // FEN row 8 (black back) → internal row 7 (player back) = 8-1 = 7
+      //
+      // Actually, the correct formula for flipped board is:
+      // For rows 1-2: fenRow - 1 (direct mapping to opponent side)
+      // For rows 7-8: fenRow - 1 (direct mapping to player side)
+      // For rows 3-6: we need to flip them
+      //   FEN row 3 → internal row 5 (closer to player side)
+      //   FEN row 4 → internal row 4 (middle)
+      //   FEN row 5 → internal row 3 (closer to opponent side)
+      //   FEN row 6 → internal row 2 (closer to opponent side)
+      //
+      // The pattern: for middle rows, we flip: internalRow = 7 - (fenRow - 1) = 8 - fenRow
+      // But wait, that gives: row 3→5, row 4→4, row 5→3, row 6→2, which matches!
+      if (fenRow <= 2) {
+        // White pieces (opponent): FEN row 1-2 → internal row 0-1
+        return fenRow - 1;
+      } else if (fenRow >= 7) {
+        // Black pieces (player): FEN row 7-8 → internal row 6-7
+        return fenRow - 1;
+      } else {
+        // Middle rows (3-6): use standard conversion
+        // When player is black, internal board is NOT flipped, so we use the same formula as white
+        // FEN row 3 → internal row 5 (8-3=5, closer to player/black side)
+        // FEN row 4 → internal row 4 (8-4=4, middle)
+        // FEN row 5 → internal row 3 (8-5=3, closer to opponent/white side)
+        // FEN row 6 → internal row 2 (8-6=2, closer to opponent/white side)
+        return 8 - fenRow;
+      }
+    }
+  }
+
   /// Return the result is Opponents move has a correct status
   ///
   Future<bool> makeOpponentsMove() async {
@@ -755,7 +892,22 @@ class GameController extends _$GameController {
     AppLogger.info('Current game state:', tag: 'GameController');
     AppLogger.info('  - Current order (whose turn): ${state.currentOrder}', tag: 'GameController');
     AppLogger.info('  - Player side: ${state.playerSide}', tag: 'GameController');
-    AppLogger.info('  - Opponent side: ${state.currentOrder}', tag: 'GameController');
+    final opponentSide = state.playerSide.opposite;
+    AppLogger.info('  - Opponent side: $opponentSide', tag: 'GameController');
+    
+    // Verify it's actually the opponent's turn
+    if (state.currentOrder != opponentSide) {
+      AppLogger.warning('=== makeOpponentsMove() ABORTED: Not opponent\'s turn ===', tag: 'GameController');
+      AppLogger.warning('  - Current order: ${state.currentOrder.name}, Expected: ${opponentSide.name}', tag: 'GameController');
+      AppLogger.warning('  - This should not happen - AI move triggered at wrong time', tag: 'GameController');
+      return false;
+    }
+    
+    // Verify game is not over
+    if (state.gameOver) {
+      AppLogger.warning('=== makeOpponentsMove() ABORTED: Game is already over ===', tag: 'GameController');
+      return false;
+    }
     
     try {
       // Ensure board state is synced before getting opponent move
@@ -777,24 +929,122 @@ class GameController extends _$GameController {
       }
 
       AppLogger.info('Step 3: Parsing opponent move: $bestAction', tag: 'GameController');
-      final fromPosition = bestAction!.substring(0, 2).convertToPosition();
-      final targetPosition = bestAction.substring(2, 4).convertToPosition();
-      AppLogger.info('  - From position: row ${fromPosition.row}, col ${fromPosition.col}', tag: 'GameController');
-      AppLogger.info('  - To position: row ${targetPosition.row}, col ${targetPosition.col}', tag: 'GameController');
+      // Stockfish always returns moves in absolute notation (from white's perspective)
+      // The board is always initialized the same way:
+      // - Row 0-1: Opponent pieces (white if player is black, black if player is white)
+      // - Row 6-7: Player pieces (black if player is black, white if player is white)
+      // 
+      // Conversion depends on player side:
+      // If player is WHITE:
+      //   - FEN row 1 (white's back rank) → internal row 7 (player's back rank)
+      //   - FEN row 2 (white's pawn row) → internal row 6 (player's pawn row)
+      //   - FEN row 7 (black's pawn row) → internal row 1 (opponent's pawn row)
+      //   - FEN row 8 (black's back rank) → internal row 0 (opponent's back rank)
+      //   Formula: internalRow = 8 - fenRow
+      //
+      // If player is BLACK:
+      //   - FEN row 1 (white's back rank) → internal row 7 (opponent's back rank)
+      //   - FEN row 2 (white's pawn row) → internal row 6 (opponent's pawn row)
+      //   - FEN row 7 (black's pawn row) → internal row 1 (player's pawn row)
+      //   - FEN row 8 (black's back rank) → internal row 0 (player's back rank)
+      //   Formula: internalRow = 8 - fenRow (same formula, but pieces are different)
+      final fromNotation = bestAction!.substring(0, 2);
+      final toNotation = bestAction.substring(2, 4);
+      
+      // Parse algebraic notation
+      final fromCol = boardLetters.indexOf(fromNotation[0]);
+      final fromRowFen = int.parse(fromNotation[1]);
+      final toCol = boardLetters.indexOf(toNotation[0]);
+      final toRowFen = int.parse(toNotation[1]);
+      
+      // Convert FEN row (1-8, white's perspective) to internal row (0-7)
+      // The board is always: row 0-1 = opponent, row 6-7 = player
+      // 
+      // If player is WHITE:
+      //   - FEN row 1-2 (white) → internal row 6-7 (player): 8 - fenRow
+      //   - FEN row 7-8 (black) → internal row 0-1 (opponent): 8 - fenRow
+      //
+      // If player is BLACK:
+      //   - FEN row 1-2 (white) → internal row 0-1 (opponent): fenRow - 1
+      //   - FEN row 7-8 (black) → internal row 6-7 (player): need different formula
+      //     FEN row 7 → internal row 6: if 8-7=1, then 6 = 1+5, so (8-fenRow)+5
+      //     FEN row 8 → internal row 7: if 8-8=0, then 7 = 0+7, so (8-fenRow)+7
+      //     But that's inconsistent. Let me try: internalRow = 13 - fenRow
+      //     Row 7: 13-7=6 ✓, Row 8: 13-8=5 ✗
+      //     Or: internalRow = 15 - fenRow
+      //     Row 7: 15-7=8 ✗ (out of bounds), Row 8: 15-8=7 ✓
+      //     
+      //     Actually, the correct formula is: internalRow = (8 - fenRow) + 6 for row 7-8
+      //     Row 7: (8-7)+6 = 1+6 = 7 ✗ (should be 6)
+      //     Row 8: (8-8)+6 = 0+6 = 6 ✗ (should be 7)
+      //     
+      //     Let me try: internalRow = (8 - fenRow) + 5 for row 7, + 7 for row 8
+      //     That's too complex. Let me use a simpler approach:
+      //     For row 7-8 when player is black: internalRow = 13 - fenRow for row 7, 15 - fenRow for row 8
+      //     But that's also complex.
+      //     
+      //     Actually, I think the simplest is: if fenRow >= 7, use 13 - fenRow, but that gives wrong for row 8
+      //     Or: if fenRow == 7, use 6; if fenRow == 8, use 7
+      //     That's: internalRow = 13 - fenRow for row 7, but 13-8=5 is wrong
+      //     
+      //     Let me check: maybe the board layout is actually different than I think.
+      //     Actually, wait - let me verify: if player is black and FEN row 7 maps to internal row 1 with 8-fenRow,
+      //     and row 1 has black pieces (player), then maybe the board IS set up that way?
+      //     But the logs show row 6 has black pieces, not row 1.
+      //     
+      //     I think the issue is that I need to check the actual board state.
+      //     For now, let me use: if fenRow >= 7, internalRow = 13 - fenRow, and handle row 8 specially
+      // Convert FEN row (1-8, white's perspective) to internal row (0-7)
+      final fromRow = _convertFenRowToInternalRow(fromRowFen, state.playerSide);
+      final toRow = _convertFenRowToInternalRow(toRowFen, state.playerSide);
+      
+      // Validate the conversion
+      if (fromRow < 0 || fromRow > 7 || toRow < 0 || toRow > 7) {
+        AppLogger.error(
+          'Invalid row conversion: FEN fromRow=$fromRowFen -> internalRow=$fromRow, FEN toRow=$toRowFen -> internalRow=$toRow',
+          tag: 'GameController'
+        );
+        return false;
+      }
+      
+      final fromPosition = Position(row: fromRow, col: fromCol);
+      final targetPosition = Position(row: toRow, col: toCol);
+      
+      AppLogger.info('  - Player side: ${state.playerSide.name}', tag: 'GameController');
+      AppLogger.info('  - From position: $fromNotation (FEN row $fromRowFen) -> internal row ${fromPosition.row}, col ${fromPosition.col}', tag: 'GameController');
+      AppLogger.info('  - To position: $toNotation (FEN row $toRowFen) -> internal row ${targetPosition.row}, col ${targetPosition.col}', tag: 'GameController');
 
       final fromCell = state.board.getCellAt(fromPosition.row, fromPosition.col);
       final targetCell =
           state.board.getCellAt(targetPosition.row, targetPosition.col);
       
-      AppLogger.info('  - From cell: ${fromCell.position.row},${fromCell.position.col}', tag: 'GameController');
-      AppLogger.info('  - To cell: ${targetCell.position.row},${targetCell.position.col}', tag: 'GameController');
+      AppLogger.info('  - From cell: row ${fromCell.position.row}, col ${fromCell.position.col}', tag: 'GameController');
+      AppLogger.info('  - From cell isOccupied: ${fromCell.isOccupied}, figure: ${fromCell.figure?.role}, side: ${fromCell.figure?.side}', tag: 'GameController');
+      AppLogger.info('  - To cell: row ${targetCell.position.row}, col ${targetCell.position.col}', tag: 'GameController');
+      AppLogger.info('  - To cell isOccupied: ${targetCell.isOccupied}, figure: ${targetCell.figure?.role}', tag: 'GameController');
 
       // Check if the move is valid before executing
       AppLogger.info('Step 4: Validating move', tag: 'GameController');
       if (fromCell.figure == null) {
         AppLogger.warning('=== makeOpponentsMove() FAILED: No figure at source position ===', tag: 'GameController');
-        AppLogger.warning('  - Source position: ${fromCell.position.algebraicPosition}', tag: 'GameController');
+        AppLogger.warning('  - Source position (absolute): $fromNotation', tag: 'GameController');
+        AppLogger.warning('  - Source position (internal): row ${fromPosition.row}, col ${fromPosition.col}', tag: 'GameController');
+        AppLogger.warning('  - Source position (algebraic): ${fromCell.position.algebraicPosition}', tag: 'GameController');
         AppLogger.warning('  - Cell is empty', tag: 'GameController');
+        AppLogger.warning('  - Player side: ${state.playerSide.name}, Current order: ${state.currentOrder.name}', tag: 'GameController');
+        AppLogger.warning('  - This suggests a board state mismatch with Stockfish', tag: 'GameController');
+        
+        // Try to find the piece that should be at this position by checking nearby cells
+        AppLogger.warning('  - Checking nearby cells for the expected piece...', tag: 'GameController');
+        for (int r = 0; r < 8; r++) {
+          for (int c = 0; c < 8; c++) {
+            final cell = state.board.getCellAt(r, c);
+            if (cell.figure != null && cell.figure!.side == state.currentOrder) {
+              AppLogger.warning('    Found ${cell.figure!.side.name} ${cell.figure!.role} at row $r, col $c (${cell.position.algebraicPosition})', tag: 'GameController');
+            }
+          }
+        }
+        
         return false;
       }
 
@@ -816,7 +1066,7 @@ class GameController extends _$GameController {
       }
 
       AppLogger.info('Step 6: Executing opponent move via action', tag: 'GameController');
-      final success = await _makeMoveViaAction(bestAction, fromCell, targetCell);
+      final success = await _makeMoveViaAction(bestAction, fromCell, targetCell, isPlayerMove: false);
       if (success) {
         AppLogger.info('=== GameController.makeOpponentsMove() SUCCESS ===', tag: 'GameController');
         AppLogger.info('Opponent move executed successfully: $bestAction', tag: 'GameController');
@@ -905,6 +1155,19 @@ class GameController extends _$GameController {
       tag: 'GameController'
     );
     
+    // Check if it's the player's turn
+    if (state.currentOrder != state.playerSide) {
+      AppLogger.warning(
+        'Cannot make move - not player\'s turn. Current order: ${state.currentOrder.name}, Player side: ${state.playerSide.name}',
+        tag: 'GameController'
+      );
+      AppLogger.info(
+        '=== GameController.makeMove END (not player\'s turn) ===',
+        tag: 'GameController'
+      );
+      return false;
+    }
+    
     final board = state.board;
     final selectedCell = _getSelectedCell(board, target, from: from);
     
@@ -985,9 +1248,11 @@ class GameController extends _$GameController {
   }
 
   /// Get [action] and make move according to it
+  /// [isPlayerMove] indicates if this is a player move (true) or opponent move (false)
+  /// This is used to determine whether to trigger AI moves after the move completes
   ///
   Future<bool> _makeMoveViaAction(
-      String action, Cell selectedCell, Cell targetCell, {bool skipCapture = false}) async {
+      String action, Cell selectedCell, Cell targetCell, {bool skipCapture = false, bool isPlayerMove = true}) async {
     AppLogger.debug('Executing move via action: $action', tag: 'GameController');
     
     // Store the move notation we're about to send (for online games to filter echoes)
@@ -1072,13 +1337,17 @@ class GameController extends _$GameController {
       return true;
     }
     
-    // For AI games, trigger opponent move after player move
+    // For AI games, trigger opponent move after player move (not after opponent moves)
     // For online games, opponent moves come via WebSocket
     final opponentMode = GameModesMediator.opponentMode;
-    if (opponentMode == OpponentMode.ai && newCurrentOrder != state.playerSide) {
+    final opponentSide = state.playerSide.opposite;
+    if (isPlayerMove && opponentMode == OpponentMode.ai && newCurrentOrder == opponentSide) {
       AppLogger.info('Triggering AI opponent move after player move', tag: 'GameController');
+      AppLogger.info('  - Player side: ${state.playerSide.name}, Opponent side: $opponentSide, New current order: ${newCurrentOrder.name}', tag: 'GameController');
       // Trigger opponent move asynchronously
       Future.microtask(() => makeOpponentsMove());
+    } else if (!isPlayerMove) {
+      AppLogger.debug('Skipping AI trigger - this was an opponent move', tag: 'GameController');
     }
     
     // Restart timer for new turn
@@ -1227,6 +1496,33 @@ class GameController extends _$GameController {
     
     AppLogger.info(
       'State updated - gameOver: ${state.gameOver}, winner: ${state.winner?.name}, isCheckmate: ${state.isCheckmate}, isStalemate: ${state.isStalemate}',
+      tag: 'GameController'
+    );
+  }
+
+  /// End game when a player's time runs out
+  /// The player whose time expired loses, the opponent wins
+  void _endGameWithTimeOut(Side timeOutSide) {
+    final winningSide = timeOutSide.opposite;
+    
+    AppLogger.info(
+      'Game Over: Time out! ${timeOutSide.name} ran out of time. ${winningSide.name} wins!',
+      tag: 'GameController'
+    );
+    
+    // Cancel timer
+    _timerCountdown?.cancel();
+    
+    // Update state to mark game as over
+    state = state.copyWith(
+      gameOver: true,
+      winner: winningSide,
+      isCheckmate: false,
+      isStalemate: false,
+    );
+    
+    AppLogger.info(
+      'State updated - gameOver: ${state.gameOver}, winner: ${state.winner?.name}, reason: time_out',
       tag: 'GameController'
     );
   }
