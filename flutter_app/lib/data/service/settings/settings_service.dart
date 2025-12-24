@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 class UserSettings {
   final String boardTheme;
   final String pieceSet;
+  final String? effect;
   final bool autoQueen;
   final bool confirmMoves;
   final double masterVolume;
@@ -17,6 +18,7 @@ class UserSettings {
   UserSettings({
     required this.boardTheme,
     required this.pieceSet,
+    this.effect,
     required this.autoQueen,
     required this.confirmMoves,
     required this.masterVolume,
@@ -29,6 +31,7 @@ class UserSettings {
       return UserSettings(
         boardTheme: json['board_theme'] as String? ?? 'glass_dark',
         pieceSet: json['piece_set'] as String? ?? 'cardinal',
+        effect: json['effect'] as String?,
       autoQueen: json['auto_queen'] as bool? ?? true,
       confirmMoves: json['confirm_moves'] as bool? ?? false,
       masterVolume: (json['master_volume'] as num?)?.toDouble() ?? 0.8,
@@ -42,6 +45,7 @@ class UserSettings {
     return {
       'board_theme': boardTheme,
       'piece_set': pieceSet,
+      if (effect != null) 'effect': effect,
       'auto_queen': autoQueen,
       'confirm_moves': confirmMoves,
       'master_volume': masterVolume,
@@ -53,6 +57,7 @@ class UserSettings {
   UserSettings copyWith({
     String? boardTheme,
     String? pieceSet,
+    String? effect,
     bool? autoQueen,
     bool? confirmMoves,
     double? masterVolume,
@@ -62,6 +67,7 @@ class UserSettings {
     return UserSettings(
       boardTheme: boardTheme ?? this.boardTheme,
       pieceSet: pieceSet ?? this.pieceSet,
+      effect: effect ?? this.effect,
       autoQueen: autoQueen ?? this.autoQueen,
       confirmMoves: confirmMoves ?? this.confirmMoves,
       masterVolume: masterVolume ?? this.masterVolume,
@@ -105,6 +111,7 @@ class SettingsService {
   Future<UserSettings> updateSettings({
     String? boardTheme,
     String? pieceSet,
+    String? effect,
     bool? autoQueen,
     bool? confirmMoves,
     double? masterVolume,
@@ -117,6 +124,7 @@ class SettingsService {
       final Map<String, dynamic> updateData = {};
       if (boardTheme != null) updateData['board_theme'] = boardTheme;
       if (pieceSet != null) updateData['piece_set'] = pieceSet;
+      if (effect != null) updateData['effect'] = effect;
       if (autoQueen != null) updateData['auto_queen'] = autoQueen;
       if (confirmMoves != null) updateData['confirm_moves'] = confirmMoves;
       if (masterVolume != null) updateData['master_volume'] = masterVolume;

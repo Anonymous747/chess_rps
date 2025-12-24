@@ -7,6 +7,7 @@ import 'package:chess_rps/presentation/utils/avatar_utils.dart';
 import 'package:chess_rps/presentation/utils/collection_utils.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
 import 'package:chess_rps/presentation/utils/board_theme_utils.dart';
+import 'package:chess_rps/presentation/utils/effect_utils.dart';
 import 'package:chess_rps/presentation/widget/collection/piece_pack_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -273,6 +274,11 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     // For AVATARS category, show all available avatars from assets
     if (currentCategory == CollectionCategory.AVATARS) {
       return _buildAvatarsGrid();
+    }
+
+    // For EFFECTS category, show all available effects
+    if (currentCategory == CollectionCategory.EFFECTS) {
+      return _buildEffectsGrid();
     }
 
     // For other categories, use the backend collection items
@@ -1718,6 +1724,504 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEffectsGrid() {
+    final effects = EffectUtils.getKnownEffects();
+    final settingsAsync = ref.watch(settingsControllerProvider);
+
+    return settingsAsync.when(
+      data: (settings) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Available Effects (${effects.length})',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Palette.textSecondary,
+                  ),
+                ),
+                if (settings.effect != null && settings.effect!.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Palette.purpleAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      'Selected: ${EffectUtils.formatEffectName(settings.effect!)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Palette.purpleAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Palette.purpleAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      'Selected: Classic',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Palette.purpleAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: effects.length,
+              itemBuilder: (context, index) {
+                final effectName = effects[index];
+                // Handle null effect - default to 'classic' if not set
+                final currentEffect = settings.effect ?? 'classic';
+                final isSelected = currentEffect == effectName;
+                return _buildEffectCard(effectName, isSelected: isSelected);
+              },
+            ),
+            const SizedBox(height: 100),
+          ],
+        ),
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            Text(
+              'Available Effects (${effects.length})',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Palette.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Palette.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Palette.error),
+              ),
+              child: Text(
+                'Error loading settings',
+                style: TextStyle(color: Palette.error),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEffectCard(String effectName, {bool isSelected = false}) {
+    final icon = EffectUtils.getEffectIcon(effectName);
+    final color = EffectUtils.getEffectColor(effectName);
+    final description = EffectUtils.getEffectDescription(effectName);
+    final rarity = EffectUtils.getEffectRarity(effectName);
+
+    return GestureDetector(
+      onTap: () {
+        // Show preview dialog
+        showDialog(
+          context: context,
+          builder: (context) => _EffectPreviewDialog(effectName: effectName),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Palette.backgroundTertiary,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? color : Palette.glassBorder,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Palette.backgroundSecondary,
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withOpacity(0.3),
+                      color.withOpacity(0.1),
+                    ],
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Icon(
+                        icon,
+                        size: 48,
+                        color: color,
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isSelected)
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Palette.success,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Palette.success.withOpacity(0.5),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.check,
+                                size: 12,
+                                color: Palette.textPrimary,
+                              ),
+                            ),
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withOpacity(0.5),
+                              ),
+                            ),
+                            child: Text(
+                              CollectionUtils.getRarityDisplayName(rarity)[0],
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: CollectionUtils.getColorFromHexOrRarity(null, rarity),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              EffectUtils.formatEffectName(effectName),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? color : Palette.textPrimary,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 10,
+                color: Palette.textSecondary,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  // Save selected effect to settings
+                  AppLogger.info('Selecting effect: $effectName', tag: 'CollectionScreen');
+                  try {
+                    await ref.read(settingsControllerProvider.notifier).updateEffect(effectName);
+                    // Refresh the collection to show updated selection
+                    if (context.mounted) {
+                      // The UI will automatically update because we're watching settingsControllerProvider
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${EffectUtils.formatEffectName(effectName)} selected'),
+                          backgroundColor: Palette.success,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    AppLogger.error('Error selecting effect', tag: 'CollectionScreen', error: e);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to select effect: $e'),
+                          backgroundColor: Palette.error,
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isSelected ? color : Palette.backgroundSecondary,
+                  foregroundColor: isSelected ? Palette.textPrimary : Palette.textSecondary,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  isSelected ? 'Selected' : 'Select',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Effect preview dialog
+class _EffectPreviewDialog extends ConsumerWidget {
+  final String effectName;
+
+  const _EffectPreviewDialog({required this.effectName});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settingsAsync = ref.watch(settingsControllerProvider);
+    // Handle null effect - default to 'classic' if not set
+    final currentEffect = settingsAsync.valueOrNull?.effect ?? 'classic';
+    final isSelected = currentEffect == effectName;
+    final icon = EffectUtils.getEffectIcon(effectName);
+    final color = EffectUtils.getEffectColor(effectName);
+    final description = EffectUtils.getEffectDescription(effectName);
+    final rarity = EffectUtils.getEffectRarity(effectName);
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(20),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: Palette.backgroundTertiary,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Palette.glassBorder),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          EffectUtils.formatEffectName(effectName),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Palette.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Palette.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(Icons.close, color: Palette.textSecondary),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Palette.backgroundSecondary,
+                      shape: const CircleBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Effect preview
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                width: double.infinity,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Palette.backgroundSecondary,
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withOpacity(0.3),
+                      color.withOpacity(0.1),
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: Icon(
+                    icon,
+                    size: 80,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Rarity info
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.star,
+                      size: 16,
+                      color: CollectionUtils.getColorFromHexOrRarity(null, rarity),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      CollectionUtils.getRarityDisplayName(rarity),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: CollectionUtils.getColorFromHexOrRarity(null, rarity),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Select button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    AppLogger.info('Selecting effect from preview: $effectName',
+                        tag: 'EffectPreview');
+                    try {
+                      await ref
+                          .read(settingsControllerProvider.notifier)
+                          .updateEffect(effectName);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        // The UI will automatically update because we're watching settingsControllerProvider
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${EffectUtils.formatEffectName(effectName)} selected'),
+                            backgroundColor: Palette.success,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      AppLogger.error('Error selecting effect',
+                          tag: 'EffectPreview', error: e);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to select effect: $e'),
+                            backgroundColor: Palette.error,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: Icon(
+                    isSelected ? Icons.check_circle : Icons.check,
+                    color: Palette.textPrimary,
+                  ),
+                  label: Text(
+                    isSelected ? 'Currently Selected' : 'Select This Effect',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Palette.textPrimary,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isSelected ? Palette.success : color,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
           ],
         ),
       ),

@@ -16,6 +16,7 @@ import 'package:chess_rps/domain/service/logger.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/action_checker.dart';
+import 'package:chess_rps/presentation/utils/effect_event.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:flutter/foundation.dart';
@@ -41,6 +42,10 @@ class GameController extends _$GameController {
   Timer? _timerCountdown;
   StreamSubscription<Map<String, dynamic>>? _websocketSubscription;
   String? _lastSentMoveNotation; // Track last move we sent to prevent processing our own echo
+  
+  // Effect event stream
+  final _effectEventController = StreamController<EffectEvent>.broadcast();
+  Stream<EffectEvent> get effectEvents => _effectEventController.stream;
 
   @override
   GameState build() {
@@ -1068,11 +1073,17 @@ class GameController extends _$GameController {
         return false;
       }
 
-      AppLogger.info('Step 6: Executing opponent move via action', tag: 'GameController');
-      final success = await _makeMoveViaAction(bestAction, fromCell, targetCell, isPlayerMove: false);
+      // Create move notation with piece type for move history
+      // Stockfish returns "e2e4", but we need "Pe2e4" format for move history
+      final pieceRole = fromCell.figure!.role;
+      final actionWithPiece = PieceNotation.createMoveNotation(pieceRole, fromNotation, toNotation);
+      AppLogger.info('Step 6: Created move notation with piece: $actionWithPiece (piece: ${pieceRole.name})', tag: 'GameController');
+
+      AppLogger.info('Step 7: Executing opponent move via action', tag: 'GameController');
+      final success = await _makeMoveViaAction(actionWithPiece, fromCell, targetCell, isPlayerMove: false);
       if (success) {
         AppLogger.info('=== GameController.makeOpponentsMove() SUCCESS ===', tag: 'GameController');
-        AppLogger.info('Opponent move executed successfully: $bestAction', tag: 'GameController');
+        AppLogger.info('Opponent move executed successfully: $actionWithPiece (piece: ${pieceRole.name})', tag: 'GameController');
         // Move history is already updated in _makeMoveViaAction
       } else {
         AppLogger.warning('=== GameController.makeOpponentsMove() FAILED: Move execution failed ===', tag: 'GameController');
@@ -1276,23 +1287,43 @@ class GameController extends _$GameController {
     // Get auto-queen setting
     final settingsAsync = ref.read(settingsControllerProvider);
     final autoQueen = settingsAsync.valueOrNull?.autoQueen ?? true;
+    final selectedEffect = settingsAsync.valueOrNull?.effect ?? 'classic';
+
+    // Check if target cell has a piece that will be captured
+    final capturedFigure = !skipCapture && targetCell.isOccupied ? targetCell.figure : null;
+    final isCapture = capturedFigure != null;
 
     // Handle capture before making the move (only if not already handled by moveFigure)
-    if (!skipCapture) {
-      // Check if target cell has a piece that will be captured
-      final capturedFigure = targetCell.isOccupied ? targetCell.figure : null;
-      if (capturedFigure != null) {
-        state.board.pushKnockedFigure(capturedFigure);
-        AppLogger.info(
-          'Piece captured: ${capturedFigure.role} (${capturedFigure.side})',
-          tag: 'GameController',
-        );
-      }
+    if (isCapture) {
+      state.board.pushKnockedFigure(capturedFigure!);
+      AppLogger.info(
+        'Piece captured: ${capturedFigure.role} (${capturedFigure.side})',
+        tag: 'GameController',
+      );
     }
 
     final updatedBoard = state.board
       ..makeMove(selectedCell, targetCell, autoQueen: autoQueen)
       ..removeSelection();
+
+    // Emit effect event for the move
+    if (isCapture) {
+      // Emit capture effect
+      _effectEventController.add(EffectEvent(
+        type: EffectEventType.capture,
+        effectName: selectedEffect,
+        fromPosition: selectedCell.position,
+        toPosition: targetCell.position,
+      ));
+    } else {
+      // Emit move effect
+      _effectEventController.add(EffectEvent(
+        type: EffectEventType.move,
+        effectName: selectedEffect,
+        fromPosition: selectedCell.position,
+        toPosition: targetCell.position,
+      ));
+    }
 
     // Determine new current order (opposite side)
     final newCurrentOrder = state.currentOrder.opposite;
@@ -1373,6 +1404,7 @@ class GameController extends _$GameController {
     AppLogger.info('Disposing GameController', tag: 'GameController');
     _timerCountdown?.cancel();
     _websocketSubscription?.cancel();
+    _effectEventController.close();
     PlayerSideMediator.makeByDefault();
     actionHandler.dispose();
     AppLogger.debug('GameController disposed', tag: 'GameController');

@@ -18,10 +18,13 @@ import 'package:chess_rps/presentation/widget/player_side_selection_dialog.dart'
 import 'package:chess_rps/presentation/widget/rps_overlay.dart';
 import 'package:chess_rps/presentation/widget/timer_widget.dart';
 import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
+import 'package:chess_rps/presentation/utils/effect_event.dart';
+import 'package:chess_rps/presentation/utils/game_effect_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'dart:async';
 
 class ChessScreen extends HookConsumerWidget {
   static const routeName = '/Chess';
@@ -79,6 +82,42 @@ class ChessScreen extends HookConsumerWidget {
     final imagesPrecachedState = useState(false);
     final precachingInProgress = useRef(false);
     final lastGameKeyRef = useRef<String?>(null);
+    
+    // Listen to effect events and apply them
+    useEffect(() {
+      if (!context.mounted) return null;
+      
+      final effectSubscription = controller.effectEvents.listen((event) {
+        if (!context.mounted) return;
+        
+        AppLogger.info(
+          'Effect event received: ${event.type.name}, effect: ${event.effectName}',
+          tag: 'ChessScreen',
+        );
+        
+        if (event.type == EffectEventType.capture) {
+          GameEffectHandler.applyCaptureEffect(
+            context,
+            event.effectName,
+            () {
+              AppLogger.debug('Capture effect completed', tag: 'ChessScreen');
+            },
+          );
+        } else if (event.type == EffectEventType.move) {
+          GameEffectHandler.applyMoveEffect(
+            context,
+            event.effectName,
+            () {
+              AppLogger.debug('Move effect completed', tag: 'ChessScreen');
+            },
+          );
+        }
+      });
+      
+      return () {
+        effectSubscription.cancel();
+      };
+    }, []);
     
     // Show loading screen until game is fully initialized
     // Check if board is ready: all pieces must be loaded and board must be properly initialized
