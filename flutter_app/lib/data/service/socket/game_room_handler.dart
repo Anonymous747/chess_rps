@@ -222,6 +222,27 @@ class GameRoomHandler {
     }
   }
 
+  Future<void> sendSurrender() async {
+    if (!_isConnected || _channel == null) {
+      AppLogger.warning('Cannot send surrender: not connected', tag: 'GameRoomHandler');
+      return;
+    }
+
+    AppLogger.info('Sending surrender message', tag: 'GameRoomHandler');
+    final message = {
+      'type': 'surrender',
+      'data': {},
+    };
+
+    try {
+      _channel!.sink.add(json.encode(message));
+      AppLogger.debug('Surrender message sent successfully', tag: 'GameRoomHandler');
+    } catch (e) {
+      AppLogger.error('Failed to send surrender: $e', tag: 'GameRoomHandler', error: e);
+      rethrow;
+    }
+  }
+
   Future<void> dispose() async {
     AppLogger.info('Disposing GameRoomHandler', tag: 'GameRoomHandler');
     for (final sub in _subs) {

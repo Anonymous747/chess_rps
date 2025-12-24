@@ -559,10 +559,25 @@ class ChessScreen extends HookConsumerWidget {
           onCancel: () {
             Navigator.of(dialogContext).pop();
           },
-          onConfirm: () {
+          onConfirm: () async {
             Navigator.of(dialogContext).pop();
+            
+            // If online mode, send surrender message to opponent
+            if (GameModesMediator.opponentMode == OpponentMode.socket) {
+              try {
+                AppLogger.info('Sending surrender message to opponent', tag: 'ChessScreen');
+                await controller.sendSurrender();
+              } catch (e) {
+                AppLogger.error('Failed to send surrender message: $e', tag: 'ChessScreen', error: e);
+                // Continue even if sending fails
+              }
+            }
+            
+            // Dispose controller and navigate to menu
             controller.dispose();
-            context.pop();
+            if (context.mounted) {
+              context.go(AppRoutes.mainMenu);
+            }
           },
         );
       },

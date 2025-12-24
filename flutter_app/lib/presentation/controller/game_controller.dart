@@ -111,12 +111,41 @@ class GameController extends _$GameController {
     _websocketSubscription = handler.messageStream.listen(
       (message) async {
         try {
-          final type = message['type'] as String?;
-          if (type == 'timer_update' || type == 'move' || type == 'room_joined' || type == 'player_left' || type == 'error') {
-            // Handle player_left - log but don't interrupt game
+            final type = message['type'] as String?;
+          if (type == 'timer_update' || type == 'move' || type == 'room_joined' || type == 'player_left' || type == 'error' || type == 'surrender' || type == 'disconnected') {
+            // Handle surrender - opponent surrendered, player wins
+            if (type == 'surrender') {
+              AppLogger.info('Received surrender message - opponent surrendered, player wins!', tag: 'GameController');
+              AppLogger.info('Current game state before surrender: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
+              // End game with player winning
+              final opponentSide = state.playerSide.opposite;
+              _endGameWithSurrender(opponentSide);
+              AppLogger.info('Game state after surrender: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
+              return;
+            }
+            
+            // Handle player_left - opponent disconnected, player wins
             if (type == 'player_left') {
-              AppLogger.warning('Received player_left message - opponent disconnected, but continuing game', tag: 'GameController');
-              // Don't interrupt the game - just log it
+              AppLogger.info('Received player_left message - opponent disconnected, player wins!', tag: 'GameController');
+              AppLogger.info('Current game state before player_left: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
+              // Only end game if it's not already over
+              if (!state.gameOver) {
+                // End game with player winning
+                final opponentSide = state.playerSide.opposite;
+                _endGameWithSurrender(opponentSide);
+                AppLogger.info('Game state after player_left: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
+              } else {
+                AppLogger.info('Game already over, ignoring player_left message', tag: 'GameController');
+              }
+              return;
+            }
+            
+            // Handle disconnected - WebSocket connection lost, opponent wins
+            if (type == 'disconnected') {
+              AppLogger.info('Received disconnected message - connection lost, opponent wins!', tag: 'GameController');
+              // End game with opponent winning (we lost connection)
+              final playerSide = state.playerSide;
+              _endGameWithSurrender(playerSide);
               return;
             }
             
@@ -199,8 +228,13 @@ class GameController extends _$GameController {
       },
       onDone: () {
         AppLogger.warning('WebSocket stream closed (onDone)', tag: 'GameController');
-        // When stream closes, try to reconnect or at least log it
-        // Don't set _isConnected to false here - let the GameRoomHandler handle it
+        // When stream closes, end the game - opponent disconnected
+        // Only end game if it's not already over
+        if (!state.gameOver) {
+          AppLogger.info('WebSocket connection closed - ending game, opponent wins', tag: 'GameController');
+          final playerSide = state.playerSide;
+          _endGameWithSurrender(playerSide);
+        }
       },
       cancelOnError: false, // Don't cancel subscription on error
     );
@@ -1112,6 +1146,16 @@ class GameController extends _$GameController {
     state = newState;
   }
 
+  /// Send surrender message to opponent (for online games)
+  Future<void> sendSurrender() async {
+    if (actionHandler is SocketActionHandler) {
+      AppLogger.info('Sending surrender message via GameController', tag: 'GameController');
+      await (actionHandler as SocketActionHandler).sendSurrender();
+    } else {
+      AppLogger.warning('Cannot send surrender: not in online mode', tag: 'GameController');
+    }
+  }
+
   /// End the game with checkmate
   /// [losingSide] is the side that was checkmated (lost)
   void _endGameWithCheckmate(Side losingSide) {
@@ -1151,6 +1195,39 @@ class GameController extends _$GameController {
       winner: null, // No winner in stalemate (draw)
       isCheckmate: false,
       isStalemate: true,
+    );
+  }
+
+  /// End the game with surrender
+  /// [surrenderingSide] is the side that surrendered (lost)
+  void _endGameWithSurrender(Side surrenderingSide) {
+    final winningSide = surrenderingSide.opposite;
+    
+    AppLogger.info(
+      'Game Over: ${surrenderingSide.name} surrendered. ${winningSide.name} wins.',
+      tag: 'GameController'
+    );
+    AppLogger.info(
+      'Player side: ${state.playerSide.name}, Winning side: ${winningSide.name}, Player won: ${winningSide == state.playerSide}',
+      tag: 'GameController'
+    );
+    
+    // Stop the timer
+    _timerCountdown?.cancel();
+    
+    // Update state to mark game as over
+    // Use a new state object to ensure Riverpod detects the change
+    final newState = state.copyWith(
+      gameOver: true,
+      winner: winningSide,
+      isCheckmate: false,
+      isStalemate: false,
+    );
+    state = newState;
+    
+    AppLogger.info(
+      'State updated - gameOver: ${state.gameOver}, winner: ${state.winner?.name}, isCheckmate: ${state.isCheckmate}, isStalemate: ${state.isStalemate}',
+      tag: 'GameController'
     );
   }
 }

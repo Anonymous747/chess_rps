@@ -42,6 +42,11 @@ class SocketActionHandler extends ActionHandler {
     await _roomHandler.sendRpsChoice(choice);
   }
 
+  Future<void> sendSurrender() async {
+    AppLogger.info('Sending surrender via SocketActionHandler', tag: 'SocketActionHandler');
+    await _roomHandler.sendSurrender();
+  }
+
   /// This method works under the assumption that when the opponent makes a move,
   /// the message will be of type "move".
   ///
