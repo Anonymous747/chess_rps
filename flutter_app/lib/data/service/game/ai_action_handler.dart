@@ -138,6 +138,35 @@ class AIActionHandler extends ActionHandler {
     await _stockfishInterpreter.visualizeBoard();
   }
 
+  /// Get current FEN position from Stockfish
+  Future<String> getFenPosition() async {
+    return await _stockfishInterpreter.getFenPosition();
+  }
+
+  /// Rebuild Stockfish board state from move history
+  /// This is used when board state gets out of sync
+  Future<void> rebuildBoardFromMoves(List<String> moveHistory) async {
+    AppLogger.info('Rebuilding Stockfish board from ${moveHistory.length} moves', tag: 'AIActionHandler');
+    
+    // Extract moves without piece prefixes (Stockfish format: "e2e4")
+    final stockfishMoves = <String>[];
+    for (final move in moveHistory) {
+      // Remove piece prefix if present (e.g., "Pe2e4" -> "e2e4")
+      String stockfishMove = move;
+      if (move.length == 5) {
+        stockfishMove = move.substring(1);
+      }
+      stockfishMoves.add(stockfishMove);
+    }
+    
+    AppLogger.info('Rebuilding board with moves: $stockfishMoves', tag: 'AIActionHandler');
+    
+    // Reset to starting position and apply all moves
+    await _stockfishInterpreter.setPosition(stockfishMoves);
+    
+    AppLogger.info('Board rebuilt successfully', tag: 'AIActionHandler');
+  }
+
   @override
   Future<void> dispose() async {
     AppLogger.info('Disposing AIActionHandler', tag: 'AIActionHandler');

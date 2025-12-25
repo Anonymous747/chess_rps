@@ -251,7 +251,14 @@ class SettingsScreen extends HookConsumerWidget {
     
     return settingsAsync.when(
       data: (settings) => _buildGameplaySectionContent(context, ref, settings),
-      loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+      loading: () => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
+          ),
+        ),
+      ),
       error: (error, stack) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -368,7 +375,14 @@ class SettingsScreen extends HookConsumerWidget {
     
     return settingsAsync.when(
       data: (settings) => _buildAudioSectionContent(context, ref, settings),
-      loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+      loading: () => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
+          ),
+        ),
+      ),
       error: (error, stack) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -496,7 +510,14 @@ class SettingsScreen extends HookConsumerWidget {
     
     return settingsAsync.when(
       data: (settings) => _buildPrivacySectionContent(context, ref, settings),
-      loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+      loading: () => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
+          ),
+        ),
+      ),
       error: (error, stack) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

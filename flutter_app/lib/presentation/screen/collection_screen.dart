@@ -9,6 +9,7 @@ import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
 import 'package:chess_rps/presentation/utils/board_theme_utils.dart';
 import 'package:chess_rps/presentation/utils/effect_utils.dart';
 import 'package:chess_rps/presentation/widget/collection/piece_pack_overlay.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -235,14 +236,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
       ),
       loading: () => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(Palette.purpleAccent),
-          ),
-        ),
+        child: Skeleton(width: 40, height: 16, borderRadius: 4),
       ),
       error: (error, stack) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -346,7 +340,14 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
+            ),
+          ),
+        ),
         error: (error, stack) => Center(
           child: Text(
             'Error loading items',
@@ -354,7 +355,15 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           ),
         ),
       ),
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SkeletonGrid(
+          itemCount: 6,
+          crossAxisCount: 2,
+          childAspectRatio: 0.85,
+          spacing: 16,
+        ),
+      ),
       error: (error, stack) => Center(
         child: Text(
           'Error loading collection',
@@ -981,7 +990,15 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           ],
         ),
       ),
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SkeletonGrid(
+          itemCount: 6,
+          crossAxisCount: 2,
+          childAspectRatio: 0.85,
+          spacing: 16,
+        ),
+      ),
       error: (error, stack) => SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -1280,7 +1297,14 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
+            ),
+          ),
+        ),
         error: (error, stack) => SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
@@ -1312,7 +1336,15 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           ),
         ),
       ),
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SkeletonGrid(
+          itemCount: 6,
+          crossAxisCount: 2,
+          childAspectRatio: 0.85,
+          spacing: 16,
+        ),
+      ),
       error: (error, stack) => SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -1547,7 +1579,15 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           ],
         ),
       ),
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SkeletonGrid(
+          itemCount: 6,
+          crossAxisCount: 2,
+          childAspectRatio: 0.85,
+          spacing: 16,
+        ),
+      ),
       error: (error, stack) => SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -1811,7 +1851,15 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           ],
         ),
       ),
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SkeletonGrid(
+          itemCount: 6,
+          crossAxisCount: 2,
+          childAspectRatio: 0.85,
+          spacing: 16,
+        ),
+      ),
       error: (error, stack) => SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(

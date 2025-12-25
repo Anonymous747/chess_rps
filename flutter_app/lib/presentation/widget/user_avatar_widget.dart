@@ -1,6 +1,7 @@
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/collection/collection_service.dart';
 import 'package:chess_rps/presentation/utils/avatar_utils.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:chess_rps/presentation/controller/collection_controller.dart';
@@ -70,14 +71,9 @@ class UserAvatarWidget extends ConsumerWidget {
           shadow: shadow,
         );
       },
-      loading: () => _buildAvatarImage(
-        context,
-        AvatarUtils.getDefaultAvatarPath(),
+      loading: () => SkeletonAvatar(
         size: size,
-        showEditIcon: showEditIcon,
-        onTap: onTap,
-        border: border,
-        shadow: shadow,
+        color: Palette.backgroundTertiary,
       ),
       error: (_, __) => _buildAvatarImage(
         context,

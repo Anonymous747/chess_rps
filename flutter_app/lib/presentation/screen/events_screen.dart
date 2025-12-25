@@ -682,15 +682,12 @@ class EventsScreen extends HookConsumerWidget {
               ),
             );
           },
-          loading: () => Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Palette.backgroundTertiary,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Palette.glassBorder),
-            ),
-            child: Center(
-              child: CircularProgressIndicator(color: Palette.purpleAccent),
+          loading: () => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Palette.purpleAccent),
+              ),
             ),
           ),
           error: (error, stack) => Container(

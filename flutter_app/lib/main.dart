@@ -2,6 +2,7 @@ import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/widget/app_loading_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -14,13 +15,37 @@ void main() {
   );
 }
 
-class Root extends ConsumerWidget {
+class Root extends ConsumerStatefulWidget {
   const Root({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<Root> createState() => _RootState();
+}
+
+class _RootState extends ConsumerState<Root> {
+  bool _showLoadingScreen = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ensure loading screen shows for at least 1.5 seconds after native splash
+    // This gives time for the native splash to transition smoothly to Flutter loading screen
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() {
+          _showLoadingScreen = false;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     final authState = ref.watch(authControllerProvider);
+    
+    // Show loading screen if auth is loading OR if minimum display time hasn't passed
+    final shouldShowLoading = _showLoadingScreen || authState.isLoading;
     
     return MaterialApp.router(
       routerConfig: router,
@@ -84,18 +109,11 @@ class Root extends ConsumerWidget {
         ),
       ),
       builder: (context, child) {
-        // Show loading screen while checking auth
-        if (authState.isLoading) {
+        // Show loading screen while checking auth or during minimum display time
+        if (shouldShowLoading) {
           return MaterialApp(
             theme: Theme.of(context),
-            home: Scaffold(
-              backgroundColor: Palette.background,
-              body: Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
-                ),
-              ),
-            ),
+            home: const AppLoadingScreen(),
           );
         }
         

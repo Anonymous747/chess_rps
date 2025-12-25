@@ -9,6 +9,7 @@ import 'package:chess_rps/presentation/controller/friends_controller.dart';
 import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/utils/avatar_utils.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -342,60 +343,13 @@ class ProfileScreen extends HookConsumerWidget {
           ],
         );
       },
-      loading: () => Column(
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 112,
-                height: 112,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Palette.purpleAccent.withOpacity(0.3),
-                    width: 2,
-                    style: BorderStyle.solid,
-                  ),
-                ),
-                child: CircularProgressIndicator(
-                  value: 0.3,
-                  strokeWidth: 2,
-                  color: Palette.purpleAccent,
-                  backgroundColor: Colors.transparent,
-                ),
-              ),
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Palette.glassBorder, width: 2),
-                ),
-              ),
-              Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Palette.purpleAccent, Palette.purpleAccentDark],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.person, color: Palette.textPrimary, size: 48),
-              ),
-            ],
+      loading: () => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Loading...',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Palette.textPrimary,
-            ),
-          ),
-        ],
+        ),
       ),
       error: (error, stack) => Column(
         children: [
@@ -463,11 +417,11 @@ class ProfileScreen extends HookConsumerWidget {
       },
       loading: () => Row(
         children: [
-          Expanded(child: _buildStatCard('Rating', '...', '', Palette.textSecondary, null)),
+          Expanded(child: SkeletonCard(height: 100)),
           const SizedBox(width: 12),
-          Expanded(child: _buildStatCard('Win Rate', '...', '', Palette.textSecondary, null)),
+          Expanded(child: SkeletonCard(height: 100)),
           const SizedBox(width: 12),
-          Expanded(child: _buildStatCard('Streak', '...', '', Palette.textSecondary, null)),
+          Expanded(child: SkeletonCard(height: 100)),
         ],
       ),
       error: (error, stack) => Row(
@@ -585,7 +539,12 @@ class ProfileScreen extends HookConsumerWidget {
               }
             },
             loading: () => Center(
-              child: CircularProgressIndicator(color: Palette.accent),
+              child: Padding(
+                padding: const EdgeInsets.all(40),
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
+                ),
+              ),
             ),
             error: (error, stack) => Center(
               child: Text(

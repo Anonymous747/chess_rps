@@ -166,7 +166,12 @@ class LevelsScreen extends HookConsumerWidget {
                     );
                   },
                   loading: () => Center(
-                    child: CircularProgressIndicator(color: Palette.purpleAccent),
+                    child: Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Palette.purpleAccent),
+                      ),
+                    ),
                   ),
                   error: (error, stack) => Center(
                     child: Text(

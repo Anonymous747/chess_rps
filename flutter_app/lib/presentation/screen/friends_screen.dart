@@ -3,6 +3,7 @@ import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/friends/friends_service.dart';
 import 'package:chess_rps/presentation/controller/friends_controller.dart';
 import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -210,10 +211,16 @@ class FriendsScreen extends HookConsumerWidget {
           ],
         );
       },
-      loading: () => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: CircularProgressIndicator(color: Palette.accent),
+      loading: () => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: List.generate(
+            3,
+            (index) => Padding(
+              padding: EdgeInsets.only(bottom: index < 2 ? 12 : 0),
+              child: const SkeletonListItem(),
+            ),
+          ),
         ),
       ),
       error: (error, stack) => Container(
@@ -451,10 +458,16 @@ class FriendsScreen extends HookConsumerWidget {
           ],
         );
       },
-      loading: () => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: CircularProgressIndicator(color: Palette.accent),
+      loading: () => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: List.generate(
+            3,
+            (index) => Padding(
+              padding: EdgeInsets.only(bottom: index < 2 ? 12 : 0),
+              child: const SkeletonListItem(),
+            ),
+          ),
         ),
       ),
       error: (error, stack) => Container(
@@ -813,8 +826,17 @@ class FriendsScreen extends HookConsumerWidget {
           },
         );
       },
-      loading: () => Center(
-        child: CircularProgressIndicator(color: Palette.accent),
+      loading: () => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: List.generate(
+            3,
+            (index) => Padding(
+              padding: EdgeInsets.only(bottom: index < 2 ? 12 : 0),
+              child: const SkeletonListItem(),
+            ),
+          ),
+        ),
       ),
       error: (error, stack) => Center(
         child: Text(

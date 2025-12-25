@@ -7,6 +7,7 @@ import 'package:chess_rps/presentation/screen/events_screen.dart';
 import 'package:chess_rps/presentation/screen/profile_screen.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -267,10 +268,17 @@ class MainMenuContent extends HookConsumerWidget {
                         rating: stats.rating,
                         onlineFriends: onlineFriends,
                       ),
-                      loading: () => _MainMenuContentHelper._buildInfoCardsGrid(
-                        context,
-                        rating: 1200,
-                        onlineFriends: onlineFriends,
+                      loading: () => GridView.count(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        childAspectRatio: 1.1,
+                        children: [
+                          SkeletonCard(height: 120),
+                          SkeletonCard(height: 120),
+                        ],
                       ),
                       error: (_, __) => _MainMenuContentHelper._buildInfoCardsGrid(
                         context,

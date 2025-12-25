@@ -5,6 +5,7 @@ import 'package:chess_rps/common/extension.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/piece_notation.dart';
 import 'package:chess_rps/common/rps_choice.dart';
+import 'package:chess_rps/data/service/game/ai_action_handler.dart';
 import 'package:chess_rps/data/service/game/rps_game_strategy.dart';
 import 'package:chess_rps/data/service/socket/socket_action_handler.dart';
 import 'package:chess_rps/domain/model/board.dart';
@@ -730,7 +731,7 @@ class GameController extends _$GameController {
     
     // Only allow selecting own pieces
     if (fromCell.figure == null || fromCell.figure!.side != state.playerSide) {
-      final pieceSideName = fromCell.figure?.side?.name ?? 'null';
+      final pieceSideName = fromCell.figure?.side.name ?? 'null';
       AppLogger.info(
         'Cannot select piece - not player\'s piece. Piece side: $pieceSideName, Player side: ${state.playerSide.name}',
         tag: 'GameController'
@@ -919,9 +920,67 @@ class GameController extends _$GameController {
     
     try {
       // Ensure board state is synced before getting opponent move
-      AppLogger.info('Step 1: Visualizing board to sync state', tag: 'GameController');
+      // After a player move, we need to verify Stockfish's board state matches our game state
+      AppLogger.info('Step 1: Verifying board state is synced', tag: 'GameController');
       await actionHandler.visualizeBoard();
-      AppLogger.info('Board visualization completed', tag: 'GameController');
+      
+      // For AI games, verify the FEN position matches our game state
+      // This ensures Stockfish knows whose turn it is
+      if (GameModesMediator.opponentMode == OpponentMode.ai) {
+        // Get current FEN from Stockfish to verify turn
+        final aiHandler = actionHandler;
+        if (aiHandler is AIActionHandler) {
+          try {
+            final currentFen = await aiHandler.getFenPosition();
+            AppLogger.info('Current FEN from Stockfish: $currentFen', tag: 'GameController');
+            
+            // Extract whose turn it is from FEN (last part before castling rights)
+            // FEN format: "pieces placement turn castling en passant halfmove fullmove"
+            final fenParts = currentFen.split(' ');
+            if (fenParts.length >= 2) {
+              final turnInFen = fenParts[1]; // 'w' for white, 'b' for black
+              final expectedTurn = state.currentOrder.isLight ? 'w' : 'b';
+              
+              AppLogger.info('FEN turn: $turnInFen, Expected turn: $expectedTurn', tag: 'GameController');
+              
+              if (turnInFen != expectedTurn) {
+                AppLogger.warning(
+                  'Board state mismatch detected! FEN shows $turnInFen but game state shows ${state.currentOrder.name}',
+                  tag: 'GameController'
+                );
+                AppLogger.warning(
+                  'Rebuilding Stockfish board state from move history...',
+                  tag: 'GameController'
+                );
+                // Rebuild board from move history to fix the mismatch
+                await aiHandler.rebuildBoardFromMoves(state.moveHistory);
+                
+                // Verify the fix worked
+                final fenAfterRebuild = await aiHandler.getFenPosition();
+                final fenPartsAfter = fenAfterRebuild.split(' ');
+                if (fenPartsAfter.length >= 2) {
+                  final turnAfterRebuild = fenPartsAfter[1];
+                  AppLogger.info(
+                    'After rebuild: FEN turn: $turnAfterRebuild, Expected: $expectedTurn',
+                    tag: 'GameController'
+                  );
+                  if (turnAfterRebuild != expectedTurn) {
+                    AppLogger.error(
+                      'Board rebuild failed! FEN still shows wrong turn: $turnAfterRebuild',
+                      tag: 'GameController'
+                    );
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            AppLogger.warning('Could not verify FEN position: $e', tag: 'GameController');
+            // Continue anyway - the move request might still work
+          }
+        }
+      }
+      
+      AppLogger.info('Board state verification completed', tag: 'GameController');
       
       AppLogger.info('Step 2: Requesting opponent move from action handler', tag: 'GameController');
       final bestAction = await actionHandler.getOpponentsMove();
@@ -1073,17 +1132,30 @@ class GameController extends _$GameController {
         return false;
       }
 
-      // Create move notation with piece type for move history
-      // Stockfish returns "e2e4", but we need "Pe2e4" format for move history
+      // Create move notation with piece type
+      // Stockfish returns moves in absolute notation (white's perspective)
+      // We should use absolute notation for both Stockfish and move history to ensure consistency
       final pieceRole = fromCell.figure!.role;
-      final actionWithPiece = PieceNotation.createMoveNotation(pieceRole, fromNotation, toNotation);
-      AppLogger.info('Step 6: Created move notation with piece: $actionWithPiece (piece: ${pieceRole.name})', tag: 'GameController');
+      
+      // Use absolute notation for Stockfish (fromNotation and toNotation are already in absolute notation)
+      final actionForStockfish = PieceNotation.createMoveNotation(pieceRole, fromNotation, toNotation);
+      
+      // Use absolute notation for move history as well (same as Stockfish)
+      // This ensures the displayed move matches what Stockfish actually played
+      final actionForHistory = actionForStockfish;
+      
+      AppLogger.info('Step 6: Created move notation - Stockfish: $actionForStockfish, History: $actionForHistory (piece: ${pieceRole.name})', tag: 'GameController');
+      AppLogger.info('  - From notation (absolute): $fromNotation, To notation (absolute): $toNotation', tag: 'GameController');
+      AppLogger.info('  - From position (internal): row=${fromPosition.row}, col=${fromPosition.col}', tag: 'GameController');
+      AppLogger.info('  - To position (internal): row=${targetPosition.row}, col=${targetPosition.col}', tag: 'GameController');
+      AppLogger.info('  - Note: Move stored in absolute notation ($actionForHistory) for consistency with Stockfish', tag: 'GameController');
 
       AppLogger.info('Step 7: Executing opponent move via action', tag: 'GameController');
-      final success = await _makeMoveViaAction(actionWithPiece, fromCell, targetCell, isPlayerMove: false);
+      // Use absolute notation for Stockfish, but pass history notation separately
+      final success = await _makeMoveViaAction(actionForStockfish, fromCell, targetCell, isPlayerMove: false, historyNotation: actionForHistory);
       if (success) {
         AppLogger.info('=== GameController.makeOpponentsMove() SUCCESS ===', tag: 'GameController');
-        AppLogger.info('Opponent move executed successfully: $actionWithPiece (piece: ${pieceRole.name})', tag: 'GameController');
+        AppLogger.info('Opponent move executed successfully: $actionForHistory (piece: ${pieceRole.name})', tag: 'GameController');
         // Move history is already updated in _makeMoveViaAction
       } else {
         AppLogger.warning('=== GameController.makeOpponentsMove() FAILED: Move execution failed ===', tag: 'GameController');
@@ -1243,6 +1315,13 @@ class GameController extends _$GameController {
         ? target.position.absoluteAlgebraicPositionForAI
         : target.position.absoluteAlgebraicPosition;
     
+    // Debug: Log the coordinate conversion
+    AppLogger.info(
+      'Coordinate conversion: selectedCell(row=${selectedCell.position.row}, col=${selectedCell.position.col}) -> $fromPos, '
+      'target(row=${target.position.row}, col=${target.position.col}) -> $toPos',
+      tag: 'GameController'
+    );
+    
     // Create move notation with piece type: "Pe2e4", "Ne2f4", etc.
     final action = PieceNotation.createMoveNotation(pieceRole, fromPos, toPos);
     AppLogger.info('Making move: $action (absolute notation, piece: ${pieceRole.name})', tag: 'GameController');
@@ -1266,7 +1345,7 @@ class GameController extends _$GameController {
   /// This is used to determine whether to trigger AI moves after the move completes
   ///
   Future<bool> _makeMoveViaAction(
-      String action, Cell selectedCell, Cell targetCell, {bool skipCapture = false, bool isPlayerMove = true}) async {
+      String action, Cell selectedCell, Cell targetCell, {bool skipCapture = false, bool isPlayerMove = true, String? historyNotation}) async {
     AppLogger.debug('Executing move via action: $action', tag: 'GameController');
     
     // Store the move notation we're about to send (for online games to filter echoes)
@@ -1295,7 +1374,7 @@ class GameController extends _$GameController {
 
     // Handle capture before making the move (only if not already handled by moveFigure)
     if (isCapture) {
-      state.board.pushKnockedFigure(capturedFigure!);
+      state.board.pushKnockedFigure(capturedFigure);
       AppLogger.info(
         'Piece captured: ${capturedFigure.role} (${capturedFigure.side})',
         tag: 'GameController',
@@ -1387,15 +1466,18 @@ class GameController extends _$GameController {
     // Restart timer for new turn
     _restartTimerCountdown();
 
-    actionLogger.add(action);
-    AppLogger.debug('Move logged: $action', tag: 'GameController');
+    // Use historyNotation if provided, otherwise use action
+    final notationForHistory = historyNotation ?? action;
     
-    // Update move history in state
-    final updatedMoveHistory = [...state.moveHistory, action];
+    actionLogger.add(action);
+    AppLogger.debug('Move logged: $action (history: $notationForHistory)', tag: 'GameController');
+    
+    // Update move history in state (use historyNotation if provided for player perspective display)
+    final updatedMoveHistory = [...state.moveHistory, notationForHistory];
     state = state.copyWith(
       moveHistory: updatedMoveHistory,
     );
-    AppLogger.info('Move history updated. Total moves: ${updatedMoveHistory.length}. Latest: $action', tag: 'GameController');
+    AppLogger.info('Move history updated. Total moves: ${updatedMoveHistory.length}. Latest: $notationForHistory', tag: 'GameController');
 
     return true;
   }
