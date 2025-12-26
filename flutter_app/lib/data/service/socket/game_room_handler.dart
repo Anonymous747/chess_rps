@@ -4,6 +4,7 @@ import 'package:chess_rps/common/endpoint.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/rps_choice.dart';
 import 'package:chess_rps/data/service/dio_logger_interceptor.dart';
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:dio/dio.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -157,6 +158,11 @@ class GameRoomHandler {
         final roomData = response.data as Map<String, dynamic>;
         final roomCode = roomData['room_code'] as String;
         final status = roomData['status'] as String?;
+        
+        // Store room status in mediator for waiting room to check
+        if (status != null) {
+          GameModesMediator.setRoomStatus(status);
+        }
         
         if (foundAvailableRoom && status == 'waiting') {
           AppLogger.info('✅ Joined available room via matchmake: $roomCode, status: $status', tag: 'GameRoomHandler');

@@ -9,12 +9,14 @@ class GameModesMediator {
   static GameMode _gameMode = GameMode.classical;
   static OpponentMode _opponentMode = OpponentMode.socket;
   static String? _currentRoomCode;
+  static String? _currentRoomStatus; // Store room status (waiting, in_progress)
   static GameRoomHandler? _sharedRoomHandler; // Shared handler to reuse connections
   static Map<String, dynamic>? _opponentInfo; // Store opponent info (user_id, username, avatar_icon)
 
   static GameMode get gameMode => _gameMode;
   static OpponentMode get opponentMode => _opponentMode;
   static String? get currentRoomCode => _currentRoomCode;
+  static String? get currentRoomStatus => _currentRoomStatus;
   static GameRoomHandler? get sharedRoomHandler => _sharedRoomHandler;
 
   static void changeGameMode(GameMode mode) {
@@ -30,6 +32,11 @@ class GameModesMediator {
   static void setRoomCode(String? roomCode) {
     AppLogger.info('Setting room code: $roomCode', tag: 'GameModesMediator');
     _currentRoomCode = roomCode;
+  }
+  
+  static void setRoomStatus(String? roomStatus) {
+    AppLogger.info('Setting room status: $roomStatus', tag: 'GameModesMediator');
+    _currentRoomStatus = roomStatus;
   }
   
   /// Set shared room handler (to reuse connection from WaitingRoomScreen)
@@ -55,6 +62,7 @@ class GameModesMediator {
     _gameMode = GameMode.classical;
     _opponentMode = OpponentMode.ai;
     _currentRoomCode = null;
+    _currentRoomStatus = null;
     _sharedRoomHandler = null;
     _opponentInfo = null;
   }

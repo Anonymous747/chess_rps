@@ -11,7 +11,6 @@ import 'package:chess_rps/domain/model/figures/queen.dart';
 import 'package:chess_rps/domain/model/figures/rook.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
-import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -62,27 +61,18 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
 
   /// Parse move string to get piece, from and to positions
   /// Supports both formats: "Pe2e4" (with piece) and "e2e4" (without piece)
-  /// For AI games: shows absolute notation (what Stockfish actually played)
-  /// For online games: converts to player's perspective for display
+  /// For both AI and online games: shows absolute notation (from white's perspective)
+  /// This ensures moves are displayed correctly regardless of player side
   Map<String, dynamic> _parseMove(String algebraicMove) {
     final parsed = PieceNotation.parseMoveNotation(algebraicMove);
     final fromAbsolute = parsed['from'] as String;
     final toAbsolute = parsed['to'] as String;
     
-    // Check if we're in an AI game
-    final isAIGame = GameModesMediator.opponentMode == OpponentMode.ai;
-    
-    String fromDisplay, toDisplay;
-    if (isAIGame) {
-      // For AI games, show absolute notation (what Stockfish actually played)
-      // This ensures moves are displayed correctly regardless of player side
-      fromDisplay = fromAbsolute;
-      toDisplay = toAbsolute;
-    } else {
-      // For online games, convert to player's perspective for display
-      fromDisplay = fromAbsolute.convertAbsoluteToPlayerPerspective();
-      toDisplay = toAbsolute.convertAbsoluteToPlayerPerspective();
-    }
+    // For both AI and online games, moves are stored in absolute notation
+    // (from white's perspective), so we display them as-is
+    // This ensures e2e4 is displayed as e2e4 for both white and black players
+    final fromDisplay = fromAbsolute;
+    final toDisplay = toAbsolute;
     
     return {
       'piece': parsed['piece'],

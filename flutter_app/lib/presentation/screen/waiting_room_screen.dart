@@ -36,6 +36,32 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
     _connectToRoom();
   }
 
+  void _navigateToGame([Map<String, dynamic>? opponentInfo]) {
+    // Mark as navigated to prevent further message processing
+    _hasNavigated = true;
+    
+    // Store opponent info if provided
+    if (opponentInfo != null) {
+      GameModesMediator.setOpponentInfo(opponentInfo);
+      AppLogger.info('Stored opponent info: ${opponentInfo['username']}, avatar: ${opponentInfo['avatar_icon']}', tag: 'WaitingRoom');
+    }
+    
+    // Navigate to chess screen after a short delay
+    // Store room code and handler in mediator so GameController can reuse the connection
+    GameModesMediator.setRoomCode(widget.roomCode);
+    GameModesMediator.setSharedRoomHandler(_roomHandler);
+    AppLogger.info('Stored shared room handler for reuse', tag: 'WaitingRoom');
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        AppLogger.info('Navigating to chess screen with room: ${widget.roomCode}', tag: 'WaitingRoom');
+        // Cancel our subscription - GameController will handle messages now
+        _messageSubscription?.cancel();
+        _messageSubscription = null;
+        context.push(AppRoutes.chess);
+      }
+    });
+  }
+
   Future<void> _connectToRoom() async {
     AppLogger.info('Connecting to room: ${widget.roomCode}', tag: 'WaitingRoom');
     setState(() {
@@ -75,6 +101,15 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
             AppLogger.warning('No player_side in room_joined message', tag: 'WaitingRoom');
           }
           AppLogger.info('Room joined successfully', tag: 'WaitingRoom');
+          
+          // Check if room is already full (in_progress) - if so, navigate immediately
+          final roomStatus = GameModesMediator.currentRoomStatus;
+          if (roomStatus == 'in_progress') {
+            AppLogger.info('Room is already full (in_progress), navigating to game immediately', tag: 'WaitingRoom');
+            _navigateToGame();
+            return;
+          }
+          
           setState(() {
             _isWaiting = true;
             _isConnecting = false;
@@ -94,23 +129,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
             _isWaiting = false;
             _isConnecting = false;
           });
-          // Mark as navigated to prevent further message processing
-          _hasNavigated = true;
-          
-          // Navigate to chess screen after a short delay
-          // Store room code and handler in mediator so GameController can reuse the connection
-          GameModesMediator.setRoomCode(widget.roomCode);
-          GameModesMediator.setSharedRoomHandler(_roomHandler);
-          AppLogger.info('Stored shared room handler for reuse', tag: 'WaitingRoom');
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              AppLogger.info('Navigating to chess screen with room: ${widget.roomCode}', tag: 'WaitingRoom');
-              // Cancel our subscription - GameController will handle messages now
-              _messageSubscription?.cancel();
-              _messageSubscription = null;
-              context.push(AppRoutes.chess);
-            }
-          });
+          _navigateToGame(opponentInfo);
         } else if (type == 'error') {
           final errorMsg = message['message'] as String? ?? 'An error occurred';
           AppLogger.error('Error in waiting room: $errorMsg', tag: 'WaitingRoom');
