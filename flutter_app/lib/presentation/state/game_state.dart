@@ -61,17 +61,22 @@ extension GameStateExtension on GameState {
       //   - Player moves: 5 characters with piece prefix, absolute notation (e.g., "Pd7d5")
       // For online games: all moves are in absolute notation from white's perspective
       final isAIGame = GameModesMediator.opponentMode == OpponentMode.ai;
+      final isOnlineGame = GameModesMediator.opponentMode == OpponentMode.socket;
       
-      // In AI games, all moves are in absolute notation, so always use absolute notation conversion
-      // For online games, moves are also in absolute notation
-      final isAbsoluteNotation = isAIGame;
-      
-      final fromPos = isAbsoluteNotation
+      // Convert based on game mode:
+      // - AI games: use convertFromAbsoluteNotationForAI() (Stockfish perspective)
+      // - Online games: use convertFromAbsoluteNotation() (absolute notation)
+      // - Otherwise: use convertToPosition() (player's perspective)
+      final fromPos = isAIGame
           ? fromNotation.convertFromAbsoluteNotationForAI()
-          : fromNotation.convertToPosition();
-      final toPos = isAbsoluteNotation
+          : isOnlineGame
+              ? fromNotation.convertFromAbsoluteNotation()
+              : fromNotation.convertToPosition();
+      final toPos = isAIGame
           ? toNotation.convertFromAbsoluteNotationForAI()
-          : toNotation.convertToPosition();
+          : isOnlineGame
+              ? toNotation.convertFromAbsoluteNotation()
+              : toNotation.convertToPosition();
       
       return {
         'fromRow': fromPos.row,

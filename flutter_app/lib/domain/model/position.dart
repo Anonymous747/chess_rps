@@ -98,7 +98,10 @@ extension PositionExtension on Position {
       // so internal col 0 = black's "h" = white's "a"
       // Therefore: whiteCol = 7 - col (reverse the columns)
       
-      final whiteCol = 7 - col;  // Reverse columns: black's left (col 0) = white's right (col 7)
+      // The internal board representation does NOT rotate - only the display does.
+      // So columns map directly: internal col X = white's col X (same for both players)
+      // Internal col 0 = white's a-file, Internal col 7 = white's h-file
+      final whiteCol = col;  // Direct mapping: internal col X = white's col X
       final whiteRow = row + 1;   // Row 0→1, row 7→8
       return "${boardLetters[whiteCol]}${whiteRow}";
     }
@@ -292,10 +295,11 @@ extension ToPositionExtension on String {
       // So white's row 1 maps to internal row 0, row 2->1, ..., row 8->7
       // Formula: internalRow = row - 1
       //
-      // Columns: Since absoluteAlgebraicPosition reverses columns for black (whiteCol = 7 - col),
-      // we need to reverse back when receiving: if white sends col X, internal col = 7 - X
+      // Columns: The internal board representation does NOT rotate - only the display does.
+      // So columns map directly: white's col X → internal col X (same for both players)
+      // Internal col 0 = white's a-file, Internal col 7 = white's h-file
       final internalRow = row - 1;  // White's row 1->0, row 2->1, ..., row 8->7
-      final internalCol = 7 - col;  // Reverse columns back: white's col X → internal col (7 - X)
+      final internalCol = col;  // Direct mapping: white's col X → internal col X
       return Position(
           row: internalRow,
           col: internalCol);

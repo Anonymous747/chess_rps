@@ -537,6 +537,10 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str):
                         await handle_rps_choice(session, websocket, room.id, message.get("data", {}))
                     elif message_type == "surrender":
                         await handle_surrender(session, websocket, room.id)
+                    elif message_type == "heartbeat":
+                        # Heartbeat message - user is still waiting, just acknowledge
+                        # No response needed, connection staying alive is the acknowledgment
+                        logger.debug(f"Heartbeat received from player in room {room_code}")
                     else:
                         await websocket.send_text(json.dumps({
                             "type": "error",
@@ -545,16 +549,52 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str):
                         
             except WebSocketDisconnect:
                 logger.info(f"WebSocket disconnected for room: {room_code}")
-                await room_manager.disconnect(websocket, session)
                 connection = room_manager.get_connection(websocket)
+                
+                # Check if this is a waiting room that should be cleaned up
                 if connection and connection.roomId:
-                    await room_manager.send_to_room(
-                        connection.roomId,
-                        json.dumps({
-                            "type": "player_left",
-                            "room_code": room_code
-                        })
-                    )
+                    # Get room to check status BEFORE disconnecting
+                    room_query = select(GameRoom).where(GameRoom.id == connection.roomId)
+                    room_result = await session.execute(room_query)
+                    room_to_check = room_result.scalar_one_or_none()
+                    
+                    if room_to_check and room_to_check.status == GameRoomStatus.WAITING:
+                        # Count remaining connected players (before we disconnect this one)
+                        players_query = select(func.count(GamePlayer.id)).where(
+                            and_(
+                                GamePlayer.room_id == connection.roomId,
+                                GamePlayer.is_connected == True
+                            )
+                        )
+                        players_result = await session.execute(players_query)
+                        connected_players = players_result.scalar() or 0
+                        
+                        # If only 1 connected player (the one disconnecting), delete the waiting room
+                        if connected_players <= 1:
+                            logger.info(f"Cleaning up empty waiting room {room_code} (only {connected_players} connected player(s))")
+                            # Delete the room and all associated data (cascade will handle players, moves, etc.)
+                            await session.delete(room_to_check)
+                            await session.commit()
+                            logger.info(f"Deleted waiting room {room_code}")
+                            # Don't send player_left message since room is deleted
+                            await room_manager.disconnect(websocket, session)
+                            return
+                
+                await room_manager.disconnect(websocket, session)
+                if connection and connection.roomId:
+                    # Only send player_left if room still exists (not deleted)
+                    room_query = select(GameRoom).where(GameRoom.id == connection.roomId)
+                    room_result = await session.execute(room_query)
+                    room_exists = room_result.scalar_one_or_none() is not None
+                    
+                    if room_exists:
+                        await room_manager.send_to_room(
+                            connection.roomId,
+                            json.dumps({
+                                "type": "player_left",
+                                "room_code": room_code
+                            })
+                        )
             except Exception as e:
                 logger.error(f"WebSocket error for room {room_code}: {e}", exc_info=True)
                 try:

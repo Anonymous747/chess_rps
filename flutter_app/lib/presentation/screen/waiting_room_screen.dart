@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
@@ -24,6 +25,7 @@ class WaitingRoomScreen extends StatefulWidget {
 class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
   final GameRoomHandler _roomHandler = GameRoomHandler();
   StreamSubscription? _messageSubscription;
+  Timer? _heartbeatTimer; // Timer for periodic heartbeat checks
   bool _isWaiting = true;
   bool _isConnecting = true;
   String? _errorMessage;
@@ -39,6 +41,10 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
   void _navigateToGame([Map<String, dynamic>? opponentInfo]) {
     // Mark as navigated to prevent further message processing
     _hasNavigated = true;
+    
+    // Stop heartbeat timer since we're navigating away
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
     
     // Store opponent info if provided
     if (opponentInfo != null) {
@@ -114,6 +120,9 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
             _isWaiting = true;
             _isConnecting = false;
           });
+          
+          // Start heartbeat timer after successfully joining room
+          _startHeartbeatTimer();
         } else if (type == 'player_joined') {
           // Another player joined, start the game
           AppLogger.info('Opponent joined, starting game', tag: 'WaitingRoom');
@@ -150,9 +159,50 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
     }
   }
 
+  void _startHeartbeatTimer() {
+    // Cancel existing timer if any
+    _heartbeatTimer?.cancel();
+    
+    // Start periodic heartbeat every 15 seconds
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+      if (!mounted || _hasNavigated) {
+        timer.cancel();
+        return;
+      }
+      
+      // Send heartbeat to keep connection alive and verify user is still waiting
+      _sendHeartbeat();
+    });
+  }
+  
+  void _sendHeartbeat() {
+    if (!_roomHandler.isConnected || _hasNavigated) {
+      return;
+    }
+    
+    try {
+      AppLogger.debug('Sending heartbeat to verify user is still waiting', tag: 'WaitingRoom');
+      // Send heartbeat message via WebSocket
+      // The backend will use this to verify the user is still active
+      final heartbeatMessage = json.encode({
+        'type': 'heartbeat',
+        'data': {
+          'room_code': widget.roomCode,
+        },
+      });
+      
+      // Access the WebSocket channel to send heartbeat
+      // Note: We need to add a method to GameRoomHandler to send custom messages
+      _roomHandler.sendHeartbeat(heartbeatMessage);
+    } catch (e) {
+      AppLogger.warning('Failed to send heartbeat: $e', tag: 'WaitingRoom');
+    }
+  }
+
   @override
   void dispose() {
     AppLogger.info('Disposing WaitingRoomScreen', tag: 'WaitingRoom');
+    _heartbeatTimer?.cancel();
     _messageSubscription?.cancel();
     // Only dispose handler if it's not being reused by GameController
     // If handler is shared, GameController will dispose it
@@ -167,7 +217,9 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
 
   void _handleCancel() {
     AppLogger.info('User cancelled waiting room', tag: 'WaitingRoom');
+    _heartbeatTimer?.cancel();
     _messageSubscription?.cancel();
+    // Close WebSocket connection - this will trigger backend cleanup
     _roomHandler.dispose();
     if (mounted) {
       context.pop();
