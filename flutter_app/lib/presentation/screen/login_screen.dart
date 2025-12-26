@@ -59,7 +59,7 @@ class LoginScreen extends HookConsumerWidget {
                         color: Palette.backgroundTertiary,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Palette.accent.withOpacity(0.3),
+                          color: Palette.accent.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),

@@ -138,7 +138,7 @@ class CellWidget extends HookConsumerWidget {
       child: Container(
         decoration: BoxDecoration(boxShadow: [
           BoxShadow(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             blurRadius: 4,
             blurStyle: BlurStyle.outer,
             offset: const Offset(1, 2),

@@ -42,7 +42,7 @@ class _ChatScreenState extends State<ChatScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Palette.backgroundSecondary.withOpacity(0.95),
+                  color: Palette.backgroundSecondary.withValues(alpha: 0.95),
                   border: Border(
                     bottom: BorderSide(color: Palette.glassBorder),
                   ),
@@ -76,10 +76,10 @@ class _ChatScreenState extends State<ChatScreen> {
                           onPressed: () {},
                           icon: Icon(Icons.edit_square, color: Palette.purpleAccent),
                           style: IconButton.styleFrom(
-                            backgroundColor: Palette.purpleAccent.withOpacity(0.1),
+                            backgroundColor: Palette.purpleAccent.withValues(alpha: 0.1),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(color: Palette.purpleAccent.withOpacity(0.2)),
+                              side: BorderSide(color: Palette.purpleAccent.withValues(alpha: 0.2)),
                             ),
                           ),
                         ),
@@ -162,7 +162,7 @@ class _ChatScreenState extends State<ChatScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Palette.backgroundSecondary.withOpacity(0.8),
+                  color: Palette.backgroundSecondary.withValues(alpha: 0.8),
                   border: Border(
                     top: BorderSide(color: Palette.glassBorder),
                   ),
@@ -260,7 +260,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Palette.onlineGreen.withOpacity(0.8),
+                      color: Palette.onlineGreen.withValues(alpha: 0.8),
                       blurRadius: 5,
                     ),
                   ],
@@ -298,9 +298,9 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Palette.purpleAccentDark.withOpacity(0.3),
+          color: Palette.purpleAccentDark.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Palette.purpleAccent.withOpacity(0.2)),
+          border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
         ),
         child: Text(
           'Welcome to the Global Strategy Channel',
@@ -341,7 +341,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(4),
                 ),
-                border: Border.all(color: Palette.purpleAccent.withOpacity(0.2)),
+                border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
               ),
               child: Text(
                 message,
@@ -384,7 +384,7 @@ class _ChatScreenState extends State<ChatScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: usernameColor != null
-                    ? [usernameColor, usernameColor.withOpacity(0.7)]
+                    ? [usernameColor, usernameColor.withValues(alpha: 0.7)]
                     : [Palette.backgroundSecondary, Palette.backgroundTertiary],
               ),
               borderRadius: BorderRadius.circular(10),

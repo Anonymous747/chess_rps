@@ -296,7 +296,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Palette.accent.withOpacity(0.1),
+                            color: Palette.accent.withValues(alpha: 0.1),
                             blurRadius: 20,
                             spreadRadius: 0,
                           ),
@@ -307,10 +307,10 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Palette.accent.withOpacity(0.1),
+                              color: Palette.accent.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Palette.accent.withOpacity(0.3),
+                                color: Palette.accent.withValues(alpha: 0.3),
                                 width: 2,
                               ),
                             ),
@@ -373,7 +373,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                         color: Palette.backgroundTertiary,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: Palette.error.withOpacity(0.5),
+                          color: Palette.error.withValues(alpha: 0.5),
                           width: 1,
                         ),
                       ),
@@ -382,7 +382,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Palette.error.withOpacity(0.1),
+                              color: Palette.error.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(

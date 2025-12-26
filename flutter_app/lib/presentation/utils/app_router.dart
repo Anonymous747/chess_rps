@@ -14,6 +14,7 @@ import 'package:chess_rps/presentation/screen/levels_screen.dart';
 import 'package:chess_rps/presentation/screen/login_screen.dart';
 import 'package:chess_rps/presentation/screen/main_navigation_screen.dart';
 import 'package:chess_rps/presentation/screen/mode_selector.dart';
+import 'package:chess_rps/presentation/screen/ai_difficulty_selector.dart';
 import 'package:chess_rps/presentation/screen/opponent_selector.dart';
 import 'package:chess_rps/presentation/screen/profile_screen.dart';
 import 'package:chess_rps/presentation/screen/rating_screen.dart';
@@ -23,7 +24,6 @@ import 'package:chess_rps/presentation/screen/waiting_room_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:riverpod/riverpod.dart';
 
 // Route paths
 class AppRoutes {
@@ -32,6 +32,7 @@ class AppRoutes {
   static const mainMenu = '/main-menu';
   static const modeSelector = '/mode-selector';
   static const opponentSelector = '/opponent-selector';
+  static const aiDifficultySelector = '/ai-difficulty-selector';
   static const waitingRoom = '/waiting-room';
   static const chess = '/chess';
   static const rating = '/rating';
@@ -131,6 +132,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.opponentSelector,
         name: 'opponent-selector',
         builder: (context, state) => const OpponentSelector(),
+      ),
+      GoRoute(
+        path: AppRoutes.aiDifficultySelector,
+        name: 'ai-difficulty-selector',
+        builder: (context, state) => const AIDifficultySelector(),
       ),
       GoRoute(
         path: AppRoutes.waitingRoom,

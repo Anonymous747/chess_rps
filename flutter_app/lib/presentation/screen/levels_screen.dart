@@ -80,7 +80,7 @@ class LevelsScreen extends HookConsumerWidget {
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Palette.purpleAccent.withOpacity(0.3),
+                                  color: Palette.purpleAccent.withValues(alpha: 0.3),
                                   blurRadius: 20,
                                   spreadRadius: 0,
                                 ),
@@ -92,7 +92,7 @@ class LevelsScreen extends HookConsumerWidget {
                                   'Current Level',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Palette.textPrimary.withOpacity(0.8),
+                                    color: Palette.textPrimary.withValues(alpha: 0.8),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -109,7 +109,7 @@ class LevelsScreen extends HookConsumerWidget {
                                   'Level $currentLevel',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: Palette.textPrimary.withOpacity(0.8),
+                                    color: Palette.textPrimary.withValues(alpha: 0.8),
                                   ),
                                 ),
                                 if (levelProgress != null) ...[
@@ -121,14 +121,14 @@ class LevelsScreen extends HookConsumerWidget {
                                         '${levelProgress.currentLevelXp} / ${levelProgress.xpForNextLevel} XP',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Palette.textPrimary.withOpacity(0.8),
+                                          color: Palette.textPrimary.withValues(alpha: 0.8),
                                         ),
                                       ),
                                       Text(
                                         '${levelProgress.progressPercentage.toStringAsFixed(1)}%',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Palette.textPrimary.withOpacity(0.8),
+                                          color: Palette.textPrimary.withValues(alpha: 0.8),
                                         ),
                                       ),
                                     ],
@@ -139,7 +139,7 @@ class LevelsScreen extends HookConsumerWidget {
                                     child: LinearProgressIndicator(
                                       value: levelProgress.progressPercentage / 100,
                                       minHeight: 8,
-                                      backgroundColor: Colors.white.withOpacity(0.2),
+                                      backgroundColor: Colors.white.withValues(alpha: 0.2),
                                       valueColor: AlwaysStoppedAnimation<Color>(Palette.textPrimary),
                                     ),
                                   ),
@@ -243,14 +243,14 @@ class LevelsScreen extends HookConsumerWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isCurrent
-              ? Palette.purpleAccent.withOpacity(0.2)
+              ? Palette.purpleAccent.withValues(alpha: 0.2)
               : Palette.backgroundTertiary,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isCurrent
                 ? Palette.purpleAccent
                 : isUnlocked
-                    ? Palette.success.withOpacity(0.3)
+                    ? Palette.success.withValues(alpha: 0.3)
                     : Palette.glassBorder,
             width: isCurrent ? 2 : 1,
           ),
@@ -266,7 +266,7 @@ class LevelsScreen extends HookConsumerWidget {
                     ? LinearGradient(
                         colors: isCurrent
                             ? [Palette.purpleAccent, Palette.purpleAccentDark]
-                            : [Palette.success, Palette.success.withOpacity(0.7)],
+                            : [Palette.success, Palette.success.withValues(alpha: 0.7)],
                       )
                     : null,
                 color: isUnlocked ? null : Palette.backgroundSecondary,

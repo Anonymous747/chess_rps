@@ -45,7 +45,7 @@ class GameOverDialog extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               blurRadius: 20,
               spreadRadius: 5,
             ),
@@ -78,10 +78,10 @@ class GameOverDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Palette.warning.withOpacity(0.2),
+              color: Palette.warning.withValues(alpha: 0.2),
               shape: BoxShape.circle,
               border: Border.all(
-                color: Palette.warning.withOpacity(0.5),
+                color: Palette.warning.withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
@@ -108,10 +108,10 @@ class GameOverDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Palette.success.withOpacity(0.2),
+              color: Palette.success.withValues(alpha: 0.2),
               shape: BoxShape.circle,
               border: Border.all(
-                color: Palette.success.withOpacity(0.5),
+                color: Palette.success.withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
@@ -138,10 +138,10 @@ class GameOverDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Palette.error.withOpacity(0.2),
+              color: Palette.error.withValues(alpha: 0.2),
               shape: BoxShape.circle,
               border: Border.all(
-                color: Palette.error.withOpacity(0.5),
+                color: Palette.error.withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
@@ -189,10 +189,10 @@ class GameOverDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: messageColor.withOpacity(0.1),
+        color: messageColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: messageColor.withOpacity(0.3),
+          color: messageColor.withValues(alpha: 0.3),
           width: 1,
         ),
       ),

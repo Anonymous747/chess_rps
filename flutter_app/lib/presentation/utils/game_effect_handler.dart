@@ -236,10 +236,10 @@ class _EffectOverlayState extends State<_EffectOverlay>
                   height: widget.isCapture ? 150 : 100,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.color.withOpacity(0.4),
+                    color: widget.color.withValues(alpha: 0.4),
                     boxShadow: [
                       BoxShadow(
-                        color: widget.color.withOpacity(0.6),
+                        color: widget.color.withValues(alpha: 0.6),
                         blurRadius: widget.isCapture ? 30 : 20,
                         spreadRadius: widget.isCapture ? 15 : 10,
                       ),
@@ -324,14 +324,14 @@ class _GlowOverlayState extends State<_GlowOverlay>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        widget.color.withOpacity(0.6),
-                        widget.color.withOpacity(0.2),
+                        widget.color.withValues(alpha: 0.6),
+                        widget.color.withValues(alpha: 0.2),
                         Colors.transparent,
                       ],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: widget.color.withOpacity(0.8),
+                        color: widget.color.withValues(alpha: 0.8),
                         blurRadius: 40,
                         spreadRadius: 20,
                       ),
@@ -414,10 +414,10 @@ class _DarkOverlayState extends State<_DarkOverlay>
                   height: 130,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.color.withOpacity(0.5),
+                    color: widget.color.withValues(alpha: 0.5),
                     boxShadow: [
                       BoxShadow(
-                        color: widget.color.withOpacity(0.7),
+                        color: widget.color.withValues(alpha: 0.7),
                         blurRadius: 50,
                         spreadRadius: 25,
                       ),

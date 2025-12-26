@@ -100,7 +100,7 @@ class UserAvatarWidget extends ConsumerWidget {
         ? <BoxShadow>[shadow]
         : <BoxShadow>[
             BoxShadow(
-              color: Palette.purpleAccent.withOpacity(0.2),
+              color: Palette.purpleAccent.withValues(alpha: 0.2),
               blurRadius: 8,
               spreadRadius: 0,
             ),
@@ -221,7 +221,7 @@ class UserAvatarByIconWidget extends StatelessWidget {
             ? <BoxShadow>[shadow as BoxShadow]
             : <BoxShadow>[
                 BoxShadow(
-                  color: Palette.purpleAccent.withOpacity(0.2),
+                  color: Palette.purpleAccent.withValues(alpha: 0.2),
                   blurRadius: 8,
                   spreadRadius: 0,
                 ),

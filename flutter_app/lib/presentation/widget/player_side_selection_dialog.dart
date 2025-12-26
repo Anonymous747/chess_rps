@@ -35,7 +35,7 @@ class PlayerSideSelectionDialog extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               blurRadius: 20,
               spreadRadius: 5,
             ),
@@ -159,8 +159,8 @@ class PlayerSideSelectionDialog extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: side == Side.light
-                          ? Palette.textPrimary.withOpacity(0.1)
-                          : Palette.textSecondary.withOpacity(0.1),
+                          ? Palette.textPrimary.withValues(alpha: 0.1)
+                          : Palette.textSecondary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(

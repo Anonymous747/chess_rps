@@ -55,14 +55,14 @@ class MainNavigationScreen extends HookConsumerWidget {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: Palette.backgroundSecondary.withOpacity(0.8),
+        color: Palette.backgroundSecondary.withValues(alpha: 0.8),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.black.withOpacity(0.2),
+            color: Palette.black.withValues(alpha: 0.2),
             blurRadius: 10,
             spreadRadius: 0,
             offset: const Offset(0, -4),
@@ -112,7 +112,7 @@ class MainNavigationScreen extends HookConsumerWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Palette.purpleAccent.withOpacity(0.4),
+                        color: Palette.purpleAccent.withValues(alpha: 0.4),
                         blurRadius: 15,
                         spreadRadius: 0,
                         offset: const Offset(0, 4),
@@ -435,7 +435,7 @@ class _MainMenuContentHelper {
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.purpleAccent.withOpacity(0.3),
+            color: Palette.purpleAccent.withValues(alpha: 0.3),
             blurRadius: 20,
             spreadRadius: 0,
             offset: const Offset(0, 8),
@@ -457,7 +457,7 @@ class _MainMenuContentHelper {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -479,7 +479,7 @@ class _MainMenuContentHelper {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -518,7 +518,7 @@ class _MainMenuContentHelper {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -548,7 +548,7 @@ class _MainMenuContentHelper {
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.black.withOpacity(0.2),
+            color: Palette.black.withValues(alpha: 0.2),
             blurRadius: 10,
             spreadRadius: 0,
             offset: const Offset(0, 4),
@@ -571,7 +571,7 @@ class _MainMenuContentHelper {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Palette.gold.withOpacity(0.2),
+                    color: Palette.gold.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -602,7 +602,7 @@ class _MainMenuContentHelper {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Palette.gold.withOpacity(0.2),
+                              color: Palette.gold.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -728,7 +728,7 @@ class _MainMenuContentHelper {
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.black.withOpacity(0.1),
+            color: Palette.black.withValues(alpha: 0.1),
             blurRadius: 10,
             spreadRadius: 0,
             offset: const Offset(0, 4),
@@ -752,7 +752,7 @@ class _MainMenuContentHelper {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: iconColor.withOpacity(0.2),
+                        color: iconColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(

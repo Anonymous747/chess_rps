@@ -158,7 +158,7 @@ class ProfileScreen extends HookConsumerWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Palette.purpleAccent.withOpacity(0.3),
+                      color: Palette.purpleAccent.withValues(alpha: 0.3),
                       width: 2,
                       style: BorderStyle.solid,
                     ),
@@ -190,7 +190,7 @@ class ProfileScreen extends HookConsumerWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Palette.purpleAccent.withOpacity(0.4),
+                          color: Palette.purpleAccent.withValues(alpha: 0.4),
                           blurRadius: 25,
                         ),
                       ],
@@ -475,7 +475,7 @@ class ProfileScreen extends HookConsumerWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 10,
-                  color: color.withOpacity(0.7),
+                  color: color.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -565,7 +565,7 @@ class ProfileScreen extends HookConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: isActive ? Colors.white.withOpacity(0.1) : Colors.transparent,
+        color: isActive ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -650,12 +650,12 @@ class ProfileScreen extends HookConsumerWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
               boxShadow: isUnlocked
                   ? [
                       BoxShadow(
-                        color: color.withOpacity(0.2),
+                        color: color.withValues(alpha: 0.2),
                         blurRadius: 15,
                       ),
                     ]
@@ -681,7 +681,7 @@ class ProfileScreen extends HookConsumerWidget {
             subtitle,
             style: TextStyle(
               fontSize: 10,
-              color: isUnlocked ? Palette.textTertiary : Palette.textTertiary.withOpacity(0.5),
+              color: isUnlocked ? Palette.textTertiary : Palette.textTertiary.withValues(alpha: 0.5),
             ),
             textAlign: TextAlign.center,
           ),
@@ -733,7 +733,7 @@ class ProfileScreen extends HookConsumerWidget {
           Container(
             height: 128,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -979,10 +979,10 @@ class ProfileScreen extends HookConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Palette.purpleAccent.withOpacity(0.1),
+                                    color: Palette.purpleAccent.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                     border:
-                                        Border.all(color: Palette.purpleAccent.withOpacity(0.2)),
+                                        Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
                                   ),
                                   child: Text(
                                     '${user.rating}',
@@ -1039,10 +1039,10 @@ class ProfileScreen extends HookConsumerWidget {
                         },
                         icon: Icon(Icons.person_add, color: Palette.purpleAccent),
                         style: IconButton.styleFrom(
-                          backgroundColor: Palette.purpleAccent.withOpacity(0.1),
+                          backgroundColor: Palette.purpleAccent.withValues(alpha: 0.1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Palette.purpleAccent.withOpacity(0.2)),
+                            side: BorderSide(color: Palette.purpleAccent.withValues(alpha: 0.2)),
                           ),
                         ),
                       )
@@ -1094,7 +1094,7 @@ class ProfileScreen extends HookConsumerWidget {
         decoration: BoxDecoration(
           color: Palette.backgroundTertiary,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+          border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -1278,8 +1278,8 @@ class _PerformanceChartPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          Palette.purpleAccent.withOpacity(0.3),
-          Palette.purpleAccent.withOpacity(0),
+          Palette.purpleAccent.withValues(alpha: 0.3),
+          Palette.purpleAccent.withValues(alpha: 0),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;

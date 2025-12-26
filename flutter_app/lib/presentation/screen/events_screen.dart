@@ -76,10 +76,10 @@ class EventsScreen extends HookConsumerWidget {
                   height: 240,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                    border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                     boxShadow: [
                       BoxShadow(
-                        color: Palette.purpleAccent.withOpacity(0.2),
+                        color: Palette.purpleAccent.withValues(alpha: 0.2),
                         blurRadius: 20,
                       ),
                     ],
@@ -111,9 +111,9 @@ class EventsScreen extends HookConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: Palette.error.withOpacity(0.2),
+                                    color: Palette.error.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Palette.error.withOpacity(0.3)),
+                                    border: Border.all(color: Palette.error.withValues(alpha: 0.3)),
                                   ),
                                   child: Text(
                                     'LIVE NOW',
@@ -127,7 +127,7 @@ class EventsScreen extends HookConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.4),
+                                    color: Colors.black.withValues(alpha: 0.4),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Row(
@@ -309,7 +309,7 @@ class EventsScreen extends HookConsumerWidget {
                 height: 64,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [iconColor, iconColor.withOpacity(0.7)],
+                    colors: [iconColor, iconColor.withValues(alpha: 0.7)],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Palette.glassBorder),
@@ -336,9 +336,9 @@ class EventsScreen extends HookConsumerWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: iconColor.withOpacity(0.1),
+                            color: iconColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: iconColor.withOpacity(0.2)),
+                            border: Border.all(color: iconColor.withValues(alpha: 0.2)),
                           ),
                           child: Text(
                             status,
@@ -401,7 +401,7 @@ class EventsScreen extends HookConsumerWidget {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [iconColor, iconColor.withOpacity(0.7)],
+                    colors: [iconColor, iconColor.withValues(alpha: 0.7)],
                   ),
                   borderRadius: BorderRadius.circular(2),
                 ),
@@ -419,7 +419,7 @@ class EventsScreen extends HookConsumerWidget {
       decoration: BoxDecoration(
         color: Palette.backgroundTertiary,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Palette.accent.withOpacity(0.2)),
+        border: Border.all(color: Palette.accent.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -430,9 +430,9 @@ class EventsScreen extends HookConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Palette.accent.withOpacity(0.1),
+                    color: Palette.accent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Palette.accent.withOpacity(0.2)),
+                    border: Border.all(color: Palette.accent.withValues(alpha: 0.2)),
                   ),
                   child: Text(
                     'DAILY CHALLENGE',
@@ -648,7 +648,7 @@ class EventsScreen extends HookConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(20),
                         topRight: Radius.circular(20),
@@ -734,7 +734,7 @@ class EventsScreen extends HookConsumerWidget {
                 : Border.all(color: Palette.glassBorder, width: 1),
             shadow: isFirst
                 ? BoxShadow(
-                    color: Palette.gold.withOpacity(0.5),
+                    color: Palette.gold.withValues(alpha: 0.5),
                     blurRadius: 8,
                     spreadRadius: 2,
                   )

@@ -109,14 +109,14 @@ class TimerWidget extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isActive 
-              ? Palette.accent.withOpacity(0.5) 
+              ? Palette.accent.withValues(alpha: 0.5) 
               : Palette.glassBorder,
           width: isActive ? 2 : 1,
         ),
         boxShadow: isActive
             ? [
                 BoxShadow(
-                  color: Palette.accent.withOpacity(0.3),
+                  color: Palette.accent.withValues(alpha: 0.3),
                   blurRadius: 12,
                   spreadRadius: 0,
                 ),
@@ -179,12 +179,12 @@ class TimerWidget extends ConsumerWidget {
           color: Palette.backgroundTertiary,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Palette.error.withOpacity(0.5),
+            color: Palette.error.withValues(alpha: 0.5),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Palette.error.withOpacity(0.2),
+              color: Palette.error.withValues(alpha: 0.2),
               blurRadius: 8,
               spreadRadius: 0,
             ),

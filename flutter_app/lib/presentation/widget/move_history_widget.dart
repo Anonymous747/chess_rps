@@ -302,7 +302,7 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
                       return Container(
                         decoration: BoxDecoration(
                           color:
-                              isCurrentMove ? Palette.accent.withOpacity(0.1) : Colors.transparent,
+                              isCurrentMove ? Palette.accent.withValues(alpha: 0.1) : Colors.transparent,
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

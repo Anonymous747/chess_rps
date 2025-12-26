@@ -5,6 +5,7 @@ import 'package:chess_rps/data/service/socket/socket_action_handler.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:stockfish_interpreter/stockfish/constants.dart';
 import 'package:stockfish_interpreter/stockfish/stockfish_interpreter.dart';
 
 part 'action_handler.g.dart';
@@ -17,9 +18,13 @@ ActionHandler actionHandler(Ref ref) {
   ActionHandler handler;
   switch (opponentMode) {
     case OpponentMode.ai:
-      AppLogger.info('Creating AIActionHandler with Stockfish interpreter', tag: 'ActionHandlerProvider');
+      final difficulty = GameModesMediator.aiDifficulty;
+      AppLogger.info('Creating AIActionHandler with Stockfish interpreter (difficulty: $difficulty)', tag: 'ActionHandlerProvider');
       handler = AIActionHandler(
-          StockfishInterpreter(parameters: {}, isLoggerSwitchOn: true));
+          StockfishInterpreter(
+            parameters: {skillLevel: difficulty},
+            isLoggerSwitchOn: true,
+          ));
       break;
     case OpponentMode.socket:
       AppLogger.info('Creating SocketActionHandler for online play', tag: 'ActionHandlerProvider');

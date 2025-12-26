@@ -58,10 +58,10 @@ class _RpsOverlayState extends State<RpsOverlay> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Palette.accent.withOpacity(0.1),
+                  color: Palette.accent.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Palette.accent.withOpacity(0.3),
+                    color: Palette.accent.withValues(alpha: 0.3),
                     width: 2,
                   ),
                 ),
@@ -127,7 +127,7 @@ class _RpsOverlayState extends State<RpsOverlay> {
                     color: Palette.backgroundElevated,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Palette.info.withOpacity(0.3),
+                      color: Palette.info.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -168,7 +168,7 @@ class _RpsOverlayState extends State<RpsOverlay> {
         height: 90,
         decoration: BoxDecoration(
           color: isSelected
-              ? Palette.accent.withOpacity(0.2)
+              ? Palette.accent.withValues(alpha: 0.2)
               : Palette.backgroundElevated,
           border: Border.all(
             color: isSelected
@@ -180,7 +180,7 @@ class _RpsOverlayState extends State<RpsOverlay> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Palette.accent.withOpacity(0.4),
+                    color: Palette.accent.withValues(alpha: 0.4),
                     blurRadius: 16,
                     spreadRadius: 0,
                     offset: const Offset(0, 6),

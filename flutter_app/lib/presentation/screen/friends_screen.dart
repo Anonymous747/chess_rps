@@ -86,10 +86,10 @@ class FriendsScreen extends HookConsumerWidget {
                       },
                       icon: Icon(Icons.person_add, color: Palette.purpleAccent),
                       style: IconButton.styleFrom(
-                        backgroundColor: Palette.purpleAccent.withOpacity(0.1),
+                        backgroundColor: Palette.purpleAccent.withValues(alpha: 0.1),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Palette.purpleAccent.withOpacity(0.2)),
+                          side: BorderSide(color: Palette.purpleAccent.withValues(alpha: 0.2)),
                         ),
                       ),
                     ),
@@ -187,7 +187,7 @@ class FriendsScreen extends HookConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Palette.error.withOpacity(0.4),
+                        color: Palette.error.withValues(alpha: 0.4),
                         blurRadius: 10,
                       ),
                     ],
@@ -242,12 +242,12 @@ class FriendsScreen extends HookConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Palette.backgroundTertiary.withOpacity(0.8),
+        color: Palette.backgroundTertiary.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Palette.glassBorder),
         boxShadow: [
           BoxShadow(
-            color: Palette.black.withOpacity(0.1),
+            color: Palette.black.withValues(alpha: 0.1),
             blurRadius: 10,
           ),
         ],
@@ -307,10 +307,10 @@ class FriendsScreen extends HookConsumerWidget {
             },
             icon: Icon(Icons.check, color: Palette.success),
             style: IconButton.styleFrom(
-              backgroundColor: Palette.success.withOpacity(0.1),
+              backgroundColor: Palette.success.withValues(alpha: 0.1),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
-                side: BorderSide(color: Palette.success.withOpacity(0.2)),
+                side: BorderSide(color: Palette.success.withValues(alpha: 0.2)),
               ),
             ),
           ),
@@ -340,10 +340,10 @@ class FriendsScreen extends HookConsumerWidget {
             },
             icon: Icon(Icons.close, color: Palette.error),
             style: IconButton.styleFrom(
-              backgroundColor: Palette.error.withOpacity(0.1),
+              backgroundColor: Palette.error.withValues(alpha: 0.1),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
-                side: BorderSide(color: Palette.error.withOpacity(0.2)),
+                side: BorderSide(color: Palette.error.withValues(alpha: 0.2)),
               ),
             ),
           ),
@@ -526,7 +526,7 @@ class FriendsScreen extends HookConsumerWidget {
                       border: Border.all(color: Palette.backgroundTertiary, width: 3),
                       boxShadow: [
                         BoxShadow(
-                          color: Palette.onlineGreen.withOpacity(0.8),
+                          color: Palette.onlineGreen.withValues(alpha: 0.8),
                           blurRadius: 8,
                         ),
                       ],
@@ -555,9 +555,9 @@ class FriendsScreen extends HookConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Palette.purpleAccent.withOpacity(0.1),
+                          color: Palette.purpleAccent.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Palette.purpleAccent.withOpacity(0.2)),
+                          border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
                         ),
                         child: Text(
                           '${friend.rating}',
@@ -622,10 +622,10 @@ class FriendsScreen extends HookConsumerWidget {
                 },
                 icon: Icon(Icons.sports_martial_arts, color: Palette.purpleAccent),
                 style: IconButton.styleFrom(
-                  backgroundColor: Palette.purpleAccent.withOpacity(0.2),
+                  backgroundColor: Palette.purpleAccent.withValues(alpha: 0.2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
-                    side: BorderSide(color: Palette.purpleAccent.withOpacity(0.2)),
+                    side: BorderSide(color: Palette.purpleAccent.withValues(alpha: 0.2)),
                   ),
                 ),
               ),
@@ -673,7 +673,7 @@ class FriendsScreen extends HookConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: isActive
-                          ? Colors.white.withOpacity(0.2)
+                          ? Colors.white.withValues(alpha: 0.2)
                           : Palette.backgroundSecondary,
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -751,9 +751,9 @@ class FriendsScreen extends HookConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Palette.purpleAccent.withOpacity(0.1),
+                                    color: Palette.purpleAccent.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: Palette.purpleAccent.withOpacity(0.2)),
+                                    border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
                                   ),
                                   child: Text(
                                     '${user.rating}',
@@ -808,10 +808,10 @@ class FriendsScreen extends HookConsumerWidget {
                         },
                         icon: Icon(Icons.person_add, color: Palette.purpleAccent),
                         style: IconButton.styleFrom(
-                          backgroundColor: Palette.purpleAccent.withOpacity(0.1),
+                          backgroundColor: Palette.purpleAccent.withValues(alpha: 0.1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Palette.purpleAccent.withOpacity(0.2)),
+                            side: BorderSide(color: Palette.purpleAccent.withValues(alpha: 0.2)),
                           ),
                         ),
                       )

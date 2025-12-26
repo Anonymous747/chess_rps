@@ -81,7 +81,7 @@ class SignupScreen extends HookConsumerWidget {
                         color: Palette.backgroundTertiary,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Palette.purpleAccent.withOpacity(0.3),
+                          color: Palette.purpleAccent.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),

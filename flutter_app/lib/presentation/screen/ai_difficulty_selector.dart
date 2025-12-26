@@ -6,13 +6,69 @@ import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-const _normalModeText = 'Classical Mode';
-const _rpsModeText = 'RPS Mode';
+class AIDifficultyLevel {
+  final String name;
+  final String description;
+  final int skillLevel;
+  final IconData icon;
+  final Color color;
 
-class ModeSelector extends StatelessWidget {
-  static const routeName = "modeSelector";
+  const AIDifficultyLevel({
+    required this.name,
+    required this.description,
+    required this.skillLevel,
+    required this.icon,
+    required this.color,
+  });
+}
 
-  const ModeSelector({Key? key}) : super(key: key);
+class AIDifficultySelector extends StatefulWidget {
+  static const routeName = "aiDifficultySelector";
+
+  const AIDifficultySelector({Key? key}) : super(key: key);
+
+  @override
+  State<AIDifficultySelector> createState() => _AIDifficultySelectorState();
+}
+
+class _AIDifficultySelectorState extends State<AIDifficultySelector> {
+  static const List<AIDifficultyLevel> difficultyLevels = [
+    AIDifficultyLevel(
+      name: 'Beginner',
+      description: 'Perfect for learning the basics',
+      skillLevel: 5,
+      icon: Icons.sentiment_very_satisfied,
+      color: Palette.success,
+    ),
+    AIDifficultyLevel(
+      name: 'Easy',
+      description: 'A gentle challenge',
+      skillLevel: 10,
+      icon: Icons.sentiment_satisfied,
+      color: Palette.info,
+    ),
+    AIDifficultyLevel(
+      name: 'Medium',
+      description: 'A balanced opponent',
+      skillLevel: 15,
+      icon: Icons.sentiment_neutral,
+      color: Palette.accent,
+    ),
+    AIDifficultyLevel(
+      name: 'Hard',
+      description: 'A tough challenge',
+      skillLevel: 18,
+      icon: Icons.sentiment_dissatisfied,
+      color: Palette.warning,
+    ),
+    AIDifficultyLevel(
+      name: 'Expert',
+      description: 'Maximum difficulty',
+      skillLevel: 20,
+      icon: Icons.sentiment_very_dissatisfied,
+      color: Palette.error,
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -92,15 +148,15 @@ class ModeSelector extends StatelessWidget {
                                     width: 2,
                                   ),
                                 ),
-                                child: Icon(
-                                  Icons.sports_esports,
+                                child: const Icon(
+                                  Icons.smart_toy,
                                   size: 64,
                                   color: Palette.accent,
                                 ),
                               ),
                               const SizedBox(height: 24),
                               const Text(
-                                'Chess RPS',
+                                'Select Difficulty',
                                 style: TextStyle(
                                   fontSize: 36,
                                   fontWeight: FontWeight.bold,
@@ -110,7 +166,7 @@ class ModeSelector extends StatelessWidget {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Select Game Mode',
+                                'Choose the AI difficulty level',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Palette.textSecondary,
@@ -121,35 +177,28 @@ class ModeSelector extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 48),
-                        // Mode Buttons
+                        // Difficulty Buttons
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Column(
-                            children: [
-                              _buildModeButton(
-                                context,
-                                title: _normalModeText,
-                                icon: Icons.sports_esports,
-                                color: Palette.accent,
-                                onPressed: () {
-                                  AppLogger.info('Classical mode selected', tag: 'ModeSelector');
-                                  GameModesMediator.changeGameMode(GameMode.classical);
-                                  context.push(AppRoutes.opponentSelector);
-                                },
-                              ),
-                              const SizedBox(height: 20),
-                              _buildModeButton(
-                                context,
-                                title: _rpsModeText,
-                                icon: Icons.handshake,
-                                color: Palette.purpleAccent,
-                                onPressed: () {
-                                  AppLogger.info('RPS mode selected', tag: 'ModeSelector');
-                                  GameModesMediator.changeGameMode(GameMode.rps);
-                                  context.push(AppRoutes.opponentSelector);
-                                },
-                              ),
-                            ],
+                            children: difficultyLevels.map((level) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: _buildDifficultyButton(
+                                  context,
+                                  level: level,
+                                  onPressed: () {
+                                    AppLogger.info(
+                                      'User selected AI difficulty: ${level.name} (skill level: ${level.skillLevel})',
+                                      tag: 'AIDifficultySelector',
+                                    );
+                                    GameModesMediator.setAIDifficulty(level.skillLevel);
+                                    GameModesMediator.changeOpponentMode(OpponentMode.ai);
+                                    context.push(AppRoutes.chess);
+                                  },
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ),
                       ],
@@ -164,11 +213,9 @@ class ModeSelector extends StatelessWidget {
     );
   }
 
-  Widget _buildModeButton(
+  Widget _buildDifficultyButton(
     BuildContext context, {
-    required String title,
-    required IconData icon,
-    required Color color,
+    required AIDifficultyLevel level,
     required VoidCallback onPressed,
   }) {
     return Container(
@@ -176,7 +223,7 @@ class ModeSelector extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.3),
+            color: level.color.withValues(alpha: 0.3),
             blurRadius: 20,
             spreadRadius: 0,
             offset: const Offset(0, 8),
@@ -189,45 +236,59 @@ class ModeSelector extends StatelessWidget {
           onTap: onPressed,
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               color: Palette.backgroundElevated,
               border: Border.all(
-                color: color.withValues(alpha: 0.5),
+                color: level.color.withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.2),
+                    color: level.color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    icon,
+                    level.icon,
                     size: 28,
-                    color: color,
+                    color: level.color,
                   ),
                 ),
                 const SizedBox(width: 20),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Palette.textPrimary,
-                    letterSpacing: 0.5,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        level.name,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Palette.textPrimary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        level.description,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Palette.textSecondary,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const Spacer(),
                 Icon(
                   Icons.arrow_forward_ios,
                   size: 18,
-                  color: color,
+                  color: level.color,
                 ),
               ],
             ),
@@ -237,3 +298,4 @@ class ModeSelector extends StatelessWidget {
     );
   }
 }
+

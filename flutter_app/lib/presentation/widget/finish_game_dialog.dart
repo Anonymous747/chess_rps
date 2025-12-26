@@ -36,12 +36,12 @@ class FinishGameDialog extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               blurRadius: 20,
               spreadRadius: 5,
             ),
             BoxShadow(
-              color: Palette.error.withOpacity(0.3),
+              color: Palette.error.withValues(alpha: 0.3),
               blurRadius: 15,
               spreadRadius: 0,
             ),
@@ -78,18 +78,18 @@ class FinishGameDialog extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Palette.error.withOpacity(0.3),
-            Palette.error.withOpacity(0.1),
+            Palette.error.withValues(alpha: 0.3),
+            Palette.error.withValues(alpha: 0.1),
           ],
         ),
         shape: BoxShape.circle,
         border: Border.all(
-          color: Palette.error.withOpacity(0.5),
+          color: Palette.error.withValues(alpha: 0.5),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.error.withOpacity(0.4),
+            color: Palette.error.withValues(alpha: 0.4),
             blurRadius: 20,
             spreadRadius: 0,
           ),
@@ -119,10 +119,10 @@ class FinishGameDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Palette.error.withOpacity(0.1),
+        color: Palette.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Palette.error.withOpacity(0.3),
+          color: Palette.error.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -230,13 +230,13 @@ class FinishGameDialog extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             Palette.error,
-            Palette.error.withOpacity(0.8),
+            Palette.error.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Palette.error.withOpacity(0.4),
+            color: Palette.error.withValues(alpha: 0.4),
             blurRadius: 12,
             spreadRadius: 0,
           ),
@@ -273,6 +273,7 @@ class FinishGameDialog extends StatelessWidget {
     );
   }
 }
+
 
 
 

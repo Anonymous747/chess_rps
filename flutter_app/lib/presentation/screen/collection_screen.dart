@@ -118,10 +118,10 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       },
                       icon: Icon(Icons.shopping_bag, color: Palette.purpleAccent),
                       style: IconButton.styleFrom(
-                        backgroundColor: Palette.purpleAccent.withOpacity(0.1),
+                        backgroundColor: Palette.purpleAccent.withValues(alpha: 0.1),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Palette.purpleAccent.withOpacity(0.2)),
+                          side: BorderSide(color: Palette.purpleAccent.withValues(alpha: 0.2)),
                         ),
                       ),
                     ),
@@ -436,7 +436,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 onPressed: () {},
                 icon: Icon(Icons.favorite_border, color: Palette.textPrimary, size: 20),
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.white.withOpacity(0.05),
+                  backgroundColor: Colors.white.withValues(alpha: 0.05),
                   shape: const CircleBorder(),
                 ),
               ),
@@ -510,9 +510,9 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         label,
@@ -534,7 +534,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            color.withOpacity(0.2),
+            color.withValues(alpha: 0.2),
             Colors.transparent,
           ],
         ),
@@ -543,9 +543,9 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           topRight: Radius.circular(8),
         ),
         border: Border(
-          top: BorderSide(color: color.withOpacity(0.2)),
-          left: BorderSide(color: color.withOpacity(0.2)),
-          right: BorderSide(color: color.withOpacity(0.2)),
+          top: BorderSide(color: color.withValues(alpha: 0.2)),
+          left: BorderSide(color: color.withValues(alpha: 0.2)),
+          right: BorderSide(color: color.withValues(alpha: 0.2)),
         ),
       ),
       child: Icon(icon, color: color, size: isLarge ? 40 : 32),
@@ -688,7 +688,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 ),
                 if (isLocked)
                   Container(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha: 0.4),
                     child: Center(
                       child: Icon(Icons.lock, color: Palette.textSecondary, size: 24),
                     ),
@@ -881,12 +881,12 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Palette.purpleAccentDark.withOpacity(0.5),
-            Palette.purpleAccent.withOpacity(0.5),
+            Palette.purpleAccentDark.withValues(alpha: 0.5),
+            Palette.purpleAccent.withValues(alpha: 0.5),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+        border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -899,7 +899,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Palette.purpleAccent.withOpacity(0.4),
+                  color: Palette.purpleAccent.withValues(alpha: 0.4),
                   blurRadius: 15,
                 ),
               ],
@@ -954,9 +954,9 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Palette.purpleAccent.withOpacity(0.1),
+                      color: Palette.purpleAccent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                      border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       'Selected: ${PiecePackUtils.formatPackName(settings.pieceSet)}',
@@ -1017,7 +1017,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Palette.error.withOpacity(0.1),
+                color: Palette.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Palette.error),
               ),
@@ -1095,7 +1095,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Palette.success.withOpacity(0.5),
+                                    color: Palette.success.withValues(alpha: 0.5),
                                     blurRadius: 8,
                                   ),
                                 ],
@@ -1118,7 +1118,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: Palette.backgroundTertiary.withOpacity(0.8),
+                                color: Palette.backgroundTertiary.withValues(alpha: 0.8),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -1248,9 +1248,9 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Palette.purpleAccent.withOpacity(0.1),
+                          color: Palette.purpleAccent.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                          border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           'Selected: ${equippedAvatar.item.name}',
@@ -1323,7 +1323,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Palette.error.withOpacity(0.1),
+                  color: Palette.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Palette.error),
                 ),
@@ -1363,7 +1363,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Palette.error.withOpacity(0.1),
+                color: Palette.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Palette.error),
               ),
@@ -1475,7 +1475,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Palette.success.withOpacity(0.5),
+                                  color: Palette.success.withValues(alpha: 0.5),
                                   blurRadius: 8,
                                 ),
                               ],
@@ -1543,9 +1543,9 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Palette.purpleAccent.withOpacity(0.1),
+                      color: Palette.purpleAccent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                      border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       'Selected: ${BoardThemeUtils.formatThemeName(settings.boardTheme)}',
@@ -1606,7 +1606,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Palette.error.withOpacity(0.1),
+                color: Palette.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Palette.error),
               ),
@@ -1686,7 +1686,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Palette.success.withOpacity(0.5),
+                                    color: Palette.success.withValues(alpha: 0.5),
                                     blurRadius: 8,
                                   ),
                                 ],
@@ -1796,9 +1796,9 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Palette.purpleAccent.withOpacity(0.1),
+                      color: Palette.purpleAccent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                      border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       'Selected: ${EffectUtils.formatEffectName(settings.effect!)}',
@@ -1813,9 +1813,9 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Palette.purpleAccent.withOpacity(0.1),
+                      color: Palette.purpleAccent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                      border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       'Selected: Classic',
@@ -1878,7 +1878,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Palette.error.withOpacity(0.1),
+                color: Palette.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Palette.error),
               ),
@@ -1930,8 +1930,8 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      color.withOpacity(0.3),
-                      color.withOpacity(0.1),
+                      color.withValues(alpha: 0.3),
+                      color.withValues(alpha: 0.1),
                     ],
                   ),
                 ),
@@ -1958,7 +1958,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Palette.success.withOpacity(0.5),
+                                    color: Palette.success.withValues(alpha: 0.5),
                                     blurRadius: 8,
                                   ),
                                 ],
@@ -1973,10 +1973,10 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withOpacity(0.2),
+                              color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
-                                color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withOpacity(0.5),
+                                color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withValues(alpha: 0.5),
                               ),
                             ),
                             child: Text(
@@ -2156,8 +2156,8 @@ class _EffectPreviewDialog extends ConsumerWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      color.withOpacity(0.3),
-                      color.withOpacity(0.1),
+                      color.withValues(alpha: 0.3),
+                      color.withValues(alpha: 0.1),
                     ],
                   ),
                 ),
@@ -2179,10 +2179,10 @@ class _EffectPreviewDialog extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withOpacity(0.1),
+                  color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withOpacity(0.3),
+                    color: CollectionUtils.getColorFromHexOrRarity(null, rarity).withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
