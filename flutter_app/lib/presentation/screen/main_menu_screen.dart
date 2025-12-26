@@ -134,6 +134,16 @@ class MainMenuScreen extends HookConsumerWidget {
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Palette.purpleAccent.withValues(alpha: 0.1),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           // Avatar with online indicator
@@ -567,6 +577,12 @@ class MainMenuScreen extends HookConsumerWidget {
           width: 1,
         ),
         boxShadow: [
+          BoxShadow(
+            color: iconColor.withValues(alpha: 0.2),
+            blurRadius: 15,
+            spreadRadius: 0,
+            offset: const Offset(0, 6),
+          ),
           BoxShadow(
             color: Palette.black.withValues(alpha: 0.1),
             blurRadius: 10,

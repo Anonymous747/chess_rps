@@ -161,7 +161,25 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
 
               // Content
               Expanded(
-                child: _buildCollectionContent(),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.1, 0.0),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        )),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _buildCollectionContent(),
+                ),
               ),
             ],
           ),
@@ -174,7 +192,9 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     final label = _getTabLabel(category);
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isActive ? Palette.textPrimary : Palette.backgroundTertiary,
@@ -183,13 +203,15 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             color: isActive ? Colors.transparent : Palette.glassBorder,
           ),
         ),
-        child: Text(
-          label,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
           style: TextStyle(
             fontSize: 14,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             color: isActive ? Palette.background : Palette.textSecondary,
           ),
+          child: Text(label),
         ),
       ),
     );
@@ -257,22 +279,22 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
 
     // For PIECES category, show all available piece packs from assets
     if (currentCategory == CollectionCategory.PIECES) {
-      return _buildPiecePacksGrid();
+      return _buildPiecePacksGrid(key: const ValueKey('pieces'));
     }
 
     // For BOARDS category, show all available board themes
     if (currentCategory == CollectionCategory.BOARDS) {
-      return _buildBoardThemesGrid();
+      return _buildBoardThemesGrid(key: const ValueKey('boards'));
     }
 
     // For AVATARS category, show all available avatars from assets
     if (currentCategory == CollectionCategory.AVATARS) {
-      return _buildAvatarsGrid();
+      return _buildAvatarsGrid(key: const ValueKey('avatars'));
     }
 
     // For EFFECTS category, show all available effects
     if (currentCategory == CollectionCategory.EFFECTS) {
-      return _buildEffectsGrid();
+      return _buildEffectsGrid(key: const ValueKey('effects'));
     }
 
     // For other categories, use the backend collection items
@@ -325,6 +347,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           }
 
           return SingleChildScrollView(
+            key: ValueKey('category_$currentCategory'),
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
@@ -928,12 +951,13 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildPiecePacksGrid() {
+  Widget _buildPiecePacksGrid({Key? key}) {
     final piecePacks = PiecePackUtils.getKnownPiecePacks();
     final settingsAsync = ref.watch(settingsControllerProvider);
 
     return settingsAsync.when(
       data: (settings) => SingleChildScrollView(
+        key: key,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1199,7 +1223,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildAvatarsGrid() {
+  Widget _buildAvatarsGrid({Key? key}) {
     final userCollectionAsync = ref.watch(userCollectionControllerProvider);
     final allItemsAsync = ref.watch(collectionControllerProvider);
 
@@ -1228,6 +1252,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           }
 
           return SingleChildScrollView(
+            key: key,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1517,12 +1542,13 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildBoardThemesGrid() {
+  Widget _buildBoardThemesGrid({Key? key}) {
     final boardThemes = BoardThemeUtils.getKnownBoardThemes();
     final settingsAsync = ref.watch(settingsControllerProvider);
 
     return settingsAsync.when(
       data: (settings) => SingleChildScrollView(
+        key: key,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1770,12 +1796,13 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildEffectsGrid() {
+  Widget _buildEffectsGrid({Key? key}) {
     final effects = EffectUtils.getKnownEffects();
     final settingsAsync = ref.watch(settingsControllerProvider);
 
     return settingsAsync.when(
       data: (settings) => SingleChildScrollView(
+        key: key,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -114,9 +114,16 @@ class RatingScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.purpleAccent.withValues(alpha: 0.2),
-            blurRadius: 20,
+            color: Palette.purpleAccent.withValues(alpha: 0.25),
+            blurRadius: 25,
             spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.15),
+            blurRadius: 15,
+            spreadRadius: 0,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -330,6 +337,20 @@ class RatingScreen extends StatelessWidget {
             color: Palette.backgroundTertiary,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Palette.glassBorder),
+            boxShadow: [
+              BoxShadow(
+                color: Palette.purpleAccent.withValues(alpha: 0.15),
+                blurRadius: 20,
+                spreadRadius: 0,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Palette.black.withValues(alpha: 0.1),
+                blurRadius: 12,
+                spreadRadius: 0,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: CustomPaint(
             painter: _ChartPainter(),
@@ -418,11 +439,32 @@ class RatingScreen extends StatelessWidget {
         boxShadow: isFeatured
             ? [
                 BoxShadow(
-                  color: Palette.purpleAccent.withValues(alpha: 0.2),
-                  blurRadius: 10,
+                  color: Palette.purpleAccent.withValues(alpha: 0.25),
+                  blurRadius: 18,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Palette.black.withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 5),
                 ),
               ]
-            : null,
+            : [
+                BoxShadow(
+                  color: iconColor.withValues(alpha: 0.15),
+                  blurRadius: 15,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: Palette.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Row(
         children: [

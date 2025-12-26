@@ -180,13 +180,20 @@ class SkeletonCard extends StatelessWidget {
         ),
       ),
       child: child ??
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SkeletonAvatar(size: 40),
-              const SizedBox(height: 12),
-              SkeletonText(width: double.infinity, height: 12, lines: 2),
-            ],
+          ClipRect(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Flexible(
+                  child: SkeletonAvatar(size: 36),
+                ),
+                const SizedBox(height: 6),
+                Flexible(
+                  child: SkeletonText(width: double.infinity, height: 10, lines: 2, spacing: 4),
+                ),
+              ],
+            ),
           ),
     );
   }

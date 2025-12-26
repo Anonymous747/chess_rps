@@ -147,22 +147,40 @@ class ProfileScreen extends HookConsumerWidget {
             ? AvatarUtils.getAvatarImagePath(equippedAvatar.item.iconName)
             : AvatarUtils.getDefaultAvatarPath();
 
-        return Column(
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 112,
-                  height: 112,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Palette.purpleAccent.withValues(alpha: 0.3),
-                      width: 2,
-                      style: BorderStyle.solid,
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Palette.purpleAccent.withValues(alpha: 0.15),
+                blurRadius: 25,
+                spreadRadius: 0,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Palette.black.withValues(alpha: 0.1),
+                blurRadius: 15,
+                spreadRadius: 0,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 112,
+                    height: 112,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Palette.purpleAccent.withValues(alpha: 0.3),
+                        width: 2,
+                        style: BorderStyle.solid,
+                      ),
                     ),
-                  ),
                   child: CircularProgressIndicator(
                     value: progressValue.clamp(0.0, 1.0),
                     strokeWidth: 2,
@@ -273,75 +291,9 @@ class ProfileScreen extends HookConsumerWidget {
             const SizedBox(height: 16),
             // Profile Name with Edit Button
             _buildProfileNameSection(context, ref),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () {
-                context.push(AppRoutes.levels);
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    levelName,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Palette.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(Icons.verified, color: Palette.gold, size: 20),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.info_outline,
-                    color: Palette.textSecondary,
-                    size: 16,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Level $level • $currentXp / $xpForNext XP',
-              style: TextStyle(
-                fontSize: 14,
-                color: Palette.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _showAddFriendsOverlay(context, ref);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Palette.textPrimary,
-                      foregroundColor: Palette.background,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: Text('Add Friends'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // TODO: Open chat
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Palette.textPrimary,
-                      side: BorderSide(color: Palette.glassBorder),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: Text('Message'),
-                  ),
-                ),
-              ],
-            ),
           ],
-        );
+        ),
+      );
       },
       loading: () => Center(
         child: Padding(
@@ -443,6 +395,20 @@ class ProfileScreen extends HookConsumerWidget {
         color: Palette.backgroundTertiary,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Palette.glassBorder),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.25),
+            blurRadius: 18,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.15),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -486,6 +452,8 @@ class ProfileScreen extends HookConsumerWidget {
   }
 
   Widget _buildPerformanceSection(AsyncValue<UserStats> statsAsync) {
+    final selectedPeriod = useState<String>('Weekly'); // Default to Weekly
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -502,29 +470,93 @@ class ProfileScreen extends HookConsumerWidget {
             ),
             Row(
               children: [
-                _buildTimeFilter('Weekly', true),
+                _buildTimeFilter(
+                  'Weekly',
+                  selectedPeriod.value == 'Weekly',
+                  () => selectedPeriod.value = 'Weekly',
+                ),
                 const SizedBox(width: 8),
-                _buildTimeFilter('Monthly', false),
+                _buildTimeFilter(
+                  'Monthly',
+                  selectedPeriod.value == 'Monthly',
+                  () => selectedPeriod.value = 'Monthly',
+                ),
               ],
             ),
           ],
         ),
         const SizedBox(height: 12),
         Container(
-          height: 160,
+          height: 180,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Palette.backgroundTertiary,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Palette.glassBorder),
+            boxShadow: [
+              BoxShadow(
+                color: Palette.purpleAccent.withValues(alpha: 0.15),
+                blurRadius: 25,
+                spreadRadius: 0,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Palette.black.withValues(alpha: 0.1),
+                blurRadius: 15,
+                spreadRadius: 0,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: statsAsync.when(
             data: (stats) {
               final history = stats.performanceHistory;
               if (history != null && history.isNotEmpty) {
-                return CustomPaint(
-                  painter: _PerformanceChartPainter(history),
-                  child: Container(),
+                // Filter history based on selected period
+                final now = DateTime.now();
+                final filteredHistory = history.where((item) {
+                  final daysDiff = now.difference(item.createdAt).inDays;
+                  if (selectedPeriod.value == 'Weekly') {
+                    return daysDiff <= 7;
+                  } else {
+                    return daysDiff <= 30;
+                  }
+                }).toList();
+                
+                if (filteredHistory.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No performance data for ${selectedPeriod.value.toLowerCase()} period',
+                      style: TextStyle(
+                        color: Palette.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }
+                
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.0, 0.1),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOut,
+                        )),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: CustomPaint(
+                    key: ValueKey('${selectedPeriod.value}_${filteredHistory.length}'),
+                    painter: _PerformanceChartPainter(filteredHistory, selectedPeriod.value),
+                    child: Container(),
+                  ),
                 );
               } else {
                 return Center(
@@ -561,18 +593,30 @@ class ProfileScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildTimeFilter(String label, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isActive ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: isActive ? Palette.textPrimary : Palette.textSecondary,
+  Widget _buildTimeFilter(String label, bool isActive, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isActive ? Palette.accent.withValues(alpha: 0.5) : Colors.transparent,
+            width: 1,
+          ),
+        ),
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+            color: isActive ? Palette.textPrimary : Palette.textSecondary,
+          ),
+          child: Text(label),
         ),
       ),
     );
@@ -643,6 +687,20 @@ class ProfileScreen extends HookConsumerWidget {
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Palette.glassBorder),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: isUnlocked ? 0.25 : 0.1),
+            blurRadius: 18,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.15),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -1082,11 +1140,30 @@ class ProfileScreen extends HookConsumerWidget {
   }
 
   Widget _buildProfileNameSection(BuildContext context, WidgetRef ref) {
+    return _ProfileNameSection(key: const ValueKey('profile_name_section'));
+  }
+}
+
+// Separate HookWidget for profile name section to maintain hook consistency
+class _ProfileNameSection extends HookConsumerWidget {
+  const _ProfileNameSection({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final authUser = ref.watch(authControllerProvider).valueOrNull;
     final profileName = authUser?.profileName ?? 'Player';
-    final isEditing = useState(false);
-    final nameController = useTextEditingController(text: profileName);
-    final isLoading = useState(false);
+    // Hooks must be called in the same order every time - using consistent types
+    final isEditing = useState<bool>(false);
+    final nameController = useTextEditingController();
+    final isLoading = useState<bool>(false);
+    
+    // Update controller text when profileName changes (but not when editing)
+    useEffect(() {
+      if (!isEditing.value) {
+        nameController.text = profileName;
+      }
+      return null;
+    }, [profileName]);
 
     if (isEditing.value) {
       return Container(
@@ -1226,12 +1303,17 @@ class ProfileScreen extends HookConsumerWidget {
 
 class _PerformanceChartPainter extends CustomPainter {
   final List<PerformanceHistoryItem> history;
+  final String period;
 
-  _PerformanceChartPainter(this.history);
+  _PerformanceChartPainter(this.history, this.period);
 
   @override
   void paint(Canvas canvas, Size size) {
     if (history.isEmpty) return;
+
+    // Reserve space at bottom for date labels
+    const dateLabelHeight = 20.0;
+    final chartHeight = size.height - dateLabelHeight;
 
     // Find min and max rating for scaling
     final ratings = history.map((h) => h.rating).toList();
@@ -1254,7 +1336,7 @@ class _PerformanceChartPainter extends CustomPainter {
       final normalizedRating =
           (history[i].rating - minRating + padding) / (ratingRange + padding * 2);
       final x = size.width * (i / (history.length - 1).clamp(1, double.infinity));
-      final y = size.height * (1 - normalizedRating); // Invert Y axis
+      final y = chartHeight * (1 - normalizedRating); // Invert Y axis, use chartHeight
       points.add(Offset(x, y));
     }
 
@@ -1269,8 +1351,8 @@ class _PerformanceChartPainter extends CustomPainter {
 
     // Fill
     final fillPath = Path.from(path)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
+      ..lineTo(size.width, chartHeight)
+      ..lineTo(0, chartHeight)
       ..close();
 
     final fillPaint = Paint()
@@ -1281,7 +1363,7 @@ class _PerformanceChartPainter extends CustomPainter {
           Palette.purpleAccent.withValues(alpha: 0.3),
           Palette.purpleAccent.withValues(alpha: 0),
         ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ).createShader(Rect.fromLTWH(0, 0, size.width, chartHeight))
       ..style = PaintingStyle.fill;
 
     canvas.drawPath(fillPath, fillPaint);
@@ -1308,6 +1390,75 @@ class _PerformanceChartPainter extends CustomPainter {
                 ..strokeWidth = 2);
         }
       }
+    }
+
+    // Draw date labels (2-3 dates evenly distributed)
+    final dateIndices = <int>[];
+    
+    if (history.length == 1) {
+      dateIndices.add(0);
+    } else if (history.length == 2) {
+      dateIndices.add(0);
+      dateIndices.add(history.length - 1);
+    } else {
+      // 3 dates: start, middle, end
+      dateIndices.add(0);
+      dateIndices.add((history.length - 1) ~/ 2);
+      dateIndices.add(history.length - 1);
+    }
+
+    final textStyle = TextStyle(
+      color: Palette.textSecondary,
+      fontSize: 10,
+      fontWeight: FontWeight.w500,
+    );
+
+    for (final index in dateIndices) {
+      if (index < points.length) {
+        final date = history[index].createdAt;
+        final dateText = _formatDate(date, period);
+        
+        // Create text span
+        final textSpan = TextSpan(
+          text: dateText,
+          style: textStyle,
+        );
+        final textPainter = TextPainter(
+          text: textSpan,
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+        
+        // Position text at bottom, centered on the point
+        final textX = points[index].dx - (textPainter.width / 2);
+        final textY = chartHeight + 4; // Position below chart
+        
+        // Ensure text doesn't go outside bounds
+        final adjustedX = textX.clamp(0.0, size.width - textPainter.width);
+        
+        textPainter.paint(canvas, Offset(adjustedX, textY));
+      }
+    }
+  }
+
+  String _formatDate(DateTime date, String period) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    final daysDiff = today.difference(dateOnly).inDays;
+
+    if (daysDiff == 0) {
+      return 'Today';
+    } else if (daysDiff == 1) {
+      return 'Yesterday';
+    } else if (period == 'Weekly' && daysDiff < 7) {
+      // For weekly, show day name
+      final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return weekdays[date.weekday - 1];
+    } else {
+      // For monthly or older dates, show M/D format
+      return '${date.month}/${date.day}';
     }
   }
 

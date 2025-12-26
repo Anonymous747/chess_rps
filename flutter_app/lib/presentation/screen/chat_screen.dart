@@ -46,6 +46,20 @@ class _ChatScreenState extends State<ChatScreen> {
                   border: Border(
                     bottom: BorderSide(color: Palette.glassBorder),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Palette.purpleAccent.withValues(alpha: 0.15),
+                      blurRadius: 25,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 6),
+                    ),
+                    BoxShadow(
+                      color: Palette.black.withValues(alpha: 0.1),
+                      blurRadius: 15,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -239,6 +253,23 @@ class _ChatScreenState extends State<ChatScreen> {
           border: Border.all(
             color: isActive ? Colors.transparent : Palette.glassBorder,
           ),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: Palette.purpleAccent.withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Palette.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: Row(
           children: [
@@ -342,6 +373,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   bottomRight: Radius.circular(4),
                 ),
                 border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Palette.purpleAccent.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Text(
                 message,
@@ -439,6 +478,14 @@ class _ChatScreenState extends State<ChatScreen> {
                       bottomRight: Radius.circular(16),
                     ),
                     border: Border.all(color: Palette.glassBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Palette.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
