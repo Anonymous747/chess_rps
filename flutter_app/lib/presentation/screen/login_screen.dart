@@ -207,7 +207,11 @@ class LoginScreen extends HookConsumerWidget {
                                       );
                                     }
                                   } finally {
-                                    isLoading.value = false;
+                                    // Only update isLoading if widget is still mounted
+                                    // (widget may be disposed after successful login navigation)
+                                    if (context.mounted) {
+                                      isLoading.value = false;
+                                    }
                                   }
                                 }
                               },

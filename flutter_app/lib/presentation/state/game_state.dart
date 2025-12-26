@@ -1,4 +1,5 @@
 import 'package:chess_rps/common/enum.dart';
+import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/rps_choice.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/domain/model/board.dart';
@@ -72,6 +73,15 @@ extension GameStateExtension on GameState {
       final toPos = isAbsoluteNotation
           ? toNotation.convertFromAbsoluteNotationForAI()
           : toNotation.convertToPosition();
+      
+      // Debug logging for coordinate conversion
+      AppLogger.debug(
+        'getLastMovePositions: lastMove=$lastMove, fromNotation=$fromNotation, toNotation=$toNotation, '
+        'fromPos(row=${fromPos.row}, col=${fromPos.col}, algebraic=${fromPos.algebraicPosition}), '
+        'toPos(row=${toPos.row}, col=${toPos.col}, algebraic=${toPos.algebraicPosition}), '
+        'isAbsoluteNotation=$isAbsoluteNotation',
+        tag: 'GameState'
+      );
       
       return {
         'fromRow': fromPos.row,

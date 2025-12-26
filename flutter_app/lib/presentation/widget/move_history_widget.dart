@@ -11,6 +11,7 @@ import 'package:chess_rps/domain/model/figures/queen.dart';
 import 'package:chess_rps/domain/model/figures/rook.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -61,12 +62,32 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
 
   /// Parse move string to get piece, from and to positions
   /// Supports both formats: "Pe2e4" (with piece) and "e2e4" (without piece)
+  /// For AI games: shows absolute notation (what Stockfish actually played)
+  /// For online games: converts to player's perspective for display
   Map<String, dynamic> _parseMove(String algebraicMove) {
     final parsed = PieceNotation.parseMoveNotation(algebraicMove);
+    final fromAbsolute = parsed['from'] as String;
+    final toAbsolute = parsed['to'] as String;
+    
+    // Check if we're in an AI game
+    final isAIGame = GameModesMediator.opponentMode == OpponentMode.ai;
+    
+    String fromDisplay, toDisplay;
+    if (isAIGame) {
+      // For AI games, show absolute notation (what Stockfish actually played)
+      // This ensures moves are displayed correctly regardless of player side
+      fromDisplay = fromAbsolute;
+      toDisplay = toAbsolute;
+    } else {
+      // For online games, convert to player's perspective for display
+      fromDisplay = fromAbsolute.convertAbsoluteToPlayerPerspective();
+      toDisplay = toAbsolute.convertAbsoluteToPlayerPerspective();
+    }
+    
     return {
       'piece': parsed['piece'],
-      'from': parsed['from'],
-      'to': parsed['to'],
+      'from': fromDisplay,
+      'to': toDisplay,
     };
   }
 

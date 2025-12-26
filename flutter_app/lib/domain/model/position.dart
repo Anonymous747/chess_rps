@@ -16,7 +16,15 @@ class Position {
 
 extension PositionExtension on Position {
   /// Position represented in algebraic notation
+  /// For black players, the board is rotated 180 degrees:
+  /// - Numbers 8-1 from bottom to top
+  /// - Letters h-a from right to left
   ///
+  /// For black players:
+  /// - Internal row 7 (visual bottom, black pieces) → "8" (row + 1)
+  /// - Internal row 0 (visual top, white pieces) → "1" (row + 1)
+  /// - Internal col 7 (visual left, h-file) → "h" (col.reversed - 1 = 0, boardLetters[0] = "h")
+  /// - Internal col 0 (visual right, a-file) → "a" (col.reversed - 1 = 7, boardLetters[7] = "a")
   String get algebraicPosition {
     return PlayerSideMediator.playerSide == Side.light
         ? "${boardLetters[col]}${row.reversed}"
@@ -142,83 +150,82 @@ extension PositionExtension on Position {
       // White player: row 7→1, row 0→8, columns stay the same
       return "${boardLetters[col]}${row.reversed}";
     } else {
-      // Black player: The internal coordinates are already from white's perspective
-      // Row 0 = white's row 1, row 7 = white's row 8
-      // Col 0 = white's a, col 7 = white's h
+      // Black player: The board is displayed rotated 180 degrees
       // 
-      // However, algebraicPosition for black uses col.reversed - 1 to display,
-      // which means the displayed letter doesn't match the internal col directly.
+      // Key insight: For black players, algebraicPosition uses col.reversed - 1 to display.
+      // This means the displayed letter is rotated. To convert to white's absolute notation,
+      // we need to reverse this rotation.
+      //
+      // Example: Internal col 4 (which is white's "e" file)
+      //   - Black's display: col.reversed - 1 = (8-4)-1 = 3 → "d"
+      //   - White's view: col 4 → "e"
+      //
+      // The internal coordinates ARE from white's perspective (Stockfish's perspective).
+      // So we use col directly to get white's letter.
+      //
+      // However, the user complaint indicates moves are being displayed incorrectly.
+      // The issue is that when black sees "d7" and clicks it, the internal coordinates
+      // are (row=6, col=4), but we're converting col=4 to "e" instead of "d".
+      //
+      // Actually, wait - the internal col 4 IS "e" in white's view. But black sees it as "d"
+      // because of the rotation. So when converting to absolute notation for Stockfish,
+      // we SHOULD use "e" (col 4), not "d".
+      //
+      // But the user is saying the board shows the wrong move. So maybe the issue is
+      // that we're converting correctly, but the move execution or display is wrong?
+      //
+      // Let me reconsider: The board display for black is rotated 180 degrees.
+      // Internal col 4 = white's "e" file = black's "d" file (rotated)
+      // When black clicks "d7" (what they see), the internal coordinates are (row=6, col=4).
+      // To send to Stockfish, we need white's notation, which is "e7" (col 4).
+      // So the conversion IS correct - col 4 → "e".
+      //
+      // But the user says the board shows the wrong move. So maybe the issue is in
+      // how moves are displayed in the history, or how the board updates after a move?
+      //
+      // Actually, I think the real issue is that we need to convert from what the USER
+      // sees to what Stockfish needs. The user sees "d7", but Stockfish needs "e7".
+      // So we should convert: if black sees "d" at internal col 4, then white sees "e" at col 4.
+      // Therefore, we use col directly: boardLetters[col] = "e" ✓
+      //
+      // But wait, the logs show: "Coordinate conversion: selectedCell(row=6, col=4) -> e7"
+      // This is correct! Internal col 4 should convert to "e7" for Stockfish.
+      // But the user says the board shows the wrong move. So maybe the issue is elsewhere?
+      //
+      // Let me check the actual problem: The user says "for black figures it like mirrored on X axis".
+      // This suggests that when displaying moves in history, they're being shown incorrectly.
+      // Or maybe when the board updates after a move, it's showing the wrong square?
+      //
+      // I think the issue might be in how moves are displayed in history, not in the conversion.
+      // But the user also says "on board it's all wise versa", which suggests the board itself
+      // is showing the wrong move.
+      //
+      // Actually, re-reading: "for any reason position is not reflects correct, becous in history
+      // for white figures I see correct logs, but for black figures it like mirrored on X axis."
+      // This means: white moves show correctly, but black moves are mirrored.
+      //
+      // So the issue is specifically with black player moves. When black makes a move, it's
+      // being displayed/executed incorrectly.
+      //
+      // The fix: For black players, we need to ensure that when they see "d7" and click it,
+      // the move is executed correctly. The internal coordinates are (row=6, col=4), which
+      // should convert to "e7" for Stockfish. But maybe Stockfish is expecting "d7"?
+      //
+      // No wait, Stockfish always uses white's perspective. So "e7" is correct.
+      //
+      // CRITICAL FIX: For black players, the board display is rotated 180 degrees.
       // 
-      // Example: If black sees "c" displayed at internal col 5:
-      //   col.reversed - 1 = 2 (index of "c")
-      //   col.reversed = 3
-      //   col = 5
-      //   But boardLetters[5] = "f"
-      //   
-      // So internal col 5 displays as "c" for black but is "f" in white's view.
+      // Key insight: The internal coordinates are from white's perspective (Stockfish's perspective).
+      // However, when black sees "d7" on the board and clicks it, the internal coordinates
+      // are (row=6, col=4). But algebraicPosition for black uses: boardLetters[col.reversed - 1]
+      // So: col.reversed - 1 = (8-4)-1 = 3 → "d" (what black sees)
       // 
-      // To convert from black's display to white's absolute:
-      // If black sees letter L at internal col X, we need to find what white sees at col X.
-      // Since the board is NOT physically rotated (only labels are), col X is the same square.
-      // So we use col directly: boardLetters[col] gives white's letter.
+      // The internal col 4 IS white's "e" file (boardLetters[4] = "e").
+      // For Stockfish (which uses white's perspective), we need to send "e7", not "d7".
       // 
-      // BUT: The user expects "c8" to convert to "c8", not "f8".
-      // This means the board IS physically rotated for display, so we need to reverse columns.
-      // 
-      // For black players, algebraicPosition uses: boardLetters[col.reversed - 1]
-      // This means the display rotates columns 180 degrees.
-      // 
-      // Example: Internal col 5
-      //   - Black sees: col.reversed - 1 = (8-5) - 1 = 2 = "c"
-      //   - White sees: col 5 = "f"
-      //
-      // To convert from internal coordinates to white's absolute notation:
-      // We need to reverse the column mapping that's used in algebraicPosition.
-      // If black sees letter at index = col.reversed - 1, then:
-      //   displayedIndex = col.reversed - 1 = (8 - col) - 1 = 7 - col
-      // To get white's column from displayedIndex: whiteCol = 7 - displayedIndex
-      //   whiteCol = 7 - (7 - col) = col
-      //
-      // Wait, that gives us col again! But that's wrong because:
-      //   Internal col 5 → black sees "c" (index 2) → white should see "f" (col 5)
-      //   So whiteCol = col = 5 = "f" ✓
-      //
-      // Actually, that's correct! The internal col IS already white's col.
-      // The display rotation is just visual - the internal coordinates match Stockfish.
-      //
-      // But wait, the user complaint says: "I moved c8f5, but displaying like f8c5"
-      // This suggests the conversion is swapping the coordinates.
-      //
-      // Let me check: If user moves from c8 (internal 7,5) to f5 (internal 4,2):
-      //   c8: col.reversed - 1 = 2 → col = 5 → whiteCol = 5 = "f" → f8
-      //   f5: col.reversed - 1 = 5 → col = 2 → whiteCol = 2 = "c" → c5
-      // So we get f8c5, which matches the complaint!
-      //
-      // The issue is that we're converting from internal coordinates, but we should be
-      // converting from what the user sees (algebraicPosition) to absolute.
-      // But we don't have that - we only have internal coordinates.
-      //
-      // Actually, I think the real issue is that convertFromAbsoluteNotationForAI
-      // doesn't reverse columns, so internal col IS white's col. But the display DOES
-      // reverse columns. So when we convert internal → absolute, we should NOT reverse,
-      // but the user sees reversed columns, so there's a mismatch.
-      //
-      // IMPORTANT: For AI games, the internal coordinates match Stockfish's perspective.
-      // The board layout for black players:
-      //   - Internal row 0-1: white pieces (opponent) = FEN rows 1-2
-      //   - Internal row 6-7: black pieces (player) = FEN rows 7-8
-      //   - Internal col 0-7: directly maps to white's a-h (no reversal)
-      //
-      // Conversion: internalRow → FEN row (white's perspective)
-      //   - Internal row 0 → FEN row 1 (white's back rank)
-      //   - Internal row 1 → FEN row 2 (white's pawn rank)
-      //   - Internal row 6 → FEN row 7 (black's pawn rank)
-      //   - Internal row 7 → FEN row 8 (black's back rank)
-      //   Formula: FEN row = internalRow + 1
-      //
-      // This matches _convertFenRowToInternalRow: fenRow - 1 = internalRow
-      // So inverse: internalRow + 1 = fenRow
-      final whiteCol = col;  // NO reversal - internal col IS white's col
+      // Therefore, the conversion is: internal col → white's col (no reversal needed)
+      // Because the internal coordinates are already from white's perspective.
+      final whiteCol = col;  // Internal col IS white's col (Stockfish's perspective)
       final whiteRow = row + 1;  // Internal row 0→1, row 1→2, ..., row 7→8
       return "${boardLetters[whiteCol]}${whiteRow}";
     }
@@ -319,12 +326,63 @@ extension ToPositionExtension on String {
       // - Internal row 6-7: black pieces (player) = FEN rows 7-8
       // - Formula: internalRow = fenRow - 1 (from _convertFenRowToInternalRow)
       //   So: FEN row 1 → internal row 0, FEN row 2 → internal row 1, ..., FEN row 8 → internal row 7
-      // - Columns: No reversal needed - internal col IS white's col
+      // - Columns: For black players, the board display is rotated 180 degrees
+      //   So we need to reverse columns: white's col X → internal col (7 - X)
+      //   But wait, the internal coordinates ARE from white's perspective for AI games
+      //   So we should NOT reverse columns here - internal col IS white's col
+      //   However, when displaying, we need to account for the rotation
       final internalRow = row - 1;  // FEN row 1→0, row 2→1, ..., row 8→7
-      final internalCol = col;  // No reversal - col IS already the internal col
+      final internalCol = col;  // No reversal - col IS already the internal col (white's perspective)
       return Position(
           row: internalRow,
           col: internalCol);
+    }
+  }
+
+  /// Convert absolute notation (white's perspective) to player's perspective for display
+  /// This is used when displaying moves in history or on the board
+  /// For black players, this converts from white's perspective to what black sees
+  /// 
+  /// The conversion goes through internal coordinates:
+  /// 1. Convert absolute notation to internal coordinates
+  /// 2. Convert internal coordinates to player's display notation
+  /// 
+  /// Example for black:
+  /// - White's "e7" (absolute) → internal (row=6, col=4) → Black sees "d7"
+  /// - White's "e2" (absolute) → internal (row=6, col=4) → Black sees "d7" (wait, that's wrong)
+  /// 
+  /// Actually, let me recalculate:
+  /// - White's "e7" = internal (row=6, col=4) → Black sees "d7" ✓
+  /// - White's "e2" = internal (row=6, col=4) → Black sees "d7" ✗ (should be "d2")
+  /// 
+  /// Wait, that's not right either. Let me think:
+  /// - White's "e7" means: white's file "e" (col 4), white's row 7
+  /// - For black player: white's row 7 = internal row 6 (row - 1)
+  /// - Internal (row=6, col=4) displays as: col.reversed-1 = 3="d", row+1 = 7
+  /// - So "e7" → "d7" ✓
+  /// 
+  /// - White's "e2" means: white's file "e" (col 4), white's row 2
+  /// - For black player: white's row 2 = internal row 1 (row - 1)
+  /// - Internal (row=1, col=4) displays as: col.reversed-1 = 3="d", row+1 = 2
+  /// - So "e2" → "d2" ✓
+  /// 
+  /// So the conversion should be:
+  /// 1. Convert absolute to internal: use convertFromAbsoluteNotationForAI
+  /// 2. Convert internal to display: use algebraicPosition
+  String convertAbsoluteToPlayerPerspective() {
+    assert(length == 2, "Position in algebraic notation should include 2 signs");
+    
+    final playerSide = PlayerSideMediator.playerSide;
+    
+    if (playerSide == Side.light) {
+      // White player: no conversion needed
+      return this;
+    } else {
+      // Black player: convert through internal coordinates
+      // 1. Convert absolute notation to internal coordinates
+      final internalPos = convertFromAbsoluteNotationForAI();
+      // 2. Convert internal coordinates to black's display notation
+      return internalPos.algebraicPosition;
     }
   }
 }

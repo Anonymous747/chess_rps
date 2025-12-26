@@ -146,13 +146,32 @@ class Board {
   }
 
   /// Initialize board cells and paint them in light or dark depend on position
+  /// 
+  /// In standard chess, a1 (bottom-left) and h8 (top-right) should always be dark.
+  /// For white players: internal (row 7, col 0) = a1, internal (row 0, col 7) = h8
+  /// For black players (rotated 180°): visual bottom-left = internal (row 0, col 0), 
+  ///                                   visual top-right = internal (row 7, col 7)
+  /// 
+  /// The color pattern must account for the 180-degree rotation for black players.
+  /// When rotated, the visual position (visualRow, visualCol) relates to internal (i, j) as:
+  ///   visualRow = 7 - i, visualCol = 7 - j
+  /// 
+  /// For correct pattern: (visualRow + visualCol + 1) % 2 == 0 for dark squares
+  /// Substituting: ((7 - i) + (7 - j) + 1) % 2 = (15 - i - j) % 2 = (1 - (i + j)) % 2
+  /// This means: (i + j) % 2 == 0 for dark when rotated
   ///
   void _fillEmptyCells(Side playerSide) {
+    final isBlackPlayer = playerSide == Side.dark;
+    
     for (int i = 0; i < cellsRowCount; i++) {
       var row = <Cell>[];
 
       for (int j = 0; j < cellsRowCount; j++) {
-        final isLight = (i + j + 1) % 2 != 0;
+        // For white players: standard pattern (i + j + 1) % 2 != 0 means light
+        // For black players: rotated pattern, need (i + j) % 2 == 0 for dark
+        final isLight = isBlackPlayer 
+            ? (i + j) % 2 != 0  // Rotated: (i + j) % 2 == 0 means dark
+            : (i + j + 1) % 2 != 0;  // Standard: (i + j + 1) % 2 != 0 means light
         final side = isLight ? Side.light : Side.dark;
 
         row.add(Cell(side: side, position: Position(row: i, col: j)));
@@ -210,10 +229,17 @@ class Board {
   }
 
   /// Define correct position for queens
+  /// 
+  /// In standard chess:
+  /// - White queen should be on d1 (light square)
+  /// - Black queen should be on d8 (dark square)
+  /// 
+  /// Both queens are always on column 3 (d-file, 0-indexed).
+  /// The cell colors are determined by the _fillEmptyCells method.
   ///
   void _fillQueen(Side playerSide) {
     const playerQueenRow = 0, opponentQueenRow = 7;
-    final queenCol = PlayerSideMediator.playerSide.isLight ? 3 : 4;
+    const queenCol = 3; // Always column d (0-indexed: a=0, b=1, c=2, d=3)
 
     _updateCellFigure(
         playerQueenRow,
@@ -230,10 +256,17 @@ class Board {
   }
 
   /// Define correct position for kings
+  /// 
+  /// In standard chess:
+  /// - White king should be on e1 (dark square)
+  /// - Black king should be on e8 (light square)
+  /// 
+  /// Both kings are always on column 4 (e-file, 0-indexed).
+  /// The cell colors are determined by the _fillEmptyCells method.
   ///
   void _fillKing(Side playerSide) {
     const playerKingRow = 0, opponentKingRow = 7;
-    final kingCol = PlayerSideMediator.playerSide.isLight ? 4 : 3;
+    const kingCol = 4; // Always column e (0-indexed: a=0, b=1, c=2, d=3, e=4)
 
     _updateCellFigure(
         playerKingRow,

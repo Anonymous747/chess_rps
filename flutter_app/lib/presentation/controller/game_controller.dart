@@ -996,27 +996,19 @@ class GameController extends _$GameController {
       }
 
       AppLogger.info('Step 3: Parsing opponent move: $bestAction', tag: 'GameController');
-      // Stockfish always returns moves in absolute notation (from white's perspective)
-      // The board is always initialized the same way:
-      // - Row 0-1: Opponent pieces (white if player is black, black if player is white)
-      // - Row 6-7: Player pieces (black if player is black, white if player is white)
-      // 
-      // Conversion depends on player side:
-      // If player is WHITE:
-      //   - FEN row 1 (white's back rank) → internal row 7 (player's back rank)
-      //   - FEN row 2 (white's pawn row) → internal row 6 (player's pawn row)
-      //   - FEN row 7 (black's pawn row) → internal row 1 (opponent's pawn row)
-      //   - FEN row 8 (black's back rank) → internal row 0 (opponent's back rank)
-      //   Formula: internalRow = 8 - fenRow
-      //
-      // If player is BLACK:
-      //   - FEN row 1 (white's back rank) → internal row 7 (opponent's back rank)
-      //   - FEN row 2 (white's pawn row) → internal row 6 (opponent's pawn row)
-      //   - FEN row 7 (black's pawn row) → internal row 1 (player's pawn row)
-      //   - FEN row 8 (black's back rank) → internal row 0 (player's back rank)
-      //   Formula: internalRow = 8 - fenRow (same formula, but pieces are different)
-      final fromNotation = bestAction!.substring(0, 2);
-      final toNotation = bestAction.substring(2, 4);
+      // Stockfish returns moves in format "e2e4" (4 chars) or potentially "Pe2e4" (5 chars with piece)
+      // Parse the move notation properly to handle both formats
+      final parsedMove = PieceNotation.parseMoveNotation(bestAction!);
+      final fromNotation = parsedMove['from'] as String? ?? '';
+      final toNotation = parsedMove['to'] as String? ?? '';
+      
+      if (fromNotation.isEmpty || toNotation.isEmpty) {
+        AppLogger.error('Failed to parse move notation: $bestAction', tag: 'GameController');
+        AppLogger.error('Parsed result: from=$fromNotation, to=$toNotation', tag: 'GameController');
+        return false;
+      }
+      
+      AppLogger.info('Parsed move: from=$fromNotation, to=$toNotation', tag: 'GameController');
       
       // Parse algebraic notation
       final fromCol = boardLetters.indexOf(fromNotation[0]);
@@ -1085,9 +1077,9 @@ class GameController extends _$GameController {
       final targetCell =
           state.board.getCellAt(targetPosition.row, targetPosition.col);
       
-      AppLogger.info('  - From cell: row ${fromCell.position.row}, col ${fromCell.position.col}', tag: 'GameController');
+      AppLogger.info('  - From cell: row ${fromCell.position.row}, col ${fromCell.position.col}, algebraic=${fromCell.position.algebraicPosition}', tag: 'GameController');
       AppLogger.info('  - From cell isOccupied: ${fromCell.isOccupied}, figure: ${fromCell.figure?.role}, side: ${fromCell.figure?.side}', tag: 'GameController');
-      AppLogger.info('  - To cell: row ${targetCell.position.row}, col ${targetCell.position.col}', tag: 'GameController');
+      AppLogger.info('  - To cell: row ${targetCell.position.row}, col ${targetCell.position.col}, algebraic=${targetCell.position.algebraicPosition}', tag: 'GameController');
       AppLogger.info('  - To cell isOccupied: ${targetCell.isOccupied}, figure: ${targetCell.figure?.role}', tag: 'GameController');
 
       // Check if the move is valid before executing
@@ -1315,10 +1307,17 @@ class GameController extends _$GameController {
         ? target.position.absoluteAlgebraicPositionForAI
         : target.position.absoluteAlgebraicPosition;
     
-    // Debug: Log the coordinate conversion
+    // Debug: Log the coordinate conversion with detailed information
+    final playerSide = PlayerSideMediator.playerSide;
+    final selectedAlgebraic = selectedCell.position.algebraicPosition;
+    final targetAlgebraic = target.position.algebraicPosition;
     AppLogger.info(
-      'Coordinate conversion: selectedCell(row=${selectedCell.position.row}, col=${selectedCell.position.col}) -> $fromPos, '
-      'target(row=${target.position.row}, col=${target.position.col}) -> $toPos',
+      'Coordinate conversion: '
+      'selectedCell(row=${selectedCell.position.row}, col=${selectedCell.position.col}, '
+      'algebraic=$selectedAlgebraic) -> $fromPos, '
+      'target(row=${target.position.row}, col=${target.position.col}, '
+      'algebraic=$targetAlgebraic) -> $toPos, '
+      'playerSide=${playerSide.name}',
       tag: 'GameController'
     );
     
@@ -1381,9 +1380,26 @@ class GameController extends _$GameController {
       );
     }
 
+    // Log move execution details
+    AppLogger.info(
+      'Executing move on board: fromCell(row=${selectedCell.position.row}, col=${selectedCell.position.col}, '
+      'algebraic=${selectedCell.position.algebraicPosition}) -> '
+      'toCell(row=${targetCell.position.row}, col=${targetCell.position.col}, '
+      'algebraic=${targetCell.position.algebraicPosition}), '
+      'playerSide=${PlayerSideMediator.playerSide.name}',
+      tag: 'GameController'
+    );
+    
     final updatedBoard = state.board
       ..makeMove(selectedCell, targetCell, autoQueen: autoQueen)
       ..removeSelection();
+    
+    // Verify the move was executed correctly
+    AppLogger.info(
+      'After move execution: fromCell isOccupied=${selectedCell.isOccupied}, '
+      'toCell isOccupied=${targetCell.isOccupied}, toCell figure=${targetCell.figure?.role}',
+      tag: 'GameController'
+    );
 
     // Emit effect event for the move
     if (isCapture) {
