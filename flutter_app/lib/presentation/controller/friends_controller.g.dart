@@ -72,6 +72,23 @@ final friendsSearchControllerProvider =
 );
 
 typedef _$FriendsSearchController = AutoDisposeAsyncNotifier<List<SearchUserResponse>>;
+
+String _$usersListControllerHash() => r'users_list_controller_provider_hash';
+
+/// See also [UsersListController].
+@ProviderFor(UsersListController)
+final usersListControllerProvider =
+    AutoDisposeAsyncNotifierProvider<UsersListController, List<SearchUserResponse>>.internal(
+  UsersListController.new,
+  name: r'usersListControllerProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$usersListControllerHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$UsersListController = AutoDisposeAsyncNotifier<List<SearchUserResponse>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
 

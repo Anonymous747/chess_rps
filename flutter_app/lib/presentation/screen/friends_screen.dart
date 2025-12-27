@@ -19,21 +19,28 @@ class FriendsScreen extends HookConsumerWidget {
     final friendsAsync = ref.watch(friendsControllerProvider);
     final requestsAsync = ref.watch(friendRequestsControllerProvider);
     final searchAsync = ref.watch(friendsSearchControllerProvider);
+    final usersListAsync = ref.watch(usersListControllerProvider);
     final searchController = ref.read(friendsSearchControllerProvider.notifier);
+    final usersListController = ref.read(usersListControllerProvider.notifier);
     final friendsController = ref.read(friendsControllerProvider.notifier);
     final requestsController = ref.read(friendRequestsControllerProvider.notifier);
     
     final searchTextController = useTextEditingController();
-    final showSearchResults = useState(false);
+    final showSearchResults = useState(false); // Don't show search results by default
+    final showUsersList = useState(true); // Show users list by default when not searching
     final selectedFilterState = useState(0); // 0: Online, 1: In Game, 2: Offline
 
     // Handle search
     void onSearchChanged(String value) {
       if (value.length >= 3) {
+        // Backend requires at least 3 characters
         showSearchResults.value = true;
+        showUsersList.value = false;
         searchController.searchUsers(value);
       } else {
+        // Clear search if less than 3 characters, show users list
         showSearchResults.value = false;
+        showUsersList.value = true;
         searchController.clearSearch();
       }
     }
@@ -106,13 +113,21 @@ class FriendsScreen extends HookConsumerWidget {
                     color: Palette.backgroundTertiary,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Palette.glassBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Palette.purpleAccent.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: TextField(
                     controller: searchTextController,
                     style: TextStyle(color: Palette.textPrimary),
                     onChanged: onSearchChanged,
                     decoration: InputDecoration(
-                      hintText: 'Search by phone number or ID...',
+                      hintText: 'Search by phone number or ID (min 3 characters)...',
                       hintStyle: TextStyle(color: Palette.textSecondary),
                       prefixIcon: Icon(Icons.search, color: Palette.textSecondary),
                       border: InputBorder.none,
@@ -123,30 +138,66 @@ class FriendsScreen extends HookConsumerWidget {
 
               const SizedBox(height: 20),
 
-              // Show search results if searching
-              if (showSearchResults.value)
-                Expanded(
-                  child: _buildSearchResults(context, ref, searchAsync, requestsController),
-                )
-              else
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        // Friend Requests Section
-                        _buildFriendRequestsSection(context, ref, requestsAsync, requestsController),
-                        
-                        const SizedBox(height: 24),
-                        
-                        // Friends List
-                        _buildFriendsList(context, ref, friendsAsync, friendsController, selectedFilterState),
-                        
-                        const SizedBox(height: 100),
-                      ],
+              // Toggle between Search and Friends
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildToggleButton(
+                        'Search Users',
+                        showSearchResults.value,
+                        () {
+                          showSearchResults.value = true;
+                          if (searchTextController.text.isEmpty) {
+                            searchController.searchUsers('');
+                          }
+                        },
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildToggleButton(
+                        'My Friends',
+                        !showSearchResults.value,
+                        () {
+                          showSearchResults.value = false;
+                        },
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Show search results, users list, or friends list
+              Expanded(
+                child: showSearchResults.value
+                    ? _buildSearchResults(context, ref, searchAsync, requestsController)
+                    : (showUsersList.value && (searchTextController.text.isEmpty || searchTextController.text.length < 3))
+                        ? _UsersListWidget(
+                            usersListAsync: usersListAsync,
+                            usersListController: usersListController,
+                            requestsController: requestsController,
+                          )
+                        : SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              children: [
+                                // Friend Requests Section
+                                _buildFriendRequestsSection(context, ref, requestsAsync, requestsController),
+                                
+                                const SizedBox(height: 24),
+                                
+                                // Friends List
+                                _buildFriendsList(context, ref, friendsAsync, friendsController, selectedFilterState),
+                                
+                                const SizedBox(height: 100),
+                              ],
+                            ),
+                          ),
+              ),
             ],
           ),
         ),
@@ -704,9 +755,35 @@ class FriendsScreen extends HookConsumerWidget {
       data: (results) {
         if (results.isEmpty) {
           return Center(
-            child: Text(
-              'No users found',
-              style: TextStyle(color: Palette.textSecondary, fontSize: 14),
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: Palette.textTertiary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No users found',
+                    style: TextStyle(
+                      color: Palette.textSecondary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Text(
+                      'Try searching with a different query. Make sure to enter at least 3 characters.',
+                      style: TextStyle(
+                        color: Palette.textTertiary,
+                        fontSize: 12,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -895,6 +972,7 @@ class FriendsScreen extends HookConsumerWidget {
                 ),
                 onChanged: (value) {
                   if (value.length >= 3) {
+                    // Backend requires at least 3 characters
                     searchController.searchUsers(value);
                   } else {
                     searchController.clearSearch();
@@ -920,6 +998,54 @@ class FriendsScreen extends HookConsumerWidget {
     );
   }
 
+  Widget _buildToggleButton(String label, bool isActive, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          gradient: isActive
+              ? LinearGradient(
+                  colors: [Palette.purpleAccent, Palette.purpleAccentDark],
+                )
+              : null,
+          color: isActive ? null : Palette.backgroundTertiary,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isActive ? Colors.transparent : Palette.glassBorder,
+          ),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: Palette.purpleAccent.withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Palette.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: isActive ? Palette.textPrimary : Palette.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   String _formatTimeAgo(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
@@ -933,6 +1059,290 @@ class FriendsScreen extends HookConsumerWidget {
     } else {
       return 'Just now';
     }
+  }
+}
+
+// Separate widget for users list with pagination
+class _UsersListWidget extends HookConsumerWidget {
+  final AsyncValue<List<SearchUserResponse>> usersListAsync;
+  final UsersListController usersListController;
+  final FriendRequestsController requestsController;
+
+  const _UsersListWidget({
+    required this.usersListAsync,
+    required this.usersListController,
+    required this.requestsController,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scrollController = useScrollController();
+    
+    // Set up scroll listener for pagination
+    useEffect(() {
+      void onScroll() {
+        if (scrollController.hasClients &&
+            scrollController.position.pixels >= scrollController.position.maxScrollExtent * 0.8) {
+          // Load more when user scrolls to 80% of the list
+          final currentState = usersListAsync.valueOrNull;
+          if (currentState != null && !usersListAsync.isLoading) {
+            usersListController.loadMore();
+          }
+        }
+      }
+      
+      scrollController.addListener(onScroll);
+      return () => scrollController.removeListener(onScroll);
+    }, [scrollController]);
+
+    return usersListAsync.when(
+      data: (users) {
+        if (users.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.people_outline, size: 64, color: Palette.textTertiary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No users available',
+                    style: TextStyle(
+                      color: Palette.textSecondary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Try searching for specific users',
+                    style: TextStyle(
+                      color: Palette.textTertiary,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'DISCOVER USERS',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Palette.textSecondary,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Palette.purpleAccent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
+                    ),
+                    child: Text(
+                      '${users.length} users',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Palette.purpleAccent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: users.length + (usersListAsync.isLoading ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == users.length) {
+                    // Loading indicator at the bottom
+                    return Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Palette.purpleAccent,
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  final user = users[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Palette.backgroundTertiary,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Palette.glassBorder),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Palette.purpleAccent.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          UserAvatarByIconWidget(
+                            size: 48,
+                            border: Border.all(color: Palette.glassBorder, width: 2),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      user.phoneNumber,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Palette.textPrimary,
+                                      ),
+                                    ),
+                                    if (user.rating != null) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Palette.purpleAccent.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
+                                        ),
+                                        child: Text(
+                                          '${user.rating}',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Palette.purpleAccent,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  user.isFriend
+                                      ? 'Already friends'
+                                      : (user.friendshipStatus == 'pending'
+                                          ? 'Request pending'
+                                          : 'Not friends'),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Palette.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (!user.isFriend && user.friendshipStatus != 'pending')
+                            IconButton(
+                              onPressed: () async {
+                                try {
+                                  await requestsController.sendFriendRequest(user.id);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Friend request sent'),
+                                        backgroundColor: Palette.success,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                  // Refresh the users list to update status
+                                  usersListController.refresh();
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Failed to send request: $e'),
+                                        backgroundColor: Palette.error,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                              icon: Icon(Icons.person_add, color: Palette.purpleAccent),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Palette.purpleAccent.withValues(alpha: 0.1),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  side: BorderSide(color: Palette.purpleAccent.withValues(alpha: 0.2)),
+                                ),
+                              ),
+                            )
+                          else if (user.isFriend)
+                            Icon(Icons.check_circle, color: Palette.success, size: 24)
+                          else
+                            Icon(Icons.hourglass_empty, color: Palette.warning, size: 24),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: List.generate(
+            3,
+            (index) => Padding(
+              padding: EdgeInsets.only(bottom: index < 2 ? 12 : 0),
+              child: const SkeletonListItem(),
+            ),
+          ),
+        ),
+      ),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Palette.error),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading users',
+              style: TextStyle(
+                color: Palette.error,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () => usersListController.refresh(),
+              child: Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -743,7 +743,26 @@ class GameController extends _$GameController {
       return;
     }
     
-    // Wipe selected cells before follow action
+    // Check if we're clicking on the same cell that's already selected
+    final pressedCellHash = fromCell.positionHash;
+    final isSameCell = state.selectedFigure == pressedCellHash;
+    
+    if (isSameCell && state.selectedFigure != null) {
+      // User clicked on the same selected cell - deselect it and hide moves
+      AppLogger.info(
+        'Same cell clicked again - deselecting and clearing available moves',
+        tag: 'GameController'
+      );
+      state.board.removeSelection();
+      state = state.copyWith(selectedFigure: null);
+      AppLogger.info(
+        '=== GameController.showAvailableActions END (deselected) ===',
+        tag: 'GameController'
+      );
+      return;
+    }
+    
+    // Wipe selected cells before selecting a new one
     if (state.selectedFigure != null) {
       AppLogger.info(
         'Clearing previous selection: ${state.selectedFigure}',
@@ -803,25 +822,17 @@ class GameController extends _$GameController {
       tag: 'GameController'
     );
     
-    if (!freshFromCell.isSelected) {
-      AppLogger.info(
-        'Cell not selected, displaying available moves',
-        tag: 'GameController'
-      );
-      _displayAvailableCells(freshFromCell);
-    } else {
-      AppLogger.info(
-        'Cell already selected, deselecting',
-        tag: 'GameController'
-      );
-    }
-
-    // Update selection state
-    final willBeSelected = !freshFromCell.isSelected;
+    // Select the new cell and show available moves
+    AppLogger.info(
+      'Selecting new cell and displaying available moves',
+      tag: 'GameController'
+    );
+    _displayAvailableCells(freshFromCell);
+    
+    // Update selection state - selecting the cell
     state.board.updateCell(freshFromCell.row, freshFromCell.col,
-        (cell) => cell.copyWith(isSelected: willBeSelected));
-    final newSelectedFigure = willBeSelected ? freshFromCell.positionHash : null;
-    state = state.copyWith(selectedFigure: newSelectedFigure);
+        (cell) => cell.copyWith(isSelected: true));
+    state = state.copyWith(selectedFigure: freshFromCell.positionHash);
     
     // Verify final state
     final finalCell = state.board.getCellAt(freshFromCell.row, freshFromCell.col);

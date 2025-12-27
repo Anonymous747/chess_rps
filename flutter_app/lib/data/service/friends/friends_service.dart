@@ -320,5 +320,65 @@ class FriendsService {
       throw Exception('Unexpected error: $e');
     }
   }
+
+  /// Get users list with pagination (uses search with a pattern that matches many users)
+  /// Note: This is a workaround since backend requires 3+ characters for search
+  /// We use a pattern "000" which matches many phone numbers
+  Future<List<SearchUserResponse>> getUsersList({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      AppLogger.info('Getting users list: page=$page, limit=$limit', tag: 'FriendsService');
+      // Use a search pattern that matches many users (e.g., "000")
+      // This is a workaround since backend requires 3+ characters
+      // We'll use a pattern that likely matches many phone numbers
+      final searchPattern = '000';
+      // Request enough results for pagination (limit * page)
+      final requestedLimit = limit * page;
+      final response = await _dio.get(
+        '/api/v1/friends/search',
+        queryParameters: {
+          'query': searchPattern,
+          'limit': requestedLimit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        final allResults = data
+            .map((json) => SearchUserResponse.fromJson(json as Map<String, dynamic>))
+            .toList();
+        
+        // Implement client-side pagination
+        final startIndex = (page - 1) * limit;
+        final endIndex = startIndex + limit;
+        
+        if (startIndex >= allResults.length) {
+          return [];
+        }
+        
+        return allResults.sublist(
+          startIndex,
+          endIndex > allResults.length ? allResults.length : endIndex,
+        );
+      } else {
+        throw Exception('Failed to get users list: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      AppLogger.error(
+        'Error getting users list: ${e.message}',
+        tag: 'FriendsService',
+        error: e,
+      );
+      throw Exception(e.response?.data['detail'] ?? 'Failed to get users list');
+    } catch (e) {
+      AppLogger.error(
+        'Unexpected error getting users list: $e',
+        tag: 'FriendsService',
+      );
+      throw Exception('Unexpected error: $e');
+    }
+  }
 }
 

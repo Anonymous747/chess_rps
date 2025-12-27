@@ -114,6 +114,7 @@ class FriendsSearchController extends _$FriendsSearchController {
   }
 
   Future<void> searchUsers(String query) async {
+    // Backend requires at least 3 characters for search
     if (query.length < 3) {
       state = const AsyncValue.data([]);
       return;
@@ -133,6 +134,65 @@ class FriendsSearchController extends _$FriendsSearchController {
 
   void clearSearch() {
     state = const AsyncValue.data([]);
+  }
+}
+
+@riverpod
+class UsersListController extends _$UsersListController {
+  @override
+  Future<List<SearchUserResponse>> build() async {
+    AppLogger.info('Initializing users list controller', tag: 'UsersListController');
+    final service = ref.read(friendsServiceProvider);
+    try {
+      return await service.getUsersList(page: 1, limit: 10);
+    } catch (e) {
+      AppLogger.error('Error loading users list', tag: 'UsersListController', error: e);
+      return [];
+    }
+  }
+
+  Future<void> loadMore() async {
+    final currentData = state.valueOrNull ?? [];
+    if (currentData.isEmpty) {
+      // If no data, refresh instead
+      await refresh();
+      return;
+    }
+    
+    final currentPage = (currentData.length ~/ 10) + 1;
+    
+    // Don't show loading state if we already have data (to avoid flickering)
+    try {
+      final service = ref.read(friendsServiceProvider);
+      final newUsers = await service.getUsersList(page: currentPage, limit: 10);
+      
+      if (newUsers.isEmpty) {
+        // No more users to load - keep current data
+        AppLogger.info('No more users to load', tag: 'UsersListController');
+        return;
+      }
+      
+      // Append new users to existing list
+      final updatedList = [...currentData, ...newUsers];
+      state = AsyncValue.data(updatedList);
+      AppLogger.info('Loaded more users: ${newUsers.length} new, ${updatedList.length} total', tag: 'UsersListController');
+    } catch (e) {
+      AppLogger.error('Error loading more users', tag: 'UsersListController', error: e);
+      // Keep existing data on error - don't change state
+    }
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    try {
+      final service = ref.read(friendsServiceProvider);
+      final users = await service.getUsersList(page: 1, limit: 10);
+      state = AsyncValue.data(users);
+      AppLogger.info('Users list refreshed: ${users.length} users', tag: 'UsersListController');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error refreshing users list', tag: 'UsersListController', error: e);
+      state = AsyncValue.error(e, stackTrace);
+    }
   }
 }
 
