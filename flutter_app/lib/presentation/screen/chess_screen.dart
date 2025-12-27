@@ -1,3 +1,4 @@
+import 'package:chess_rps/common/asset_url.dart';
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
@@ -8,6 +9,8 @@ import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/utils/avatar_utils.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
+import 'package:chess_rps/presentation/screen/main_navigation_screen.dart';
+import 'package:chess_rps/presentation/screen/play_flow_screen.dart';
 import 'package:chess_rps/presentation/widget/board_widget.dart';
 import 'package:chess_rps/presentation/widget/captured_pieces_widget.dart';
 import 'package:chess_rps/presentation/widget/finish_game_dialog.dart';
@@ -242,20 +245,20 @@ class ChessScreen extends HookConsumerWidget {
         // Use current piece set (already determined above)
         final pieceSet = currentPieceSet;
         
-        // Collect all unique piece images needed (all 6 piece types for both sides)
-        final Set<String> imagePaths = {};
+        // Collect all unique piece image URLs needed (all 6 piece types for both sides)
+        final Set<String> imageUrls = {};
         // Add all piece types for both sides to ensure complete precaching
         final pieceTypes = ['king', 'queen', 'rook', 'bishop', 'knight', 'pawn'];
         final sides = ['white', 'black'];
         for (final side in sides) {
           for (final pieceType in pieceTypes) {
-            final imagePath = 'assets/images/figures/$pieceSet/$side/$pieceType.png';
-            imagePaths.add(imagePath);
+            final imageUrl = AssetUrl.getChessPieceUrl(pieceSet, side, pieceType);
+            imageUrls.add(imageUrl);
           }
         }
         
         AppLogger.info(
-          'Precaching ${imagePaths.length} piece images for piece set: $pieceSet',
+          'Precaching ${imageUrls.length} piece images for piece set: $pieceSet',
           tag: 'ChessScreen'
         );
         
@@ -264,14 +267,14 @@ class ChessScreen extends HookConsumerWidget {
           try {
             int successCount = 0;
             int failCount = 0;
-            for (final imagePath in imagePaths) {
+            for (final imageUrl in imageUrls) {
               try {
-                await precacheImage(AssetImage(imagePath), context);
+                await precacheImage(NetworkImage(imageUrl), context);
                 successCount++;
               } catch (e) {
                 failCount++;
                 AppLogger.warning(
-                  'Failed to precache image: $imagePath - $e',
+                  'Failed to precache image: $imageUrl - $e',
                   tag: 'ChessScreen'
                 );
               }
@@ -419,7 +422,7 @@ class ChessScreen extends HookConsumerWidget {
                           lightPlayerTimeSeconds: lightPlayerTime,
                           darkPlayerTimeSeconds: darkPlayerTime,
                           currentTurn: currentOrder,
-                          onFinishGame: () => _showFinishGameDialog(context, controller),
+                          onFinishGame: () => _showFinishGameDialog(context, controller, ref),
                         ),
                       ],
                     ),
@@ -589,7 +592,7 @@ class ChessScreen extends HookConsumerWidget {
     }
   }
 
-  void _showFinishGameDialog(BuildContext context, GameController controller) {
+  void _showFinishGameDialog(BuildContext context, GameController controller, WidgetRef ref) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -612,9 +615,13 @@ class ChessScreen extends HookConsumerWidget {
               }
             }
             
-            // Dispose controller and navigate to menu
+            // Dispose controller and navigate to menu with play tab selected
             controller.dispose();
             if (context.mounted) {
+              // Reset play flow state to mode selector
+              ref.read(playFlowStateProvider.notifier).reset();
+              // Navigate to main menu with play tab (index 2) selected
+              ref.read(navigationIndexProvider.notifier).setIndex(2);
               context.go(AppRoutes.mainMenu);
             }
           },
@@ -743,9 +750,13 @@ class ChessScreen extends HookConsumerWidget {
       // Continue even if submission fails
     }
     
-    // Dispose controller and navigate to main menu
+    // Dispose controller and navigate to main menu with play tab selected
     controller.dispose();
     if (context.mounted) {
+      // Reset play flow state to mode selector
+      ref.read(playFlowStateProvider.notifier).reset();
+      // Navigate to main menu with play tab (index 2) selected
+      ref.read(navigationIndexProvider.notifier).setIndex(2);
       context.go(AppRoutes.mainMenu);
     }
   }

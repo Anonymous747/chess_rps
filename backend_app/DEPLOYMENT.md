@@ -6,8 +6,28 @@ This guide explains how to build a Docker image for the backend and deploy it to
 
 - Docker installed on your local machine
 - Docker installed on your server
-- Docker Compose installed on your server (optional, for easier deployment)
+- Docker Compose installed on your server
 - Access to your server via SSH
+- Docker Hub account (if using pre-built images)
+
+## Deployment Options
+
+### Option A: Using Docker Hub (Recommended)
+
+Deploy without cloning the repository - uses pre-built image from Docker Hub.
+- ✅ Faster deployment
+- ✅ No source code on server
+- ✅ Better security
+- ✅ CI/CD friendly
+
+**See `DEPLOY_WITHOUT_REPO.md` for detailed instructions.**
+
+### Option B: Build on Server
+
+Clone repository and build Docker image on the server.
+- Requires repository access
+- Takes longer (builds on server)
+- Includes source code on server
 
 ## Building the Docker Image
 

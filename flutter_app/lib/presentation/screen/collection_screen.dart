@@ -398,7 +398,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
 
   Widget _buildFeaturedSet(CollectionItem item, bool isEquipped) {
     final isAvatar = item.category == CollectionCategory.AVATARS;
-    final avatarPath = isAvatar ? AvatarUtils.getAvatarImagePath(item.iconName) : null;
+    final avatarUrl = isAvatar ? AvatarUtils.getAvatarImageUrl(item.iconName) : null;
 
     return Container(
       height: 220,
@@ -471,7 +471,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             children: [
               Row(
                 children: [
-                  isAvatar && avatarPath != null
+                  isAvatar && avatarUrl != null
                       ? Container(
                           width: 80,
                           height: 80,
@@ -480,10 +480,23 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                             border: Border.all(color: Palette.glassBorder, width: 2),
                           ),
                           child: ClipOval(
-                            child: Image.asset(
-                              avatarPath,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
+                          child: Image.network(
+                            avatarUrl,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Skeleton(
+                                width: 80,
+                                height: 80,
+                                borderRadius: 40,
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                                AppLogger.error(
+                                  'Failed to load avatar image: $avatarUrl',
+                                  tag: 'CollectionScreen',
+                                  error: error,
+                                );
                                 return _buildPiecePreview(
                                   CollectionUtils.getIconFromName(item.iconName),
                                   CollectionUtils.getColorFromHexOrRarity(
@@ -671,7 +684,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
         : CollectionUtils.getRarityDisplayName(item.rarity);
 
     // For avatars, use image instead of icon
-    final avatarPath = isAvatar ? AvatarUtils.getAvatarImagePath(item.iconName) : null;
+    final avatarUrl = isAvatar ? AvatarUtils.getAvatarImageUrl(item.iconName) : null;
 
     final cardContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -686,15 +699,23 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             child: Stack(
               children: [
                 Center(
-                  child: isAvatar && avatarPath != null
+                  child: isAvatar && avatarUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.asset(
-                            avatarPath,
-                            width: double.infinity,
-                            height: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
+                        child: Image.network(
+                          avatarUrl,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Skeleton(
+                              width: double.infinity,
+                              height: double.infinity,
+                              borderRadius: 12,
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
                               return Icon(
                                 icon,
                                 size: 48,
@@ -1057,7 +1078,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
   }
 
   Widget _buildPiecePackCard(String packName, {bool isSelected = false}) {
-    final queenImagePath = PiecePackUtils.getQueenImagePath(packName, isWhite: true);
+    final queenImageUrl = PiecePackUtils.getQueenImageUrl(packName, isWhite: true);
 
     return GestureDetector(
       onTap: () {
@@ -1092,10 +1113,23 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.all(8),
-                        child: Image.asset(
-                          queenImagePath,
+                        child: Image.network(
+                          queenImageUrl,
                           fit: BoxFit.contain,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Skeleton(
+                              width: double.infinity,
+                              height: double.infinity,
+                              borderRadius: 8,
+                            );
+                          },
                           errorBuilder: (context, error, stackTrace) {
+                            AppLogger.error(
+                              'Failed to load piece pack image: $queenImageUrl',
+                              tag: 'CollectionScreen',
+                              error: error,
+                            );
                             return Icon(
                               Icons.extension,
                               size: 48,
@@ -1303,14 +1337,14 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     final avatarIndex = index + 1;
                     final iconName = AvatarUtils.getAvatarIconName(avatarIndex);
                     final avatarName = AvatarUtils.getAvatarName(avatarIndex);
-                    final avatarPath = AvatarUtils.getAvatarImagePath(iconName);
+                    final avatarUrl = AvatarUtils.getAvatarImageUrl(iconName);
                     final isSelected = equippedIndex == avatarIndex;
                     final avatarItem = avatarItemsMap[iconName];
 
                     return _buildAvatarCard(
                       avatarIndex: avatarIndex,
                       avatarName: avatarName,
-                      avatarPath: avatarPath,
+                      avatarUrl: avatarUrl,
                       iconName: iconName,
                       isSelected: isSelected,
                       avatarItem: avatarItem,
@@ -1322,12 +1356,13 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             ),
           );
         },
-        loading: () => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(40),
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
-            ),
+        loading: () => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SkeletonGrid(
+            itemCount: 6,
+            crossAxisCount: 2,
+            childAspectRatio: 0.85,
+            spacing: 16,
           ),
         ),
         error: (error, stack) => SingleChildScrollView(
@@ -1406,7 +1441,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
   Widget _buildAvatarCard({
     required int avatarIndex,
     required String avatarName,
-    required String avatarPath,
+    required String avatarUrl,
     required String iconName,
     required bool isSelected,
     CollectionItem? avatarItem,
@@ -1468,12 +1503,25 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          avatarPath,
+                        child: Image.network(
+                          avatarUrl,
                           width: double.infinity,
                           height: double.infinity,
                           fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Skeleton(
+                              width: double.infinity,
+                              height: double.infinity,
+                              borderRadius: 12,
+                            );
+                          },
                           errorBuilder: (context, error, stackTrace) {
+                            AppLogger.error(
+                              'Failed to load avatar image in _buildAvatarCard: $avatarUrl',
+                              tag: 'CollectionScreen',
+                              error: error,
+                            );
                             return Container(
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(

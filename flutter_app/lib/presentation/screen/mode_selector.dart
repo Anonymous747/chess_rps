@@ -2,9 +2,9 @@ import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
-import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/screen/play_flow_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 const _normalModeText = 'Classical Mode';
 const _rpsModeText = 'RPS Mode';
@@ -17,164 +17,154 @@ class ModeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Palette.background,
-              Palette.backgroundSecondary,
-              Palette.backgroundTertiary,
-            ],
-          ),
+      body: ModeSelectorContent(),
+    );
+  }
+}
+
+/// Content widget for mode selector (without Scaffold)
+/// Can be used standalone or within PlayFlowScreen
+class ModeSelectorContent extends ConsumerWidget {
+  const ModeSelectorContent({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Palette.background,
+            Palette.backgroundSecondary,
+            Palette.backgroundTertiary,
+          ],
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header - only show back button if not in navigation system
-              // Check if we can pop (i.e., if this was pushed, not part of navigation)
-              Builder(
-                builder: (context) {
-                  final canPop = Navigator.of(context).canPop();
-                  if (canPop) {
-                    return Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Palette.backgroundTertiary,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Palette.glassBorder,
-                                width: 1,
-                              ),
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.arrow_back, color: Palette.textPrimary),
-                              onPressed: () => context.pop(),
-                            ),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Centered content
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // App Title with modern card design
+                      Container(
+                        padding: const EdgeInsets.all(32),
+                        margin: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Palette.backgroundTertiary,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: Palette.glassBorder,
+                            width: 1,
                           ),
-                        ],
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-              // Centered content
-              Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // App Title with modern card design
-                        Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: Palette.backgroundTertiary,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Palette.glassBorder,
-                              width: 1,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Palette.accent.withValues(alpha: 0.1),
+                              blurRadius: 20,
+                              spreadRadius: 0,
                             ),
-                            boxShadow: [
-                              BoxShadow(
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
                                 color: Palette.accent.withValues(alpha: 0.1),
-                                blurRadius: 20,
-                                spreadRadius: 0,
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: Palette.accent.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Palette.accent.withValues(alpha: 0.3),
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Icon(
-                                  Icons.sports_esports,
-                                  size: 64,
-                                  color: Palette.accent,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Palette.accent.withValues(alpha: 0.3),
+                                  width: 2,
                                 ),
                               ),
-                              const SizedBox(height: 24),
-                              const Text(
-                                'Chess RPS',
-                                style: TextStyle(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.bold,
-                                  color: Palette.textPrimary,
-                                  letterSpacing: 1.5,
-                                ),
+                              child: Icon(
+                                Icons.sports_esports,
+                                size: 64,
+                                color: Palette.accent,
                               ),
-                              const SizedBox(height: 12),
-                              Text(
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Chess RPS',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.bold,
+                                color: Palette.textPrimary,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
                                 'Select Game Mode',
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Palette.textSecondary,
                                   letterSpacing: 0.5,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 48),
-                        // Mode Buttons
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            children: [
-                              _buildModeButton(
-                                context,
-                                title: _normalModeText,
-                                icon: Icons.sports_esports,
-                                color: Palette.accent,
-                                onPressed: () {
-                                  AppLogger.info('Classical mode selected', tag: 'ModeSelector');
-                                  GameModesMediator.changeGameMode(GameMode.classical);
-                                  context.push(AppRoutes.opponentSelector);
-                                },
-                              ),
-                              const SizedBox(height: 20),
-                              _buildModeButton(
-                                context,
-                                title: _rpsModeText,
-                                icon: Icons.handshake,
-                                color: Palette.purpleAccent,
-                                onPressed: () {
-                                  AppLogger.info('RPS mode selected', tag: 'ModeSelector');
-                                  GameModesMediator.changeGameMode(GameMode.rps);
-                                  context.push(AppRoutes.opponentSelector);
-                                },
-                              ),
-                            ],
-                          ),
+                      ),
+                      const SizedBox(height: 48),
+                      // Mode Buttons
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            _buildModeButton(
+                              context,
+                              ref,
+                              title: _normalModeText,
+                              icon: Icons.sports_esports,
+                              color: Palette.accent,
+                              onPressed: () {
+                                AppLogger.info('Classical mode selected', tag: 'ModeSelector');
+                                GameModesMediator.changeGameMode(GameMode.classical);
+                                ref.read(playFlowStateProvider.notifier).goToOpponentSelector();
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            _buildModeButton(
+                              context,
+                              ref,
+                              title: _rpsModeText,
+                              icon: Icons.handshake,
+                              color: Palette.purpleAccent,
+                              onPressed: () {
+                                AppLogger.info('RPS mode selected', tag: 'ModeSelector');
+                                GameModesMediator.changeGameMode(GameMode.rps);
+                                ref.read(playFlowStateProvider.notifier).goToOpponentSelector();
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildModeButton(
-    BuildContext context, {
+    BuildContext context,
+    WidgetRef ref, {
     required String title,
     required IconData icon,
     required Color color,

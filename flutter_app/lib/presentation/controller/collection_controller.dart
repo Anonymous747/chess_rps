@@ -88,7 +88,7 @@ class UserCollectionController extends _$UserCollectionController {
     try {
       final service = ref.read(collectionServiceProvider);
       await service.equipAvatarByIcon(iconName);
-      // Refresh collection after equipping
+      // Refresh collection after equipping to ensure all widgets update
       await refreshCollection();
       // Also refresh all items to get the newly created item
       ref.read(collectionControllerProvider.notifier).refreshItems();

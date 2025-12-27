@@ -1,5 +1,8 @@
 version: '3.8'
 
+# Docker Compose configuration using pre-built image from Docker Hub
+# This version does NOT require the source code on the server
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -13,7 +16,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - chess_rps_network
     healthcheck:
@@ -24,14 +26,8 @@ services:
     restart: unless-stopped
 
   backend:
-    # Option 1: Use pre-built image from Docker Hub (recommended for production)
-    # Uncomment the line below and replace YOUR_USERNAME with your Docker Hub username
-    # image: YOUR_USERNAME/chess-rps-backend:latest
-    
-    # Option 2: Build from local source (for development)
-    build:
-      context: ..
-      dockerfile: Dockerfile
+    # Replace YOUR_DOCKERHUB_USERNAME with your Docker Hub username
+    image: YOUR_DOCKERHUB_USERNAME/chess-rps-backend:latest
     container_name: chess_rps_backend
     environment:
       DB_HOST: postgres

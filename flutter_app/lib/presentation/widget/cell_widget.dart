@@ -11,10 +11,11 @@ import 'package:chess_rps/presentation/utils/board_theme_utils.dart';
 import 'package:chess_rps/presentation/widget/custom/animated_border.dart';
 import 'package:chess_rps/presentation/widget/custom/available_move.dart';
 import 'package:chess_rps/presentation/widget/custom/custom_gradient.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-const String _imagesPath = 'assets/images/figures';
+import 'package:chess_rps/common/asset_url.dart';
 
 class CellWidget extends HookConsumerWidget {
   final int column;
@@ -26,14 +27,14 @@ class CellWidget extends HookConsumerWidget {
     Key? key,
   }) : super(key: key);
 
-  String _getAppropriateImage(Cell cell, String pieceSet) {
+  String _getAppropriateImageUrl(Cell cell, String pieceSet) {
     final side = cell.figure!.side.toString();
     final name = cell.figure!.runtimeType.toString().toLowerCase();
     
     // Ensure pieceSet is not empty
     final safePieceSet = pieceSet.isNotEmpty ? pieceSet : 'cardinal';
 
-    return '$_imagesPath/$safePieceSet/$side/$name.png';
+    return AssetUrl.getChessPieceUrl(safePieceSet, side, name);
   }
 
   @override
@@ -188,13 +189,23 @@ class CellWidget extends HookConsumerWidget {
                     ),
                   ),
                 if (cell.figure != null)
-                  Container(
-                    key: const ValueKey('figureKey'),
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(_getAppropriateImage(cell, pieceSet)),
-                      ),
-                    ),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final imageUrl = _getAppropriateImageUrl(cell, pieceSet);
+                      final size = constraints.maxWidth;
+                      return Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Skeleton(
+                            width: size * 0.8,
+                            height: size * 0.8,
+                            borderRadius: 4,
+                          );
+                        },
+                      );
+                    },
                   ),
                 if (cell.isAvailable)
                   AvailableMove(isAvailable: cell.isAvailable),

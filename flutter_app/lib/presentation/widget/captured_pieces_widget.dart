@@ -1,13 +1,13 @@
+import 'package:chess_rps/common/asset_url.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/figure.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-const String _imagesPath = 'assets/images/figures';
 
 class CapturedPiecesWidget extends ConsumerWidget {
   final Board board;
@@ -93,16 +93,22 @@ class CapturedPiecesWidget extends ConsumerWidget {
     final side = figure.side.toString(); // Returns 'black' or 'white'
     final role = figure.role.toString().split('.').last.toLowerCase();
     final safePieceSet = pieceSet.isNotEmpty ? pieceSet : 'cardinal';
-    final imagePath = '$_imagesPath/$safePieceSet/$side/$role.png';
+    final imageUrl = AssetUrl.getChessPieceUrl(safePieceSet, side, role);
 
-    return Container(
+    return SizedBox(
       width: 24,
       height: 24,
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage(imagePath),
-          fit: BoxFit.contain,
-        ),
+      child: Image.network(
+        imageUrl,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Skeleton(
+            width: 24,
+            height: 24,
+            borderRadius: 2,
+          );
+        },
       ),
     );
   }

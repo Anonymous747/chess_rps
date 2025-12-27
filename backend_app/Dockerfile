@@ -26,6 +26,9 @@ RUN pip install --upgrade pip && \
 # Copy application code
 COPY . .
 
+# Assets are included in the COPY . . above
+# Assets should be at backend_app/assets/images/ before building
+
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app

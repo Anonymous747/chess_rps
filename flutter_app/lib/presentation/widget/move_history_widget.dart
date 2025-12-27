@@ -1,3 +1,4 @@
+import 'package:chess_rps/common/asset_url.dart';
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/common/piece_notation.dart';
@@ -12,6 +13,7 @@ import 'package:chess_rps/domain/model/figures/rook.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -33,7 +35,6 @@ class MoveHistoryWidget extends ConsumerStatefulWidget {
 }
 
 class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
-  static const String _imagesPath = 'assets/images/figures';
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -145,15 +146,23 @@ class _MoveHistoryWidgetState extends ConsumerState<MoveHistoryWidget> {
       final side = figure.side.toString(); // Returns 'black' or 'white'
       final role = figure.role.toString().split('.').last.toLowerCase();
       final safePieceSet = pieceSet.isNotEmpty ? pieceSet : 'cardinal';
-      final imagePath = '$_imagesPath/$safePieceSet/$side/$role.png';
+      final imageUrl = AssetUrl.getChessPieceUrl(safePieceSet, side, role);
 
       return Container(
         width: 20,
         height: 20,
         margin: const EdgeInsets.only(right: 6),
-        child: Image.asset(
-          imagePath,
+        child: Image.network(
+          imageUrl,
           fit: BoxFit.contain,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Skeleton(
+              width: 20,
+              height: 20,
+              borderRadius: 2,
+            );
+          },
           errorBuilder: (context, error, stackTrace) {
             // Return empty container if image fails to load
             return const SizedBox.shrink();

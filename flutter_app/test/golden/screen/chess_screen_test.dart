@@ -1,4 +1,3 @@
-import 'package:chess_rps/common/assets.dart';
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/screen/chess_screen.dart';
@@ -19,12 +18,9 @@ void main() {
             child: Container(
               width: 200.0,
               height: 200.0,
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(
-                    Assets.blackBishop,
-                  ),
-                ),
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                // Note: Assets are now loaded from backend, using placeholder for test
               ),
             ),
           ),
@@ -32,11 +28,6 @@ void main() {
       );
 
       await tester.pumpWidget(child);
-
-      Element element = tester.element(find.byType(DecoratedBox));
-      DecoratedBox widget = element.widget as DecoratedBox;
-      BoxDecoration decoration = widget.decoration as BoxDecoration;
-      await precacheImage(decoration.image!.image, element);
 
       await tester.pumpAndSettle();
     });

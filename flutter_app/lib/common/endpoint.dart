@@ -1,5 +1,5 @@
 class Endpoint {
-  static const _backendEndpoint = '10.0.2.2:8000';
+  static const _backendEndpoint = 'gamerbot.pro:8000'; //'10.0.2.2:8000';
 
   static const opponentSocket = '$_backendEndpoint/api/v1/game/ws';
   static const apiBase = 'http://$_backendEndpoint';

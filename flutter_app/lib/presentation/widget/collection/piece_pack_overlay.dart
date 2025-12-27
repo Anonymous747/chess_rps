@@ -1,5 +1,6 @@
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
@@ -17,8 +18,8 @@ class PiecePackOverlay extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsControllerProvider);
     final isSelected = settingsAsync.valueOrNull?.pieceSet == packName;
-    final whitePieces = PiecePackUtils.getAllPieceImages(packName, isWhite: true);
-    final blackPieces = PiecePackUtils.getAllPieceImages(packName, isWhite: false);
+    final whitePieces = PiecePackUtils.getAllPieceImageUrls(packName, isWhite: true);
+    final blackPieces = PiecePackUtils.getAllPieceImageUrls(packName, isWhite: false);
     
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -235,7 +236,7 @@ class PiecePackOverlay extends ConsumerWidget {
       itemCount: pieceOrder.length,
       itemBuilder: (context, index) {
         final pieceName = pieceOrder[index];
-        final imagePath = pieces[pieceName]!;
+        final imageUrl = pieces[pieceName]!;
         
         return Container(
           decoration: BoxDecoration(
@@ -249,9 +250,17 @@ class PiecePackOverlay extends ConsumerWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(8),
-                  child: Image.asset(
-                    imagePath,
+                  child: Image.network(
+                    imageUrl,
                     fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Skeleton(
+                        width: double.infinity,
+                        height: double.infinity,
+                        borderRadius: 8,
+                      );
+                    },
                     errorBuilder: (context, error, stackTrace) {
                       return Icon(
                         Icons.broken_image,

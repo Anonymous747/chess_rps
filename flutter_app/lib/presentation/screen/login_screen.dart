@@ -2,6 +2,7 @@ import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/utils/auth_error_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -197,12 +198,13 @@ class LoginScreen extends HookConsumerWidget {
                                     );
                                   } catch (e) {
                                     if (context.mounted) {
+                                      final errorMessage = AuthErrorHelper.getUserFriendlyError(e);
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text(
-                                            e.toString().replaceAll('Exception: ', ''),
-                                          ),
+                                          content: Text(errorMessage),
                                           backgroundColor: Palette.error,
+                                          duration: const Duration(seconds: 4),
+                                          behavior: SnackBarBehavior.floating,
                                         ),
                                       );
                                     }

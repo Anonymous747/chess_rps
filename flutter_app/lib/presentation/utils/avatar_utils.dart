@@ -1,11 +1,19 @@
+import 'package:chess_rps/common/asset_url.dart';
+
 class AvatarUtils {
-  /// Get avatar image path from icon name
+  /// Get avatar image URL from icon name
   /// icon_name format: "avatar_1", "avatar_2", etc.
-  static String getAvatarImagePath(String? iconName) {
+  static String getAvatarImageUrl(String? iconName) {
     if (iconName == null || !iconName.startsWith('avatar_')) {
-      return 'assets/images/avatars/avatar_1.png'; // Default avatar
+      return AssetUrl.getAvatarUrl('avatar_1.png'); // Default avatar
     }
-    return 'assets/images/avatars/$iconName.png';
+    return AssetUrl.getAvatarUrl('$iconName.png');
+  }
+
+  /// Get avatar image path from icon name (deprecated - use getAvatarImageUrl)
+  /// @deprecated Use getAvatarImageUrl instead
+  static String getAvatarImagePath(String? iconName) {
+    return getAvatarImageUrl(iconName);
   }
 
   /// Get avatar index from icon name
@@ -21,14 +29,26 @@ class AvatarUtils {
     }
   }
 
-  /// Get default avatar path
-  static String getDefaultAvatarPath() {
-    return 'assets/images/avatars/avatar_1.png';
+  /// Get default avatar URL
+  static String getDefaultAvatarUrl() {
+    return AssetUrl.getAvatarUrl('avatar_1.png');
   }
 
-  /// Get all available avatar paths (1-20)
+  /// Get default avatar path (deprecated - use getDefaultAvatarUrl)
+  /// @deprecated Use getDefaultAvatarUrl instead
+  static String getDefaultAvatarPath() {
+    return getDefaultAvatarUrl();
+  }
+
+  /// Get all available avatar URLs (1-20)
+  static List<String> getAllAvatarUrls() {
+    return List.generate(20, (index) => AssetUrl.getAvatarUrl('avatar_${index + 1}.png'));
+  }
+
+  /// Get all available avatar paths (deprecated - use getAllAvatarUrls)
+  /// @deprecated Use getAllAvatarUrls instead
   static List<String> getAllAvatarPaths() {
-    return List.generate(20, (index) => 'assets/images/avatars/avatar_${index + 1}.png');
+    return getAllAvatarUrls();
   }
 
   /// Get avatar icon name from index (1-20)

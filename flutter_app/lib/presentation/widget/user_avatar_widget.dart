@@ -1,3 +1,4 @@
+import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/collection/collection_service.dart';
 import 'package:chess_rps/presentation/utils/avatar_utils.dart';
@@ -32,7 +33,7 @@ class UserAvatarWidget extends ConsumerWidget {
     if (avatarIconName != null) {
       return _buildAvatarImage(
         context,
-        AvatarUtils.getAvatarImagePath(avatarIconName),
+        AvatarUtils.getAvatarImageUrl(avatarIconName),
         size: size,
         showEditIcon: showEditIcon,
         onTap: onTap,
@@ -57,13 +58,13 @@ class UserAvatarWidget extends ConsumerWidget {
           equippedAvatar = null;
         }
 
-        final avatarPath = equippedAvatar != null
-            ? AvatarUtils.getAvatarImagePath(equippedAvatar.item.iconName)
-            : AvatarUtils.getDefaultAvatarPath();
+        final avatarUrl = equippedAvatar != null
+            ? AvatarUtils.getAvatarImageUrl(equippedAvatar.item.iconName)
+            : AvatarUtils.getDefaultAvatarUrl();
 
         return _buildAvatarImage(
           context,
-          avatarPath,
+          avatarUrl,
           size: size,
           showEditIcon: showEditIcon,
           onTap: onTap,
@@ -77,7 +78,7 @@ class UserAvatarWidget extends ConsumerWidget {
       ),
       error: (_, __) => _buildAvatarImage(
         context,
-        AvatarUtils.getDefaultAvatarPath(),
+        AvatarUtils.getDefaultAvatarUrl(),
         size: size,
         showEditIcon: showEditIcon,
         onTap: onTap,
@@ -89,7 +90,7 @@ class UserAvatarWidget extends ConsumerWidget {
 
   Widget _buildAvatarImage(
     BuildContext context,
-    String avatarPath, {
+    String avatarUrl, {
     required double size,
     required bool showEditIcon,
     VoidCallback? onTap,
@@ -119,11 +120,15 @@ class UserAvatarWidget extends ConsumerWidget {
         boxShadow: boxShadowList,
       ),
       child: ClipOval(
-        child: Image.asset(
-          avatarPath,
+        child: Image.network(
+          avatarUrl,
           width: size,
           height: size,
           fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return SkeletonAvatar(size: size);
+          },
           errorBuilder: (context, error, stackTrace) {
             return Container(
               width: size,
@@ -203,9 +208,9 @@ class UserAvatarByIconWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarPath = avatarIconName != null
-        ? AvatarUtils.getAvatarImagePath(avatarIconName)
-        : AvatarUtils.getDefaultAvatarPath();
+    final avatarUrl = avatarIconName != null
+        ? AvatarUtils.getAvatarImageUrl(avatarIconName)
+        : AvatarUtils.getDefaultAvatarUrl();
 
     final avatarWidget = Container(
       width: size,
@@ -228,12 +233,21 @@ class UserAvatarByIconWidget extends StatelessWidget {
               ],
       ),
       child: ClipOval(
-        child: Image.asset(
-          avatarPath,
+        child: Image.network(
+          avatarUrl,
           width: size,
           height: size,
           fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return SkeletonAvatar(size: size);
+          },
           errorBuilder: (context, error, stackTrace) {
+            AppLogger.error(
+              'Failed to load avatar image in UserAvatarByIconWidget: $avatarUrl',
+              tag: 'UserAvatarWidget',
+              error: error,
+            );
             return Container(
               width: size,
               height: size,

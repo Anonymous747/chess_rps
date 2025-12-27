@@ -2,9 +2,12 @@ import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
+import 'package:chess_rps/presentation/screen/play_flow_screen.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/widget/dashboard_navigation_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class AIDifficultyLevel {
   final String name;
@@ -22,17 +25,200 @@ class AIDifficultyLevel {
   });
 }
 
-class AIDifficultySelector extends StatefulWidget {
+class AIDifficultySelector extends ConsumerStatefulWidget {
   static const routeName = "aiDifficultySelector";
 
   const AIDifficultySelector({Key? key}) : super(key: key);
 
   @override
-  State<AIDifficultySelector> createState() => _AIDifficultySelectorState();
+  ConsumerState<AIDifficultySelector> createState() => _AIDifficultySelectorState();
 }
 
-class _AIDifficultySelectorState extends State<AIDifficultySelector> {
-  static const List<AIDifficultyLevel> difficultyLevels = [
+class _AIDifficultySelectorState extends ConsumerState<AIDifficultySelector> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      bottomNavigationBar: const DashboardNavigationMenu(currentIndexOverride: 2),
+      body: AIDifficultySelectorContent(),
+    );
+  }
+}
+
+/// Content widget for AI difficulty selector (without Scaffold)
+/// Can be used standalone or within PlayFlowScreen
+class AIDifficultySelectorContent extends ConsumerWidget {
+  const AIDifficultySelectorContent({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Palette.background,
+            Palette.backgroundSecondary,
+            Palette.backgroundTertiary,
+          ],
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Header with back button
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Palette.backgroundTertiary,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Palette.glassBorder,
+                        width: 1,
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Palette.textPrimary),
+                      onPressed: () {
+                        // Check if we're in play flow screen, if so use state, otherwise pop
+                        try {
+                          ref.read(playFlowStateProvider.notifier).goBackToOpponentSelector();
+                        } catch (e) {
+                          if (context.mounted) {
+                            context.pop();
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Centered content
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // App Title with modern card design
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                            margin: const EdgeInsets.symmetric(horizontal: 14),
+                            decoration: BoxDecoration(
+                              color: Palette.backgroundTertiary,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Palette.glassBorder,
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Palette.accent.withValues(alpha: 0.1),
+                                  blurRadius: 20,
+                                  spreadRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Palette.accent.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Palette.accent.withValues(alpha: 0.3),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.smart_toy,
+                                    size: 48,
+                                    color: Palette.accent,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Select Difficulty',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Palette.textPrimary,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: Text(
+                                    'Choose the AI difficulty level',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Palette.textSecondary,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          // Difficulty Buttons - compact design
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: _difficultyLevels.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final level = entry.value;
+                                return Padding(
+                                  padding: EdgeInsets.only(
+                                      bottom: index < _difficultyLevels.length - 1 ? 12 : 0),
+                                  child: _buildDifficultyButton(
+                                    context,
+                                    ref,
+                                    level: level,
+                                    onPressed: () {
+                                      AppLogger.info(
+                                        'User selected AI difficulty: ${level.name} (skill level: ${level.skillLevel})',
+                                        tag: 'AIDifficultySelector',
+                                      );
+                                      GameModesMediator.setAIDifficulty(level.skillLevel);
+                                      GameModesMediator.changeOpponentMode(OpponentMode.ai);
+                                      if (context.mounted) {
+                                        context.push(AppRoutes.chess);
+                                      }
+                                    },
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static const List<AIDifficultyLevel> _difficultyLevels = [
     AIDifficultyLevel(
       name: 'Beginner',
       description: 'Perfect for learning the basics',
@@ -70,151 +256,9 @@ class _AIDifficultySelectorState extends State<AIDifficultySelector> {
     ),
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Palette.background,
-              Palette.backgroundSecondary,
-              Palette.backgroundTertiary,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header with back button at the top
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Palette.backgroundTertiary,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Palette.glassBorder,
-                          width: 1,
-                        ),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Palette.textPrimary),
-                        onPressed: () => context.pop(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Centered content
-              Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // App Title with modern card design
-                        Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: Palette.backgroundTertiary,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Palette.glassBorder,
-                              width: 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Palette.accent.withValues(alpha: 0.1),
-                                blurRadius: 20,
-                                spreadRadius: 0,
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: Palette.accent.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Palette.accent.withValues(alpha: 0.3),
-                                    width: 2,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.smart_toy,
-                                  size: 64,
-                                  color: Palette.accent,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              const Text(
-                                'Select Difficulty',
-                                style: TextStyle(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.bold,
-                                  color: Palette.textPrimary,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Choose the AI difficulty level',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Palette.textSecondary,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 48),
-                        // Difficulty Buttons
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            children: difficultyLevels.map((level) {
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: _buildDifficultyButton(
-                                  context,
-                                  level: level,
-                                  onPressed: () {
-                                    AppLogger.info(
-                                      'User selected AI difficulty: ${level.name} (skill level: ${level.skillLevel})',
-                                      tag: 'AIDifficultySelector',
-                                    );
-                                    GameModesMediator.setAIDifficulty(level.skillLevel);
-                                    GameModesMediator.changeOpponentMode(OpponentMode.ai);
-                                    context.push(AppRoutes.chess);
-                                  },
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildDifficultyButton(
-    BuildContext context, {
+    BuildContext context,
+    WidgetRef ref, {
     required AIDifficultyLevel level,
     required VoidCallback onPressed,
   }) {
@@ -236,7 +280,7 @@ class _AIDifficultySelectorState extends State<AIDifficultySelector> {
           onTap: onPressed,
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               color: Palette.backgroundElevated,
@@ -248,36 +292,37 @@ class _AIDifficultySelectorState extends State<AIDifficultySelector> {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: level.color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     level.icon,
-                    size: 28,
+                    size: 24,
                     color: level.color,
                   ),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         level.name,
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: Palette.textPrimary,
                           letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         level.description,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: Palette.textSecondary,
                           letterSpacing: 0.3,
                         ),
@@ -287,7 +332,7 @@ class _AIDifficultySelectorState extends State<AIDifficultySelector> {
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  size: 18,
+                  size: 16,
                   color: level.color,
                 ),
               ],
@@ -298,4 +343,3 @@ class _AIDifficultySelectorState extends State<AIDifficultySelector> {
     );
   }
 }
-

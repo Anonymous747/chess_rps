@@ -5,7 +5,7 @@ import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/screen/chat_screen.dart';
 import 'package:chess_rps/presentation/screen/events_screen.dart';
 import 'package:chess_rps/presentation/screen/profile_screen.dart';
-import 'package:chess_rps/presentation/screen/mode_selector.dart';
+import 'package:chess_rps/presentation/screen/play_flow_screen.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
@@ -65,7 +65,7 @@ class MainNavigationScreen extends HookConsumerWidget {
       case 1:
         return const EventsScreen(key: ValueKey('events'));
       case 2:
-        return const ModeSelector(key: ValueKey('play'));
+        return const PlayFlowScreen(key: ValueKey('play'));
       case 3:
         return const ChatScreen(key: ValueKey('chat'));
       case 4:

@@ -143,9 +143,9 @@ class ProfileScreen extends HookConsumerWidget {
           // No equipped avatar found
           equippedAvatar = null;
         }
-        final avatarPath = equippedAvatar != null
-            ? AvatarUtils.getAvatarImagePath(equippedAvatar.item.iconName)
-            : AvatarUtils.getDefaultAvatarPath();
+        final avatarUrl = equippedAvatar != null
+            ? AvatarUtils.getAvatarImageUrl(equippedAvatar.item.iconName)
+            : AvatarUtils.getDefaultAvatarUrl();
 
         return Container(
           padding: const EdgeInsets.all(20),
@@ -216,11 +216,15 @@ class ProfileScreen extends HookConsumerWidget {
                     child: Stack(
                       children: [
                         ClipOval(
-                          child: Image.asset(
-                            avatarPath,
+                          child: Image.network(
+                            avatarUrl,
                             width: 88,
                             height: 88,
                             fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return SkeletonAvatar(size: 88);
+                            },
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
                                 width: 88,

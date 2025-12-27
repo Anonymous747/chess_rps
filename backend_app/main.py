@@ -9,6 +9,7 @@ from src.auth.settings_router import router as router_settings
 from src.collection.router import router as router_collection
 from src.stats.router import router as router_stats
 from src.friends.router import router as router_friends
+from src.assets.router import router as router_assets
 from src.database import get_async_session, engine
 from src.database import Base
 
@@ -93,4 +94,5 @@ app.include_router(router_game, prefix="/api/v1", tags=["games"])
 app.include_router(router_collection, prefix="/api/v1")
 app.include_router(router_stats, prefix="/api/v1")
 app.include_router(router_friends, prefix="/api/v1")
+app.include_router(router_assets, prefix="/api/v1")
 
