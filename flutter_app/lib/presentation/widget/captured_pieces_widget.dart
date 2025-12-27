@@ -1,6 +1,7 @@
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/domain/model/board.dart';
 import 'package:chess_rps/domain/model/figure.dart';
+import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
 import 'package:flutter/material.dart';
@@ -20,9 +21,17 @@ class CapturedPiecesWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the board's lost figures lists to ensure widget rebuilds when captures occur
+    final lostLightFigures = ref.watch(
+      gameControllerProvider.select((state) => state.board.lostLightFigures),
+    );
+    final lostDarkFigures = ref.watch(
+      gameControllerProvider.select((state) => state.board.lostDarkFigures),
+    );
+    
     final capturedFigures = isLightSide
-        ? board.lostDarkFigures
-        : board.lostLightFigures;
+        ? lostDarkFigures
+        : lostLightFigures;
 
     // Get piece set from settings
     final settingsAsync = ref.watch(settingsControllerProvider);

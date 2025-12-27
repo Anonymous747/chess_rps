@@ -4,7 +4,6 @@ import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/socket/game_room_handler.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
-import 'package:chess_rps/presentation/widget/loading_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,14 +20,9 @@ class OpponentSelector extends StatefulWidget {
 }
 
 class _OpponentSelectorState extends State<OpponentSelector> {
-  bool _isCreatingRoom = false;
-
   @override
   Widget build(BuildContext context) {
-    return LoadingOverlay(
-      isLoading: _isCreatingRoom,
-      message: 'Creating room...',
-      child: Scaffold(
+    return Scaffold(
         body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -86,7 +80,7 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Palette.accent.withOpacity(0.1),
+                                  color: Palette.accent.withValues(alpha: 0.1),
                                   blurRadius: 20,
                                   spreadRadius: 0,
                                 ),
@@ -97,10 +91,10 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                                 Container(
                                   padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
-                                    color: Palette.accent.withOpacity(0.1),
+                                    color: Palette.accent.withValues(alpha: 0.1),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Palette.accent.withOpacity(0.3),
+                                      color: Palette.accent.withValues(alpha: 0.3),
                                       width: 2,
                                     ),
                                   ),
@@ -145,8 +139,7 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                                   color: Palette.accent,
                                   onPressed: () {
                                     AppLogger.info('User selected AI opponent', tag: 'OpponentSelector');
-                                    GameModesMediator.changeOpponentMode(OpponentMode.ai);
-                                    context.push(AppRoutes.chess);
+                                    context.push(AppRoutes.aiDifficultySelector);
                                   },
                                 ),
                                 const SizedBox(height: 20),
@@ -156,41 +149,36 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                                   icon: Icons.people,
                                   color: Palette.purpleAccent,
                                   onPressed: () async {
-                                    AppLogger.info('Creating online game room',
+                                    AppLogger.info('Finding match for online play',
                                         tag: 'OpponentSelector');
-                                    setState(() {
-                                      _isCreatingRoom = true;
-                                    });
-
                                     try {
                                       AppLogger.info('User selected online opponent', tag: 'OpponentSelector');
                                       GameModesMediator.changeOpponentMode(OpponentMode.socket);
-                                      // Create room and navigate to waiting room
+                                      // Find match - either joins waiting room or creates new one
                                       final roomHandler = GameRoomHandler();
-                                      final roomCode = await roomHandler.createRoom(
+                                      final roomCode = await roomHandler.findMatch(
                                           GameModesMediator.gameMode == GameMode.classical
                                               ? 'classical'
                                               : 'rps');
-                                      await roomHandler.dispose();
+                                      
+                                      // Store room code in mediator for GameController
+                                      GameModesMediator.setRoomCode(roomCode);
+                                      
+                                      // Don't dispose the handler - the waiting room will take ownership
+                                      // The waiting room will dispose it if not reused by GameController
 
                                       if (context.mounted) {
-                                        setState(() {
-                                          _isCreatingRoom = false;
-                                        });
                                         AppLogger.info('Navigating to waiting room: $roomCode',
                                             tag: 'OpponentSelector');
                                         context.push('${AppRoutes.waitingRoom}?roomCode=$roomCode');
                                       }
                                     } catch (e) {
-                                      AppLogger.error('Failed to create room: $e',
+                                      AppLogger.error('Failed to find match: $e',
                                           tag: 'OpponentSelector', error: e);
                                       if (context.mounted) {
-                                        setState(() {
-                                          _isCreatingRoom = false;
-                                        });
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('Failed to create room: $e'),
+                                            content: Text('Failed to find match: $e'),
                                             backgroundColor: Palette.error,
                                           ),
                                         );
@@ -210,7 +198,6 @@ class _OpponentSelectorState extends State<OpponentSelector> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -232,7 +219,7 @@ class _OpponentSelectorState extends State<OpponentSelector> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 20,
             spreadRadius: 0,
             offset: const Offset(0, 8),
@@ -250,7 +237,7 @@ class _OpponentSelectorState extends State<OpponentSelector> {
               borderRadius: BorderRadius.circular(16),
               color: Palette.backgroundElevated,
               border: Border.all(
-                color: color.withOpacity(0.5),
+                color: color.withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
@@ -260,7 +247,7 @@ class _OpponentSelectorState extends State<OpponentSelector> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
+                    color: color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(

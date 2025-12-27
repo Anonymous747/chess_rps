@@ -1,11 +1,11 @@
 {
-    "name": "chess_rps",
-    "short_name": "chess_rps",
+    "name": "Chess RPS",
+    "short_name": "Chess RPS",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0A0E27",
+    "theme_color": "#00D4FF",
+    "description": "Modern chess game with rock-paper-scissors mechanics",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

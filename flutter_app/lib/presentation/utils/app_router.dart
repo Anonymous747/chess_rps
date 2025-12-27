@@ -3,15 +3,18 @@ import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:chess_rps/presentation/screen/chat_screen.dart';
 import 'package:chess_rps/presentation/screen/chess_screen.dart';
 import 'package:chess_rps/presentation/screen/collection_screen.dart';
 import 'package:chess_rps/presentation/screen/events_screen.dart';
 import 'package:chess_rps/presentation/screen/friends_screen.dart';
+import 'package:chess_rps/presentation/screen/levels_screen.dart';
 import 'package:chess_rps/presentation/screen/login_screen.dart';
 import 'package:chess_rps/presentation/screen/main_navigation_screen.dart';
 import 'package:chess_rps/presentation/screen/mode_selector.dart';
+import 'package:chess_rps/presentation/screen/ai_difficulty_selector.dart';
 import 'package:chess_rps/presentation/screen/opponent_selector.dart';
 import 'package:chess_rps/presentation/screen/profile_screen.dart';
 import 'package:chess_rps/presentation/screen/rating_screen.dart';
@@ -21,7 +24,6 @@ import 'package:chess_rps/presentation/screen/waiting_room_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:riverpod/riverpod.dart';
 
 // Route paths
 class AppRoutes {
@@ -30,6 +32,7 @@ class AppRoutes {
   static const mainMenu = '/main-menu';
   static const modeSelector = '/mode-selector';
   static const opponentSelector = '/opponent-selector';
+  static const aiDifficultySelector = '/ai-difficulty-selector';
   static const waitingRoom = '/waiting-room';
   static const chess = '/chess';
   static const rating = '/rating';
@@ -39,6 +42,7 @@ class AppRoutes {
   static const events = '/events';
   static const chat = '/chat';
   static const profile = '/profile';
+  static const levels = '/levels';
 }
 
 // ValueNotifier to trigger router refresh when auth state changes
@@ -73,7 +77,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   // Create a router that will redirect based on auth state
   // The redirect function will handle navigation once auth is loaded
   final router = GoRouter(
-    initialLocation: AppRoutes.login,
+    initialLocation: AppRoutes.login, // Always start at login - will redirect if authenticated
     debugLogDiagnostics: true,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
@@ -89,7 +93,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       
       // Redirect to login if not authenticated and trying to access protected route
       if (!isAuthenticated && !isAuthRoute) {
-        AppLogger.info('Redirecting to login - not authenticated', tag: 'AppRouter');
+        AppLogger.info('Redirecting to login - no valid token found', tag: 'AppRouter');
         return AppRoutes.login;
       }
       
@@ -100,6 +104,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.mainMenu;
       }
       
+      // ignore: dead_code
       return null; // No redirect needed
     },
     routes: [
@@ -129,6 +134,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const OpponentSelector(),
       ),
       GoRoute(
+        path: AppRoutes.aiDifficultySelector,
+        name: 'ai-difficulty-selector',
+        builder: (context, state) => const AIDifficultySelector(),
+      ),
+      GoRoute(
         path: AppRoutes.waitingRoom,
         name: 'waiting-room',
         builder: (context, state) {
@@ -151,20 +161,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.chess,
         name: 'chess',
         builder: (context, state) {
-          Side playerSide = Side.light;
-          
           final sideParam = state.uri.queryParameters['side'];
-          if (sideParam != null) {
-            playerSide = sideParam == 'dark' ? Side.dark : Side.light;
-            PlayerSideMediator.changePlayerSide(playerSide);
-          }
           
-          return ProviderScope(
-            overrides: [
-              gameControllerProvider.overrideWith(() => GameController()),
-            ],
-            child: const ChessScreen(),
-          );
+          if (sideParam != null) {
+            final playerSide = sideParam == 'dark' ? Side.dark : Side.light;
+            PlayerSideMediator.changePlayerSide(playerSide);
+            
+            // Side is selected, create GameController
+            return ProviderScope(
+              overrides: [
+                gameControllerProvider.overrideWith(() => GameController()),
+              ],
+              child: const ChessScreen(),
+            );
+          } else {
+            // No side parameter - check if we need side selection for AI games
+            final isAIGame = GameModesMediator.opponentMode.isAI;
+            
+            if (isAIGame) {
+              // For AI games without side, show screen which will display side selection dialog
+              // Don't create GameController yet - it will be created after side selection
+              return const ChessScreen();
+            } else {
+              // For non-AI games, create GameController immediately
+              return ProviderScope(
+                overrides: [
+                  gameControllerProvider.overrideWith(() => GameController()),
+                ],
+                child: const ChessScreen(),
+              );
+            }
+          }
         },
       ),
       GoRoute(
@@ -201,6 +228,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.profile,
         name: 'profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.levels,
+        name: 'levels',
+        builder: (context, state) => const LevelsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

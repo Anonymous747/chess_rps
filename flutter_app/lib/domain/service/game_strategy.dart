@@ -1,4 +1,5 @@
 import 'package:chess_rps/common/enum.dart';
+import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/data/service/game/classical_game_strategy.dart';
 import 'package:chess_rps/data/service/game/rps_game_strategy.dart';
 import 'package:chess_rps/domain/model/cell.dart';
@@ -27,17 +28,93 @@ abstract class GameStrategy {
   Future<void> onPressed(
       GameController controller, GameState state, Cell pressedCell) async {
     final currentOrder = state.currentOrder;
+    
+    AppLogger.info(
+      '=== GameStrategy.onPressed START ===',
+      tag: 'GameStrategy'
+    );
+    // Use positionHash for logging (format: "row-col")
+    AppLogger.info(
+      'Pressed cell: ${pressedCell.positionHash} (row=${pressedCell.position.row}, col=${pressedCell.position.col})',
+      tag: 'GameStrategy'
+    );
+    AppLogger.info(
+      'Pressed cell isOccupied: ${pressedCell.isOccupied}, '
+      'figureSide: ${pressedCell.figureSide}, '
+      'figureRole: ${pressedCell.figure?.role}',
+      tag: 'GameStrategy'
+    );
+    AppLogger.info(
+      'Pressed cell isAvailable: ${pressedCell.isAvailable}, '
+      'canBeKnockedDown: ${pressedCell.canBeKnockedDown}',
+      tag: 'GameStrategy'
+    );
+    AppLogger.info(
+      'Current selectedFigure: ${state.selectedFigure}, '
+      'currentOrder: ${currentOrder}, '
+      'playerSide: ${PlayerSideMediator.playerSide}',
+      tag: 'GameStrategy'
+    );
 
-    if (state.selectedFigure != null &&
-        (pressedCell.isAvailable || pressedCell.canBeKnockedDown)) {
-      await makeMove(controller, pressedCell);
-    }
-
+    // First check if the pressed cell is a piece of the current player
+    // Only allow selection if it's the player's turn
     if (pressedCell.isOccupied &&
-        pressedCell.figureSide == currentOrder &&
+        currentOrder == PlayerSideMediator.playerSide &&
         pressedCell.figure!.side == PlayerSideMediator.playerSide) {
+      AppLogger.info(
+        'Pressed cell is own piece - selecting it and clearing previous selection',
+        tag: 'GameStrategy'
+      );
       controller.showAvailableActions(pressedCell);
       controller.ref.notifyListeners();
+      AppLogger.info(
+        '=== GameStrategy.onPressed END (piece selected) ===',
+        tag: 'GameStrategy'
+      );
+      return; // Don't process as a move if selecting a new piece
+    }
+
+    // Only try to make a move if we have a selected piece and the target is valid
+    // CRITICAL: Never make a move if the target cell contains our own piece
+    if (state.selectedFigure != null &&
+        (pressedCell.isAvailable || pressedCell.canBeKnockedDown)) {
+      // Double-check: if target cell has our own piece, don't move
+      if (pressedCell.isOccupied &&
+          pressedCell.figureSide == currentOrder &&
+          pressedCell.figure!.side == PlayerSideMediator.playerSide) {
+        AppLogger.warning(
+          'BLOCKED MOVE ATTEMPT: Target cell contains own piece! '
+          'selectedFigure=${state.selectedFigure} -> ${pressedCell.positionHash}, '
+          'targetPiece=${pressedCell.figure?.role}',
+          tag: 'GameStrategy'
+        );
+        AppLogger.info(
+          '=== GameStrategy.onPressed END (move blocked - own piece) ===',
+          tag: 'GameStrategy'
+        );
+        return; // Don't make the move
+      }
+      
+      AppLogger.info(
+        'Attempting to make move: selectedFigure=${state.selectedFigure} -> ${pressedCell.positionHash}',
+        tag: 'GameStrategy'
+      );
+      await makeMove(controller, pressedCell);
+      AppLogger.info(
+        '=== GameStrategy.onPressed END (move attempted) ===',
+        tag: 'GameStrategy'
+      );
+    } else {
+      AppLogger.info(
+        'No action taken: selectedFigure=${state.selectedFigure}, '
+        'isAvailable=${pressedCell.isAvailable}, '
+        'canBeKnockedDown=${pressedCell.canBeKnockedDown}',
+        tag: 'GameStrategy'
+      );
+      AppLogger.info(
+        '=== GameStrategy.onPressed END (no action) ===',
+        tag: 'GameStrategy'
+      );
     }
   }
 

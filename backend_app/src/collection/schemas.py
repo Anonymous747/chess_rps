@@ -88,3 +88,8 @@ class EquipItemRequest(BaseModel):
     item_id: int
     category: CollectionCategory
 
+
+class EquipAvatarByIconRequest(BaseModel):
+    icon_name: str
+    category: CollectionCategory = CollectionCategory.AVATARS
+

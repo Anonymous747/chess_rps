@@ -10,7 +10,7 @@ from sqlalchemy import select, and_, delete
 from src.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
 from src.database import get_async_session
 from src.auth.models import User, Token
-from src.auth.schemas import UserRegister, UserLogin, TokenResponse, UserResponse, RefreshTokenRequest
+from src.auth.schemas import UserRegister, UserLogin, TokenResponse, UserResponse, RefreshTokenRequest, UpdateProfileNameRequest
 from src.auth.dependencies import get_current_active_user, security
 
 router = APIRouter(
@@ -244,6 +244,22 @@ async def validate_token(
         "user_id": current_user.id,
         "phone_number": current_user.phone_number
     }
+
+
+@router.patch("/profile-name", response_model=UserResponse)
+async def update_profile_name(
+    update_data: UpdateProfileNameRequest,
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    """
+    Update user's profile name.
+    """
+    current_user.profile_name = update_data.profile_name
+    await session.commit()
+    await session.refresh(current_user)
+    
+    return current_user
 
 
 @router.post("/refresh", response_model=TokenResponse)

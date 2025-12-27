@@ -1,13 +1,16 @@
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/presentation/controller/stats_controller.dart';
+import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class EventsScreen extends StatelessWidget {
+class EventsScreen extends HookConsumerWidget {
   static const routeName = '/events';
 
   const EventsScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -73,10 +76,10 @@ class EventsScreen extends StatelessWidget {
                   height: 240,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Palette.purpleAccent.withOpacity(0.3)),
+                    border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                     boxShadow: [
                       BoxShadow(
-                        color: Palette.purpleAccent.withOpacity(0.2),
+                        color: Palette.purpleAccent.withValues(alpha: 0.2),
                         blurRadius: 20,
                       ),
                     ],
@@ -108,9 +111,9 @@ class EventsScreen extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: Palette.error.withOpacity(0.2),
+                                    color: Palette.error.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Palette.error.withOpacity(0.3)),
+                                    border: Border.all(color: Palette.error.withValues(alpha: 0.3)),
                                   ),
                                   child: Text(
                                     'LIVE NOW',
@@ -124,7 +127,7 @@ class EventsScreen extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.4),
+                                    color: Colors.black.withValues(alpha: 0.4),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Row(
@@ -246,7 +249,7 @@ class EventsScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       _buildClubWarsCard(),
                       const SizedBox(height: 16),
-                      _buildStandingsSection(),
+                      _buildStandingsSection(context, ref),
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -268,6 +271,23 @@ class EventsScreen extends StatelessWidget {
         border: Border.all(
           color: isActive ? Colors.transparent : Palette.glassBorder,
         ),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: Palette.purpleAccent.withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Palette.black.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Text(
         label,
@@ -296,6 +316,20 @@ class EventsScreen extends StatelessWidget {
         color: Palette.backgroundTertiary,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Palette.glassBorder),
+        boxShadow: [
+          BoxShadow(
+            color: iconColor.withValues(alpha: 0.25),
+            blurRadius: 18,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.15),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -306,7 +340,7 @@ class EventsScreen extends StatelessWidget {
                 height: 64,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [iconColor, iconColor.withOpacity(0.7)],
+                    colors: [iconColor, iconColor.withValues(alpha: 0.7)],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Palette.glassBorder),
@@ -333,9 +367,9 @@ class EventsScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: iconColor.withOpacity(0.1),
+                            color: iconColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: iconColor.withOpacity(0.2)),
+                            border: Border.all(color: iconColor.withValues(alpha: 0.2)),
                           ),
                           child: Text(
                             status,
@@ -398,7 +432,7 @@ class EventsScreen extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [iconColor, iconColor.withOpacity(0.7)],
+                    colors: [iconColor, iconColor.withValues(alpha: 0.7)],
                   ),
                   borderRadius: BorderRadius.circular(2),
                 ),
@@ -416,7 +450,21 @@ class EventsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Palette.backgroundTertiary,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Palette.accent.withOpacity(0.2)),
+        border: Border.all(color: Palette.accent.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Palette.accent.withValues(alpha: 0.25),
+            blurRadius: 18,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.15),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -427,9 +475,9 @@ class EventsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Palette.accent.withOpacity(0.1),
+                    color: Palette.accent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Palette.accent.withOpacity(0.2)),
+                    border: Border.all(color: Palette.accent.withValues(alpha: 0.2)),
                   ),
                   child: Text(
                     'DAILY CHALLENGE',
@@ -495,6 +543,20 @@ class EventsScreen extends StatelessWidget {
         color: Palette.backgroundTertiary,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Palette.glassBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Palette.purpleAccent.withValues(alpha: 0.25),
+            blurRadius: 18,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.15),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -585,7 +647,9 @@ class EventsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStandingsSection() {
+  Widget _buildStandingsSection(BuildContext context, WidgetRef ref) {
+    final leaderboardAsync = ref.watch(leaderboardProvider(3));
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -610,37 +674,97 @@ class EventsScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: Palette.backgroundTertiary,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Palette.glassBorder),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
+        leaderboardAsync.when(
+          data: (leaderboard) {
+            if (leaderboard.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
+                  color: Palette.backgroundTertiary,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Palette.glassBorder),
+                ),
+                child: Center(
+                  child: Text(
+                    'No standings available',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Palette.textSecondary,
+                    ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    SizedBox(width: 24, child: Text('#', style: TextStyle(fontSize: 12, color: Palette.textSecondary))),
-                    Expanded(child: Text('Player', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
-                    SizedBox(width: 64, child: Text('Points', textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
-                  ],
+              );
+            }
+            
+            return Container(
+              decoration: BoxDecoration(
+                color: Palette.backgroundTertiary,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Palette.glassBorder),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(width: 24, child: Text('#', style: TextStyle(fontSize: 12, color: Palette.textSecondary))),
+                        Expanded(child: Text('Player', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
+                        SizedBox(width: 64, child: Text('Rating', textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
+                      ],
+                    ),
+                  ),
+                  ...leaderboard.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final player = entry.value;
+                    final isFirst = index == 0;
+                    return Column(
+                      children: [
+                        if (index > 0) Divider(color: Palette.glassBorder, height: 1),
+                        _buildStandingRow(
+                          player.rank,
+                          player.username,
+                          player.rating,
+                          isFirst,
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ],
+              ),
+            );
+          },
+          loading: () => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Palette.purpleAccent),
+              ),
+            ),
+          ),
+          error: (error, stack) => Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Palette.backgroundTertiary,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Palette.glassBorder),
+            ),
+            child: Center(
+              child: Text(
+                'Failed to load standings',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Palette.error,
                 ),
               ),
-              _buildStandingRow(1, 'GrandmasterX', 2450, true),
-              Divider(color: Palette.glassBorder, height: 1),
-              _buildStandingRow(2, 'TacticalPawn', 2310, false),
-              Divider(color: Palette.glassBorder, height: 1),
-              _buildStandingRow(3, 'RookToE4', 2180, false),
-            ],
+            ),
           ),
         ),
       ],
@@ -662,17 +786,18 @@ class EventsScreen extends StatelessWidget {
       ),
       title: Row(
         children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              gradient: isFirst
-                  ? LinearGradient(colors: [Palette.purpleAccent, Palette.purpleAccentDark])
-                  : null,
-              color: isFirst ? null : Palette.backgroundSecondary,
-              shape: BoxShape.circle,
-              border: Border.all(color: Palette.glassBorder),
-            ),
+          UserAvatarByIconWidget(
+            size: 32,
+            border: isFirst
+                ? Border.all(color: Palette.gold, width: 2)
+                : Border.all(color: Palette.glassBorder, width: 1),
+            shadow: isFirst
+                ? BoxShadow(
+                    color: Palette.gold.withValues(alpha: 0.5),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  )
+                : null,
           ),
           const SizedBox(width: 8),
           Text(
@@ -696,4 +821,6 @@ class EventsScreen extends StatelessWidget {
     );
   }
 }
+
+
 

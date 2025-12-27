@@ -1,7 +1,10 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
+import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -15,9 +18,7 @@ class MainMenuScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authUser = ref.watch(authControllerProvider).valueOrNull;
     final username = authUser?.phoneNumber ?? 'Player';
-    final level = 42; // Placeholder - can be fetched from backend later
-    final rating = 1250; // Placeholder - can be fetched from backend later
-    final progress = 0.65; // Placeholder - 65% progress to next level
+    final statsAsync = ref.watch(statsControllerProvider);
     final onlineFriends = 3; // Placeholder
 
     return Scaffold(
@@ -37,11 +38,36 @@ class MainMenuScreen extends HookConsumerWidget {
           child: Column(
             children: [
               // User Profile Header
-              _buildUserProfileHeader(
-                context,
-                username: username,
-                level: level,
-                progress: progress,
+              statsAsync.when(
+                data: (stats) {
+                  final level = stats.level;
+                  final levelName = stats.levelName ?? 'Novice';
+                  final levelProgress = stats.levelProgress;
+                  final progress = levelProgress != null && levelProgress.xpForNextLevel > 0
+                      ? levelProgress.currentLevelXp / levelProgress.xpForNextLevel
+                      : 0.0;
+                  return _buildUserProfileHeader(
+                    context,
+                    username: username,
+                    level: level,
+                    levelName: levelName,
+                    progress: progress,
+                  );
+                },
+                loading: () => _buildUserProfileHeader(
+                  context,
+                  username: username,
+                  level: 0,
+                  levelName: 'Novice',
+                  progress: 0.0,
+                ),
+                error: (_, __) => _buildUserProfileHeader(
+                  context,
+                  username: username,
+                  level: 0,
+                  levelName: 'Novice',
+                  progress: 0.0,
+                ),
               ),
               
               // Main Content
@@ -61,10 +87,29 @@ class MainMenuScreen extends HookConsumerWidget {
                       const SizedBox(height: 24),
                       
                       // Info Cards Grid
-                      _buildInfoCardsGrid(
-                        context,
-                        rating: rating,
-                        onlineFriends: onlineFriends,
+                      statsAsync.when(
+                        data: (stats) => _buildInfoCardsGrid(
+                          context,
+                          rating: stats.rating,
+                          onlineFriends: onlineFriends,
+                        ),
+                        loading: () => GridView.count(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          childAspectRatio: 1.1,
+                          children: [
+                            SkeletonCard(height: 120),
+                            SkeletonCard(height: 120),
+                          ],
+                        ),
+                        error: (_, __) => _buildInfoCardsGrid(
+                          context,
+                          rating: 1200,
+                          onlineFriends: onlineFriends,
+                        ),
                       ),
                       
                       const SizedBox(height: 100), // Space for bottom nav
@@ -84,37 +129,31 @@ class MainMenuScreen extends HookConsumerWidget {
     BuildContext context, {
     required String username,
     required int level,
+    required String levelName,
     required double progress,
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Palette.purpleAccent.withValues(alpha: 0.1),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           // Avatar with online indicator
           Stack(
             children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Palette.purpleAccent,
-                      Palette.purpleAccentDark,
-                    ],
-                  ),
-                  border: Border.all(
-                    color: Palette.purpleAccentLight,
-                    width: 2,
-                  ),
-                ),
-                child: Icon(
-                  Icons.person,
-                  color: Palette.textPrimary,
-                  size: 32,
+              UserAvatarWidget(
+                size: 60,
+                border: Border.all(
+                  color: Palette.purpleAccentLight,
+                  width: 2,
                 ),
               ),
               Positioned(
@@ -144,7 +183,7 @@ class MainMenuScreen extends HookConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Grandmaster', // Placeholder title
+                  levelName,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -153,7 +192,7 @@ class MainMenuScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Level $level Strategist',
+                  'Level $level',
                   style: TextStyle(
                     fontSize: 14,
                     color: Palette.textSecondary,
@@ -237,7 +276,7 @@ class MainMenuScreen extends HookConsumerWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.purpleAccent.withOpacity(0.3),
+            color: Palette.purpleAccent.withValues(alpha: 0.3),
             blurRadius: 20,
             spreadRadius: 0,
             offset: const Offset(0, 8),
@@ -260,7 +299,7 @@ class MainMenuScreen extends HookConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -285,7 +324,7 @@ class MainMenuScreen extends HookConsumerWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -326,7 +365,7 @@ class MainMenuScreen extends HookConsumerWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -356,7 +395,7 @@ class MainMenuScreen extends HookConsumerWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.black.withOpacity(0.2),
+            color: Palette.black.withValues(alpha: 0.2),
             blurRadius: 10,
             spreadRadius: 0,
             offset: const Offset(0, 4),
@@ -379,7 +418,7 @@ class MainMenuScreen extends HookConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Palette.gold.withOpacity(0.2),
+                    color: Palette.gold.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -413,7 +452,7 @@ class MainMenuScreen extends HookConsumerWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Palette.gold.withOpacity(0.2),
+                              color: Palette.gold.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -539,7 +578,13 @@ class MainMenuScreen extends HookConsumerWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.black.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.2),
+            blurRadius: 15,
+            spreadRadius: 0,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.1),
             blurRadius: 10,
             spreadRadius: 0,
             offset: const Offset(0, 4),
@@ -563,7 +608,7 @@ class MainMenuScreen extends HookConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: iconColor.withOpacity(0.2),
+                        color: iconColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -607,14 +652,14 @@ class MainMenuScreen extends HookConsumerWidget {
   Widget _buildBottomNavigationBar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Palette.backgroundSecondary.withOpacity(0.8),
+        color: Palette.backgroundSecondary.withValues(alpha: 0.8),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.black.withOpacity(0.2),
+            color: Palette.black.withValues(alpha: 0.2),
             blurRadius: 10,
             spreadRadius: 0,
             offset: const Offset(0, -4),
@@ -667,7 +712,7 @@ class MainMenuScreen extends HookConsumerWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Palette.purpleAccent.withOpacity(0.4),
+                        color: Palette.purpleAccent.withValues(alpha: 0.4),
                         blurRadius: 15,
                         spreadRadius: 0,
                         offset: const Offset(0, 4),
@@ -739,4 +784,6 @@ class MainMenuScreen extends HookConsumerWidget {
     );
   }
 }
+
+
 

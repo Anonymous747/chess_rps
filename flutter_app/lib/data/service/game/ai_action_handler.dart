@@ -16,6 +16,45 @@ class AIActionHandler extends ActionHandler {
       AppLogger.info('Stockfish state: ${_stockfishInterpreter.state}', tag: 'AIActionHandler');
       AppLogger.info('Stockfish is ready: ${_stockfishInterpreter.state == "ready"}', tag: 'AIActionHandler');
       
+      // Check Stockfish state and wait if needed
+      var currentState = _stockfishInterpreter.state;
+      AppLogger.info('Stockfish state before wait: $currentState', tag: 'AIActionHandler');
+      
+      // If disposed, try to reinitialize Stockfish
+      if (currentState == "disposed") {
+        AppLogger.warning('Stockfish is disposed - attempting to reinitialize', tag: 'AIActionHandler');
+        try {
+          _stockfishInterpreter.initEngine();
+          AppLogger.info('Stockfish reinitialized, waiting for ready state', tag: 'AIActionHandler');
+          await _stockfishInterpreter.waitForReady();
+          // Update state after reinitialization
+          currentState = _stockfishInterpreter.state;
+          AppLogger.info('Stockfish is now ready after reinitialization (state: $currentState)', tag: 'AIActionHandler');
+          
+          // After reinitialization, we need to sync the board state with Stockfish
+          // The board state might have changed, so we need to visualize it again
+          AppLogger.info('Syncing board state with Stockfish after reinitialization', tag: 'AIActionHandler');
+          await _stockfishInterpreter.visualizeBoard();
+          AppLogger.info('Board state synced after reinitialization', tag: 'AIActionHandler');
+        } catch (e) {
+          AppLogger.error('Failed to reinitialize Stockfish: $e', tag: 'AIActionHandler', error: e);
+          return null;
+        }
+      }
+      
+      // Wait for Stockfish to be ready if it's not already
+      // Use currentState which may have been updated after reinitialization
+      if (currentState != "ready") {
+        AppLogger.info('Waiting for Stockfish to be ready (current state: $currentState)...', tag: 'AIActionHandler');
+        try {
+          await _stockfishInterpreter.waitForReady();
+          AppLogger.info('Stockfish is now ready', tag: 'AIActionHandler');
+        } catch (e) {
+          AppLogger.error('Failed to wait for Stockfish to be ready: $e', tag: 'AIActionHandler');
+          return null;
+        }
+      }
+      
       // Get current FEN position to verify board state is synced
       AppLogger.info('Step 1: Getting current FEN position from Stockfish', tag: 'AIActionHandler');
       final fenPosition = await _stockfishInterpreter.getFenPosition();
@@ -63,9 +102,23 @@ class AIActionHandler extends ActionHandler {
     AppLogger.info('=== AIActionHandler.makeMove() START: $action ===', tag: 'AIActionHandler');
     try {
       AppLogger.info('Stockfish state before move: ${_stockfishInterpreter.state}', tag: 'AIActionHandler');
-      AppLogger.info('Applying move to Stockfish: $action', tag: 'AIActionHandler');
       
-      await _stockfishInterpreter.makeMovesFromCurrentPosition([action]);
+      // Stockfish expects moves in format "e2e4" (without piece prefix)
+      // But our action format is "Pe2e4" (with piece prefix)
+      // Strip the piece prefix if present
+      String stockfishMove = action;
+      if (action.length == 5) {
+        // Format: "Pe2e4" -> extract "e2e4"
+        stockfishMove = action.substring(1);
+        AppLogger.info('Stripped piece prefix from move: $action -> $stockfishMove', tag: 'AIActionHandler');
+      } else if (action.length != 4) {
+        AppLogger.warning('Unexpected move format: $action (length: ${action.length})', tag: 'AIActionHandler');
+        AppLogger.warning('Expected format: "e2e4" (4 chars) or "Pe2e4" (5 chars)', tag: 'AIActionHandler');
+      }
+      
+      AppLogger.info('Applying move to Stockfish: $stockfishMove', tag: 'AIActionHandler');
+      
+      await _stockfishInterpreter.makeMovesFromCurrentPosition([stockfishMove]);
       
       AppLogger.info('Move applied successfully in Stockfish', tag: 'AIActionHandler');
       
@@ -83,6 +136,35 @@ class AIActionHandler extends ActionHandler {
   @override
   Future<void> visualizeBoard() async {
     await _stockfishInterpreter.visualizeBoard();
+  }
+
+  /// Get current FEN position from Stockfish
+  Future<String> getFenPosition() async {
+    return await _stockfishInterpreter.getFenPosition();
+  }
+
+  /// Rebuild Stockfish board state from move history
+  /// This is used when board state gets out of sync
+  Future<void> rebuildBoardFromMoves(List<String> moveHistory) async {
+    AppLogger.info('Rebuilding Stockfish board from ${moveHistory.length} moves', tag: 'AIActionHandler');
+    
+    // Extract moves without piece prefixes (Stockfish format: "e2e4")
+    final stockfishMoves = <String>[];
+    for (final move in moveHistory) {
+      // Remove piece prefix if present (e.g., "Pe2e4" -> "e2e4")
+      String stockfishMove = move;
+      if (move.length == 5) {
+        stockfishMove = move.substring(1);
+      }
+      stockfishMoves.add(stockfishMove);
+    }
+    
+    AppLogger.info('Rebuilding board with moves: $stockfishMoves', tag: 'AIActionHandler');
+    
+    // Reset to starting position and apply all moves
+    await _stockfishInterpreter.setPosition(stockfishMoves);
+    
+    AppLogger.info('Board rebuilt successfully', tag: 'AIActionHandler');
   }
 
   @override

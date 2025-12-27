@@ -59,7 +59,7 @@ class LoginScreen extends HookConsumerWidget {
                         color: Palette.backgroundTertiary,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Palette.accent.withOpacity(0.3),
+                          color: Palette.accent.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
@@ -207,7 +207,11 @@ class LoginScreen extends HookConsumerWidget {
                                       );
                                     }
                                   } finally {
-                                    isLoading.value = false;
+                                    // Only update isLoading if widget is still mounted
+                                    // (widget may be disposed after successful login navigation)
+                                    if (context.mounted) {
+                                      isLoading.value = false;
+                                    }
                                   }
                                 }
                               },

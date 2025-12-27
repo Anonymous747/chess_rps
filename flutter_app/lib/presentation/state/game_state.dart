@@ -1,7 +1,8 @@
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/rps_choice.dart';
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/domain/model/board.dart';
-import 'package:collection/collection.dart';
+import 'package:chess_rps/domain/model/position.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'game_state.freezed.dart';
@@ -28,4 +29,63 @@ class GameState with _$GameState {
     @Default(false) bool isCheckmate, // Whether the game ended in checkmate
     @Default(false) bool isStalemate, // Whether the game ended in stalemate
   }) = _GameState;
+}
+
+/// Extension on GameState to get last move positions
+extension GameStateExtension on GameState {
+  /// Get the last move positions from move history
+  /// Returns a map with 'fromRow', 'fromCol', 'toRow', 'toCol' or null if no moves
+  /// Note: For AI games, moves are stored in absolute notation (white's perspective)
+  ///       For online games, moves are stored from the player's perspective
+  Map<String, int>? getLastMovePositions() {
+    if (moveHistory.isEmpty) return null;
+    
+    final lastMove = moveHistory.last;
+    if (lastMove.length < 4) return null;
+    
+    try {
+      // Parse algebraic notation - handle both "e2e4" and "Pe2e4" formats
+      String fromNotation, toNotation;
+      if (lastMove.length == 5) {
+        // Format with piece prefix: "Pe2e4"
+        fromNotation = lastMove.substring(1, 3);
+        toNotation = lastMove.substring(3, 5);
+      } else {
+        // Format without piece prefix: "e2e4"
+        fromNotation = lastMove.substring(0, 2);
+        toNotation = lastMove.substring(2, 4);
+      }
+      
+      // For AI games: all moves are stored in absolute notation (from white's perspective)
+      //   - Opponent moves (from Stockfish): 4 characters, absolute notation (e.g., "e2e4")
+      //   - Player moves: 5 characters with piece prefix, absolute notation (e.g., "Pd7d5")
+      // For online games: all moves are in absolute notation from white's perspective
+      final isAIGame = GameModesMediator.opponentMode == OpponentMode.ai;
+      final isOnlineGame = GameModesMediator.opponentMode == OpponentMode.socket;
+      
+      // Convert based on game mode:
+      // - AI games: use convertFromAbsoluteNotationForAI() (Stockfish perspective)
+      // - Online games: use convertFromAbsoluteNotation() (absolute notation)
+      // - Otherwise: use convertToPosition() (player's perspective)
+      final fromPos = isAIGame
+          ? fromNotation.convertFromAbsoluteNotationForAI()
+          : isOnlineGame
+              ? fromNotation.convertFromAbsoluteNotation()
+              : fromNotation.convertToPosition();
+      final toPos = isAIGame
+          ? toNotation.convertFromAbsoluteNotationForAI()
+          : isOnlineGame
+              ? toNotation.convertFromAbsoluteNotation()
+              : toNotation.convertToPosition();
+      
+      return {
+        'fromRow': fromPos.row,
+        'fromCol': fromPos.col,
+        'toRow': toPos.row,
+        'toCol': toPos.col,
+      };
+    } catch (e) {
+      return null;
+    }
+  }
 }

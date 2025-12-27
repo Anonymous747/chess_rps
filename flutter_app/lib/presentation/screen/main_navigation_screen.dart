@@ -1,21 +1,24 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
+import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/screen/chat_screen.dart';
 import 'package:chess_rps/presentation/screen/events_screen.dart';
 import 'package:chess_rps/presentation/screen/profile_screen.dart';
+import 'package:chess_rps/presentation/screen/mode_selector.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:riverpod/riverpod.dart';
 
 final navigationIndexProvider = StateNotifierProvider<NavigationIndexNotifier, int>((ref) {
   return NavigationIndexNotifier();
 });
 
 class NavigationIndexNotifier extends StateNotifier<int> {
-  NavigationIndexNotifier() : super(0); // 0: Home, 1: Events, 2: Chat, 3: Profile
+  NavigationIndexNotifier() : super(0); // 0: Home, 1: Events, 2: Play, 3: Chat, 4: Profile
 
   void setIndex(int index) {
     state = index;
@@ -32,17 +35,44 @@ class MainNavigationScreen extends HookConsumerWidget {
     final currentIndex = ref.watch(navigationIndexProvider);
 
     return Scaffold(
-      body: IndexedStack(
-        index: currentIndex,
-        children: const [
-          MainMenuContent(), // Home tab
-          EventsScreen(),     // Events tab
-          ChatScreen(),       // Chat tab
-          ProfileScreen(),    // Profile tab
-        ],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.1, 0.0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            ),
+          );
+        },
+        child: _getScreenForIndex(currentIndex),
       ),
       bottomNavigationBar: _buildBottomNavigationBar(context, ref, currentIndex),
     );
+  }
+
+  Widget _getScreenForIndex(int index) {
+    switch (index) {
+      case 0:
+        return const MainMenuContent(key: ValueKey('home'));
+      case 1:
+        return const EventsScreen(key: ValueKey('events'));
+      case 2:
+        return const ModeSelector(key: ValueKey('play'));
+      case 3:
+        return const ChatScreen(key: ValueKey('chat'));
+      case 4:
+        return const ProfileScreen(key: ValueKey('profile'));
+      default:
+        return const MainMenuContent(key: ValueKey('home'));
+    }
   }
 
   Widget _buildBottomNavigationBar(
@@ -52,14 +82,14 @@ class MainNavigationScreen extends HookConsumerWidget {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: Palette.backgroundSecondary.withOpacity(0.8),
+        color: Palette.backgroundSecondary.withValues(alpha: 0.8),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.black.withOpacity(0.2),
+            color: Palette.black.withValues(alpha: 0.2),
             blurRadius: 10,
             spreadRadius: 0,
             offset: const Offset(0, -4),
@@ -88,47 +118,18 @@ class MainNavigationScreen extends HookConsumerWidget {
                 index: 1,
                 currentIndex: currentIndex,
               ),
-              // Central Play Button
-              GestureDetector(
-                onTap: () {
-                  AppLogger.info('Quick play tapped', tag: 'MainNavigation');
-                  context.push(AppRoutes.modeSelector);
-                },
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Palette.purpleAccent,
-                        Palette.purpleAccentDark,
-                      ],
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Palette.purpleAccent.withOpacity(0.4),
-                        blurRadius: 15,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.play_arrow,
-                    color: Palette.textPrimary,
-                    size: 32,
-                  ),
-                ),
+              // Central Play Button (now part of navigation)
+              _buildPlayNavItem(
+                context,
+                ref,
+                currentIndex: currentIndex,
               ),
               _buildNavItem(
                 context,
                 ref,
                 icon: Icons.chat_bubble_outline,
                 label: 'Chat',
-                index: 2,
+                index: 3,
                 currentIndex: currentIndex,
               ),
               _buildNavItem(
@@ -136,7 +137,7 @@ class MainNavigationScreen extends HookConsumerWidget {
                 ref,
                 icon: Icons.person_outline,
                 label: 'Profile',
-                index: 3,
+                index: 4,
                 currentIndex: currentIndex,
               ),
             ],
@@ -160,24 +161,99 @@ class MainNavigationScreen extends HookConsumerWidget {
         ref.read(navigationIndexProvider.notifier).setIndex(index);
         AppLogger.info('Navigation to $label', tag: 'MainNavigation');
       },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? Palette.purpleAccent : Palette.textSecondary,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: isActive ? Palette.purpleAccent : Palette.textSecondary,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedScale(
+              scale: isActive ? 1.1 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isActive ? Palette.purpleAccent.withValues(alpha: 0.1) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: isActive ? Palette.purpleAccent : Palette.textSecondary,
+                  size: 24,
+                ),
+              ),
             ),
+            const SizedBox(height: 4),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              style: TextStyle(
+                fontSize: 12,
+                color: isActive ? Palette.purpleAccent : Palette.textSecondary,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              ),
+              child: Text(label),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayNavItem(
+    BuildContext context,
+    WidgetRef ref, {
+    required int currentIndex,
+  }) {
+    final isActive = currentIndex == 2;
+    return GestureDetector(
+      onTap: () {
+        ref.read(navigationIndexProvider.notifier).setIndex(2);
+        AppLogger.info('Navigation to Play', tag: 'MainNavigation');
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isActive
+                ? [
+                    Palette.purpleAccent,
+                    Palette.purpleAccentDark,
+                  ]
+                : [
+                    Palette.purpleAccent.withValues(alpha: 0.8),
+                    Palette.purpleAccentDark.withValues(alpha: 0.8),
+                  ],
           ),
-        ],
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Palette.purpleAccent.withValues(alpha: isActive ? 0.4 : 0.2),
+              blurRadius: isActive ? 15 : 8,
+              spreadRadius: 0,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: AnimatedScale(
+          scale: isActive ? 1.1 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          child: Icon(
+            Icons.play_arrow,
+            color: Palette.textPrimary,
+            size: 32,
+          ),
+        ),
       ),
     );
   }
@@ -191,9 +267,7 @@ class MainMenuContent extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authUser = ref.watch(authControllerProvider).valueOrNull;
     final username = authUser?.phoneNumber ?? 'Player';
-    final level = 42;
-    final rating = 1250;
-    final progress = 0.65;
+    final statsAsync = ref.watch(statsControllerProvider);
     final onlineFriends = 3;
 
     return Container(
@@ -212,11 +286,36 @@ class MainMenuContent extends HookConsumerWidget {
         child: Column(
           children: [
             // User Profile Header
-            _MainMenuContentHelper._buildUserProfileHeader(
-              context,
-              username: username,
-              level: level,
-              progress: progress,
+            statsAsync.when(
+              data: (stats) {
+                final level = stats.level;
+                final levelName = stats.levelName ?? 'Novice';
+                final levelProgress = stats.levelProgress;
+                final progress = levelProgress != null && levelProgress.xpForNextLevel > 0
+                    ? levelProgress.currentLevelXp / levelProgress.xpForNextLevel
+                    : 0.0;
+                return _MainMenuContentHelper._buildUserProfileHeader(
+                  context,
+                  username: username,
+                  level: level,
+                  levelName: levelName,
+                  progress: progress,
+                );
+              },
+              loading: () => _MainMenuContentHelper._buildUserProfileHeader(
+                context,
+                username: username,
+                level: 0,
+                levelName: 'Novice',
+                progress: 0.0,
+              ),
+              error: (_, __) => _MainMenuContentHelper._buildUserProfileHeader(
+                context,
+                username: username,
+                level: 0,
+                levelName: 'Novice',
+                progress: 0.0,
+              ),
             ),
             
             // Main Content
@@ -236,10 +335,29 @@ class MainMenuContent extends HookConsumerWidget {
                     const SizedBox(height: 24),
                     
                     // Info Cards Grid
-                    _MainMenuContentHelper._buildInfoCardsGrid(
-                      context,
-                      rating: rating,
-                      onlineFriends: onlineFriends,
+                    statsAsync.when(
+                      data: (stats) => _MainMenuContentHelper._buildInfoCardsGrid(
+                        context,
+                        rating: stats.rating,
+                        onlineFriends: onlineFriends,
+                      ),
+                      loading: () => GridView.count(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        childAspectRatio: 1.1,
+                        children: [
+                          SkeletonCard(height: 120),
+                          SkeletonCard(height: 120),
+                        ],
+                      ),
+                      error: (_, __) => _MainMenuContentHelper._buildInfoCardsGrid(
+                        context,
+                        rating: 1200,
+                        onlineFriends: onlineFriends,
+                      ),
                     ),
                     
                     const SizedBox(height: 100), // Space for bottom nav
@@ -261,36 +379,30 @@ class _MainMenuContentHelper {
     BuildContext context, {
     required String username,
     required int level,
+    required String levelName,
     required double progress,
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Palette.purpleAccent.withValues(alpha: 0.1),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Stack(
             children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Palette.purpleAccent,
-                      Palette.purpleAccentDark,
-                    ],
-                  ),
-                  border: Border.all(
-                    color: Palette.purpleAccentLight,
-                    width: 2,
-                  ),
-                ),
-                child: Icon(
-                  Icons.person,
-                  color: Palette.textPrimary,
-                  size: 32,
+              UserAvatarWidget(
+                size: 60,
+                border: Border.all(
+                  color: Palette.purpleAccentLight,
+                  width: 2,
                 ),
               ),
               Positioned(
@@ -317,7 +429,7 @@ class _MainMenuContentHelper {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Grandmaster',
+                  levelName,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -326,7 +438,7 @@ class _MainMenuContentHelper {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Level $level Strategist',
+                  'Level $level',
                   style: TextStyle(
                     fontSize: 14,
                     color: Palette.textSecondary,
@@ -406,7 +518,7 @@ class _MainMenuContentHelper {
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.purpleAccent.withOpacity(0.3),
+            color: Palette.purpleAccent.withValues(alpha: 0.3),
             blurRadius: 20,
             spreadRadius: 0,
             offset: const Offset(0, 8),
@@ -428,7 +540,7 @@ class _MainMenuContentHelper {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -450,7 +562,7 @@ class _MainMenuContentHelper {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -489,7 +601,7 @@ class _MainMenuContentHelper {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -519,7 +631,13 @@ class _MainMenuContentHelper {
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.black.withOpacity(0.2),
+            color: Palette.gold.withValues(alpha: 0.3),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.1),
             blurRadius: 10,
             spreadRadius: 0,
             offset: const Offset(0, 4),
@@ -542,7 +660,7 @@ class _MainMenuContentHelper {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Palette.gold.withOpacity(0.2),
+                    color: Palette.gold.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -573,7 +691,7 @@ class _MainMenuContentHelper {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Palette.gold.withOpacity(0.2),
+                              color: Palette.gold.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -699,7 +817,13 @@ class _MainMenuContentHelper {
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.black.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.2),
+            blurRadius: 15,
+            spreadRadius: 0,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.1),
             blurRadius: 10,
             spreadRadius: 0,
             offset: const Offset(0, 4),
@@ -723,7 +847,7 @@ class _MainMenuContentHelper {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: iconColor.withOpacity(0.2),
+                        color: iconColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -764,4 +888,6 @@ class _MainMenuContentHelper {
     );
   }
 }
+
+
 

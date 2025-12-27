@@ -22,21 +22,20 @@ class BoardWidget extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
 
     final sideSize = _calculateCellWidth(context, width);
-    final letters = PlayerSideMediator.playerSide.isLight
-        ? boardLetters
-        : boardLetters.reversed.toList();
+    final letters =
+        PlayerSideMediator.playerSide.isLight ? boardLetters : boardLetters.reversed.toList();
 
-    final numbers = PlayerSideMediator.playerSide.isLight
-        ? boardNumbers
-        : boardNumbers.reversed.toList();
+    final numbers =
+        PlayerSideMediator.playerSide.isLight ? boardNumbers : boardNumbers.reversed.toList();
 
     return Stack(
+      alignment: Alignment.center,
       children: [
         Container(
+          alignment: Alignment.center,
           decoration: BoxDecoration(
               color: Palette.backgroundTertiary,
-              border: Border.all(
-                  width: _parentBorderWidth, color: Palette.backgroundTertiary),
+              border: Border.all(width: _parentBorderWidth, color: Palette.backgroundTertiary),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -46,13 +45,13 @@ class BoardWidget extends StatelessWidget {
                   offset: const Offset(0, 15),
                 ),
               ]),
-          height: width,
+          height: width - 30,
           width: width,
           child: Container(
+            alignment: Alignment.center,
             decoration: BoxDecoration(
                 color: Palette.backgroundElevated,
-                border: Border.all(
-                    width: _childBorderWidth, color: Palette.glassBorder),
+                border: Border.all(width: _childBorderWidth, color: Palette.glassBorder),
                 borderRadius: BorderRadius.circular(16)),
             child: GridView.count(
               crossAxisCount: 8,
@@ -99,13 +98,53 @@ class BoardWidget extends StatelessWidget {
   List<Widget> _buildCells() {
     final cells = board.cells;
     var widgets = <Widget>[];
+    final isBlackPlayer = !PlayerSideMediator.playerSide.isLight;
 
-    for (int i = 0; i < cells.length; i++) {
-      for (int j = 0; j < cells[i].length; j++) {
-        widgets.add(CellWidget(
-          column: j,
-          row: i,
-        ));
+    // Build cells with proper rotation for black players
+    // GridView.count fills cells left-to-right, top-to-bottom in the order we provide
+    // 
+    // Board layout (internal coordinates):
+    // - Row 0-1: opponent pieces (white if player is black, black if player is white)
+    // - Row 6-7: player pieces (black if player is black, white if player is white)
+    //
+    // For white: standard order (row 0 at visual top, row 7 at visual bottom)
+    // For black: rotated 180 degrees
+    //   - White pieces (row 0-1) should appear at visual top
+    //   - Black pieces (row 6-7) should appear at visual bottom
+    //   - Columns should be reversed (h-a from left to right)
+    //
+    // To achieve this for black:
+    // - Iterate rows 0→7 (so row 0 goes first → visual top, row 7 goes last → visual bottom)
+    // - Within each row, iterate columns 7→0 (so col 7 goes first → visual left, which is black's h-file)
+    
+    if (isBlackPlayer) {
+      // For black: rotated view with columns reversed
+      // Board layout: row 0-1 (white pieces), row 6-7 (black pieces)
+      // User wants: black pieces at visual bottom, white pieces at visual top
+      // 
+      // Iterate rows 0→7 (so row 0 goes first → visual top, row 7 goes last → visual bottom)
+      // Within each row, iterate columns 7→0 (so col 7 goes first → visual left, which is h-file)
+      // This ensures:
+      // - White pieces (row 0-1) appear at visual top
+      // - Black pieces (row 6-7) appear at visual bottom
+      // - Columns are reversed: h-a from left to right
+      for (int i = 0; i < cells.length; i++) {
+        for (int j = cells[i].length - 1; j >= 0; j--) {
+          widgets.add(CellWidget(
+            column: j,
+            row: i,
+          ));
+        }
+      }
+    } else {
+      // For white: standard order (top-left to bottom-right)
+      for (int i = 0; i < cells.length; i++) {
+        for (int j = 0; j < cells[i].length; j++) {
+          widgets.add(CellWidget(
+            column: j,
+            row: i,
+          ));
+        }
       }
     }
 
@@ -113,5 +152,5 @@ class BoardWidget extends StatelessWidget {
   }
 
   double _calculateCellWidth(BuildContext context, double width) =>
-      (width - _parentBorderWidth * 2 - _childBorderWidth * 2) / 8;
+      (width - _parentBorderWidth * 2 - _childBorderWidth * 2) / 8 - 4;
 }

@@ -44,6 +44,7 @@ class AuthService {
         return AuthUser(
           userId: data['user_id'],
           phoneNumber: data['phone_number'],
+          profileName: data['profile_name'] ?? 'Player',
           accessToken: data['access_token'],
           refreshToken: data['refresh_token'],
         );
@@ -87,6 +88,7 @@ class AuthService {
         return AuthUser(
           userId: data['user_id'],
           phoneNumber: data['phone_number'],
+          profileName: data['profile_name'] ?? 'Player',
           accessToken: data['access_token'],
           refreshToken: data['refresh_token'],
         );
@@ -196,6 +198,7 @@ class AuthService {
         return AuthUser(
           userId: data['user_id'],
           phoneNumber: data['phone_number'],
+          profileName: data['profile_name'] ?? 'Player',
           accessToken: data['access_token'],
           refreshToken: data['refresh_token'],
         );
@@ -211,6 +214,40 @@ class AuthService {
       throw Exception('Network error: ${e.message}');
     } catch (e) {
       AppLogger.error('Unexpected error during token refresh', tag: 'AuthService', error: e);
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  Future<String> updateProfileName(String profileName) async {
+    try {
+      AppLogger.info('Updating profile name: $profileName', tag: 'AuthService');
+      
+      final response = await _dio.patch(
+        '${Endpoint.apiBase}/api/v1/auth/profile-name',
+        data: {
+          'profile_name': profileName,
+        },
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        AppLogger.info('Profile name updated successfully', tag: 'AuthService');
+        return data['profile_name'] as String;
+      } else {
+        throw Exception('Profile name update failed: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      AppLogger.error('Profile name update error: ${e.message}', tag: 'AuthService', error: e);
+      if (e.response != null) {
+        final errorMessage = e.response?.data['detail'] ?? 'Profile name update failed';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      AppLogger.error('Unexpected error during profile name update', tag: 'AuthService', error: e);
       throw Exception('Unexpected error: $e');
     }
   }

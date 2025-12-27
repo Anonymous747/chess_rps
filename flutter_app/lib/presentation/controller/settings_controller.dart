@@ -24,6 +24,7 @@ class SettingsController extends _$SettingsController {
       return UserSettings(
         boardTheme: 'glass_dark',
         pieceSet: 'cardinal',
+        effect: 'classic',
         autoQueen: true,
         confirmMoves: false,
         masterVolume: 0.8,
@@ -169,6 +170,30 @@ class SettingsController extends _$SettingsController {
       AppLogger.info('Online status visible updated successfully', tag: 'SettingsController');
     } catch (e) {
       AppLogger.error('Error updating online status visible', tag: 'SettingsController', error: e);
+      // Revert on error
+      state = AsyncValue.data(currentSettings);
+    }
+  }
+
+  Future<void> updateEffect(String effect) async {
+    AppLogger.info('Updating effect to $effect', tag: 'SettingsController');
+    final currentSettings = state.valueOrNull;
+    if (currentSettings == null) return;
+
+    // Optimistically update UI
+    state = AsyncValue.data(currentSettings.copyWith(effect: effect));
+
+    try {
+      final service = ref.read(settingsServiceProvider);
+      final updated = await service.updateSettings(effect: effect);
+      // If backend doesn't return effect field, preserve our optimistic update
+      final finalSettings = updated.effect != null 
+          ? updated 
+          : updated.copyWith(effect: effect);
+      state = AsyncValue.data(finalSettings);
+      AppLogger.info('Effect updated successfully', tag: 'SettingsController');
+    } catch (e) {
+      AppLogger.error('Error updating effect', tag: 'SettingsController', error: e);
       // Revert on error
       state = AsyncValue.data(currentSettings);
     }

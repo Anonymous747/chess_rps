@@ -22,7 +22,7 @@ class AvailableMove extends StatelessWidget {
           borderRadius: BorderRadius.circular(constraints.maxWidth),
           boxShadow: [
             BoxShadow(
-              color: Palette.purple400.withOpacity(0.5),
+              color: Palette.purple400.withValues(alpha: 0.5),
               blurRadius: 8,
               spreadRadius: 2,
             ),

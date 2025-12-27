@@ -19,6 +19,7 @@ class UserSettings(Base):
     # Gameplay settings
     board_theme = Column(String, default="glass_dark", nullable=False)
     piece_set = Column(String, default="cardinal", nullable=False)
+    effect = Column(String, default=None, nullable=True)  # Visual effect name
     auto_queen = Column(Boolean, default=True, nullable=False)
     confirm_moves = Column(Boolean, default=False, nullable=False)
     

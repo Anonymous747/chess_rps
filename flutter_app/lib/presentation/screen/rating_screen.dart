@@ -107,16 +107,23 @@ class RatingScreen extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Palette.purpleAccentDark.withOpacity(0.3),
+            Palette.purpleAccentDark.withValues(alpha: 0.3),
             Palette.backgroundTertiary,
             Palette.backgroundSecondary,
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: Palette.purpleAccent.withOpacity(0.2),
-            blurRadius: 20,
+            color: Palette.purpleAccent.withValues(alpha: 0.25),
+            blurRadius: 25,
             spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.15),
+            blurRadius: 15,
+            spreadRadius: 0,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -206,9 +213,9 @@ class RatingScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Palette.success.withOpacity(0.1),
+                  color: Palette.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Palette.success.withOpacity(0.2)),
+                  border: Border.all(color: Palette.success.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -256,9 +263,9 @@ class RatingScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
@@ -330,6 +337,20 @@ class RatingScreen extends StatelessWidget {
             color: Palette.backgroundTertiary,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Palette.glassBorder),
+            boxShadow: [
+              BoxShadow(
+                color: Palette.purpleAccent.withValues(alpha: 0.15),
+                blurRadius: 20,
+                spreadRadius: 0,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Palette.black.withValues(alpha: 0.1),
+                blurRadius: 12,
+                spreadRadius: 0,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: CustomPaint(
             painter: _ChartPainter(),
@@ -413,16 +434,37 @@ class RatingScreen extends StatelessWidget {
         color: Palette.backgroundTertiary,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isFeatured ? Palette.purpleAccent.withOpacity(0.3) : Palette.glassBorder,
+          color: isFeatured ? Palette.purpleAccent.withValues(alpha: 0.3) : Palette.glassBorder,
         ),
         boxShadow: isFeatured
             ? [
                 BoxShadow(
-                  color: Palette.purpleAccent.withOpacity(0.2),
-                  blurRadius: 10,
+                  color: Palette.purpleAccent.withValues(alpha: 0.25),
+                  blurRadius: 18,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Palette.black.withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 5),
                 ),
               ]
-            : null,
+            : [
+                BoxShadow(
+                  color: iconColor.withValues(alpha: 0.15),
+                  blurRadius: 15,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: Palette.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Row(
         children: [
@@ -442,9 +484,9 @@ class RatingScreen extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: iconColor.withOpacity(0.2)),
+              border: Border.all(color: iconColor.withValues(alpha: 0.2)),
             ),
             child: Icon(icon, color: iconColor, size: 24),
           ),
@@ -541,8 +583,8 @@ class _ChartPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          Palette.purpleAccent.withOpacity(0.4),
-          Palette.purpleAccent.withOpacity(0),
+          Palette.purpleAccent.withValues(alpha: 0.4),
+          Palette.purpleAccent.withValues(alpha: 0),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;

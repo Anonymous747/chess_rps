@@ -301,6 +301,34 @@ class CollectionService {
     }
   }
 
+  Future<List<UserCollectionItem>> equipAvatarByIcon(String iconName) async {
+    try {
+      AppLogger.info('Equipping avatar by icon: $iconName', tag: 'CollectionService');
+      final response = await _dio.post(
+        '/api/v1/collection/equip-avatar-by-icon',
+        data: {
+          'icon_name': iconName,
+          'category': CollectionCategory.AVATARS.value,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => UserCollectionItem.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to equip avatar: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      AppLogger.error('Error equipping avatar by icon: ${e.message}',
+          tag: 'CollectionService', error: e);
+      throw Exception(e.response?.data['detail'] ?? 'Failed to equip avatar');
+    } catch (e) {
+      AppLogger.error('Unexpected error equipping avatar by icon: $e',
+          tag: 'CollectionService', error: e);
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
   Future<UserCollectionItem> unlockItem(int itemId) async {
     try {
       AppLogger.info('Unlocking item $itemId', tag: 'CollectionService');

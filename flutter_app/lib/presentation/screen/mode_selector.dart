@@ -32,27 +32,36 @@ class ModeSelector extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // Header with back button at the top
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Palette.backgroundTertiary,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Palette.glassBorder,
-                          width: 1,
-                        ),
+              // Header - only show back button if not in navigation system
+              // Check if we can pop (i.e., if this was pushed, not part of navigation)
+              Builder(
+                builder: (context) {
+                  final canPop = Navigator.of(context).canPop();
+                  if (canPop) {
+                    return Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Palette.backgroundTertiary,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Palette.glassBorder,
+                                width: 1,
+                              ),
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.arrow_back, color: Palette.textPrimary),
+                              onPressed: () => context.pop(),
+                            ),
+                          ),
+                        ],
                       ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Palette.textPrimary),
-                        onPressed: () => context.pop(),
-                      ),
-                    ),
-                  ],
-                ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
               // Centered content
               Expanded(
@@ -74,7 +83,7 @@ class ModeSelector extends StatelessWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Palette.accent.withOpacity(0.1),
+                                color: Palette.accent.withValues(alpha: 0.1),
                                 blurRadius: 20,
                                 spreadRadius: 0,
                               ),
@@ -85,10 +94,10 @@ class ModeSelector extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: Palette.accent.withOpacity(0.1),
+                                  color: Palette.accent.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Palette.accent.withOpacity(0.3),
+                                    color: Palette.accent.withValues(alpha: 0.3),
                                     width: 2,
                                   ),
                                 ),
@@ -176,7 +185,7 @@ class ModeSelector extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 20,
             spreadRadius: 0,
             offset: const Offset(0, 8),
@@ -194,7 +203,7 @@ class ModeSelector extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               color: Palette.backgroundElevated,
               border: Border.all(
-                color: color.withOpacity(0.5),
+                color: color.withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
@@ -204,7 +213,7 @@ class ModeSelector extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
+                    color: color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(

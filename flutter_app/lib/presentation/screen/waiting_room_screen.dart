@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/socket/game_room_handler.dart';
+import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
+import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -21,15 +25,47 @@ class WaitingRoomScreen extends StatefulWidget {
 class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
   final GameRoomHandler _roomHandler = GameRoomHandler();
   StreamSubscription? _messageSubscription;
+  Timer? _heartbeatTimer; // Timer for periodic heartbeat checks
   bool _isWaiting = true;
   bool _isConnecting = true;
   String? _errorMessage;
+  bool _hasNavigated = false; // Track if we've navigated to chess screen
 
   @override
   void initState() {
     super.initState();
     AppLogger.info('WaitingRoomScreen initialized for room: ${widget.roomCode}', tag: 'WaitingRoom');
     _connectToRoom();
+  }
+
+  void _navigateToGame([Map<String, dynamic>? opponentInfo]) {
+    // Mark as navigated to prevent further message processing
+    _hasNavigated = true;
+    
+    // Stop heartbeat timer since we're navigating away
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
+    
+    // Store opponent info if provided
+    if (opponentInfo != null) {
+      GameModesMediator.setOpponentInfo(opponentInfo);
+      AppLogger.info('Stored opponent info: ${opponentInfo['username']}, avatar: ${opponentInfo['avatar_icon']}', tag: 'WaitingRoom');
+    }
+    
+    // Navigate to chess screen after a short delay
+    // Store room code and handler in mediator so GameController can reuse the connection
+    GameModesMediator.setRoomCode(widget.roomCode);
+    GameModesMediator.setSharedRoomHandler(_roomHandler);
+    AppLogger.info('Stored shared room handler for reuse', tag: 'WaitingRoom');
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        AppLogger.info('Navigating to chess screen with room: ${widget.roomCode}', tag: 'WaitingRoom');
+        // Cancel our subscription - GameController will handle messages now
+        _messageSubscription?.cancel();
+        _messageSubscription = null;
+        context.push(AppRoutes.chess);
+      }
+    });
   }
 
   Future<void> _connectToRoom() async {
@@ -51,27 +87,58 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
         final type = message['type'] as String?;
         AppLogger.debug('Received message type: $type', tag: 'WaitingRoom');
         
+        // Once we navigate to chess screen, stop processing messages here
+        // GameController will handle all game-related messages
+        if (_hasNavigated) {
+          AppLogger.debug('WaitingRoom: Ignoring message (already navigated): $type', tag: 'WaitingRoom');
+          return;
+        }
+        
         if (type == 'room_joined') {
-          // Room joined successfully
+          // Room joined successfully - set player side from server
+          // player_side is at the top level of the message, not in 'data'
+          final playerSideStr = message['player_side'] as String?;
+          if (playerSideStr != null) {
+            // Convert backend side ("light"/"dark") to Flutter Side enum
+            final playerSide = playerSideStr == 'light' ? Side.light : Side.dark;
+            PlayerSideMediator.changePlayerSide(playerSide);
+            AppLogger.info('Player side set to: ${playerSide.name} (from server)', tag: 'WaitingRoom');
+          } else {
+            AppLogger.warning('No player_side in room_joined message', tag: 'WaitingRoom');
+          }
           AppLogger.info('Room joined successfully', tag: 'WaitingRoom');
+          
+          // Check if room is already full (in_progress) - if so, navigate immediately
+          final roomStatus = GameModesMediator.currentRoomStatus;
+          if (roomStatus == 'in_progress') {
+            AppLogger.info('Room is already full (in_progress), navigating to game immediately', tag: 'WaitingRoom');
+            _navigateToGame();
+            return;
+          }
+          
           setState(() {
             _isWaiting = true;
             _isConnecting = false;
           });
+          
+          // Start heartbeat timer after successfully joining room
+          _startHeartbeatTimer();
         } else if (type == 'player_joined') {
           // Another player joined, start the game
           AppLogger.info('Opponent joined, starting game', tag: 'WaitingRoom');
+          
+          // Extract opponent info if available
+          final opponentInfo = message['opponent'] as Map<String, dynamic>?;
+          if (opponentInfo != null) {
+            GameModesMediator.setOpponentInfo(opponentInfo);
+            AppLogger.info('Stored opponent info: ${opponentInfo['username']}, avatar: ${opponentInfo['avatar_icon']}', tag: 'WaitingRoom');
+          }
+          
           setState(() {
             _isWaiting = false;
             _isConnecting = false;
           });
-          // Navigate to chess screen after a short delay
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              AppLogger.info('Navigating to chess screen', tag: 'WaitingRoom');
-              context.push(AppRoutes.chess);
-            }
-          });
+          _navigateToGame(opponentInfo);
         } else if (type == 'error') {
           final errorMsg = message['message'] as String? ?? 'An error occurred';
           AppLogger.error('Error in waiting room: $errorMsg', tag: 'WaitingRoom');
@@ -92,17 +159,67 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
     }
   }
 
+  void _startHeartbeatTimer() {
+    // Cancel existing timer if any
+    _heartbeatTimer?.cancel();
+    
+    // Start periodic heartbeat every 15 seconds
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+      if (!mounted || _hasNavigated) {
+        timer.cancel();
+        return;
+      }
+      
+      // Send heartbeat to keep connection alive and verify user is still waiting
+      _sendHeartbeat();
+    });
+  }
+  
+  void _sendHeartbeat() {
+    if (!_roomHandler.isConnected || _hasNavigated) {
+      return;
+    }
+    
+    try {
+      AppLogger.debug('Sending heartbeat to verify user is still waiting', tag: 'WaitingRoom');
+      // Send heartbeat message via WebSocket
+      // The backend will use this to verify the user is still active
+      final heartbeatMessage = json.encode({
+        'type': 'heartbeat',
+        'data': {
+          'room_code': widget.roomCode,
+        },
+      });
+      
+      // Access the WebSocket channel to send heartbeat
+      // Note: We need to add a method to GameRoomHandler to send custom messages
+      _roomHandler.sendHeartbeat(heartbeatMessage);
+    } catch (e) {
+      AppLogger.warning('Failed to send heartbeat: $e', tag: 'WaitingRoom');
+    }
+  }
+
   @override
   void dispose() {
     AppLogger.info('Disposing WaitingRoomScreen', tag: 'WaitingRoom');
+    _heartbeatTimer?.cancel();
     _messageSubscription?.cancel();
-    _roomHandler.dispose();
+    // Only dispose handler if it's not being reused by GameController
+    // If handler is shared, GameController will dispose it
+    if (GameModesMediator.sharedRoomHandler != _roomHandler) {
+      AppLogger.info('Disposing room handler (not shared)', tag: 'WaitingRoom');
+      _roomHandler.dispose();
+    } else {
+      AppLogger.info('Keeping room handler for reuse (it is shared)', tag: 'WaitingRoom');
+    }
     super.dispose();
   }
 
   void _handleCancel() {
     AppLogger.info('User cancelled waiting room', tag: 'WaitingRoom');
+    _heartbeatTimer?.cancel();
     _messageSubscription?.cancel();
+    // Close WebSocket connection - this will trigger backend cleanup
     _roomHandler.dispose();
     if (mounted) {
       context.pop();
@@ -179,7 +296,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Palette.accent.withOpacity(0.1),
+                            color: Palette.accent.withValues(alpha: 0.1),
                             blurRadius: 20,
                             spreadRadius: 0,
                           ),
@@ -190,10 +307,10 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Palette.accent.withOpacity(0.1),
+                              color: Palette.accent.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Palette.accent.withOpacity(0.3),
+                                color: Palette.accent.withValues(alpha: 0.3),
                                 width: 2,
                               ),
                             ),
@@ -210,70 +327,14 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                               color: Palette.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 32),
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Palette.backgroundElevated,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Palette.accent.withOpacity(0.3),
-                                width: 2,
-                              ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'We are searching for an opponent for you...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Palette.textSecondary,
                             ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Room Code',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Palette.textSecondary,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 16,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Palette.background,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    widget.roomCode,
-                                    style: TextStyle(
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.bold,
-                                      color: Palette.accent,
-                                      letterSpacing: 6,
-                                      fontFamily: 'monospace',
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.share_outlined,
-                                      size: 16,
-                                      color: Palette.textTertiary,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Share this code with your opponent',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Palette.textTertiary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                            textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 32),
                           // Cancel button
@@ -312,7 +373,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                         color: Palette.backgroundTertiary,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: Palette.error.withOpacity(0.5),
+                          color: Palette.error.withValues(alpha: 0.5),
                           width: 1,
                         ),
                       ),
@@ -321,7 +382,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Palette.error.withOpacity(0.1),
+                              color: Palette.error.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(

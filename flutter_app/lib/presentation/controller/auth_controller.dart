@@ -86,6 +86,8 @@ class AuthController extends _$AuthController {
         }
       }
       
+      // No saved user found - return null so user can log in
+      AppLogger.info('No saved user found', tag: 'AuthController');
       return null;
     } catch (e) {
       AppLogger.error('Error in AuthController build', tag: 'AuthController', error: e);
@@ -162,5 +164,24 @@ class AuthController extends _$AuthController {
   AuthUser? get currentUser => state.valueOrNull;
   
   String? get token => state.valueOrNull?.accessToken;
+
+  Future<void> updateProfileName(String profileName) async {
+    final currentUser = state.valueOrNull;
+    if (currentUser == null) {
+      throw Exception('User not authenticated');
+    }
+
+    try {
+      final updatedName = await _authService!.updateProfileName(profileName);
+      final updatedUser = currentUser.copyWith(profileName: updatedName);
+      await _authStorage!.saveAuthUser(updatedUser);
+      state = AsyncValue.data(updatedUser);
+      AppLogger.info('Profile name updated successfully', tag: 'AuthController');
+    } catch (e, stackTrace) {
+      AppLogger.error('Profile name update failed', tag: 'AuthController', error: e);
+      state = AsyncValue.error(e, stackTrace);
+      rethrow;
+    }
+  }
 }
 

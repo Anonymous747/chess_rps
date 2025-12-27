@@ -7,6 +7,8 @@ from src.game.router import router as router_game
 from src.auth.router import router as router_auth
 from src.auth.settings_router import router as router_settings
 from src.collection.router import router as router_collection
+from src.stats.router import router as router_stats
+from src.friends.router import router as router_friends
 from src.database import get_async_session, engine
 from src.database import Base
 
@@ -15,6 +17,8 @@ from src.game.models import Messages, GameRoom, GamePlayer, GameMove, RpsRound  
 from src.auth.models import User, Token  # noqa: F401
 from src.auth.settings_models import UserSettings  # noqa: F401
 from src.collection.models import CollectionItem, UserCollection  # noqa: F401
+from src.stats.models import UserStats, PerformanceHistory  # noqa: F401
+from src.friends.models import Friendship  # noqa: F401
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -87,4 +91,6 @@ app.include_router(router_auth, prefix="/api/v1")
 app.include_router(router_settings, prefix="/api/v1")
 app.include_router(router_game, prefix="/api/v1", tags=["games"])
 app.include_router(router_collection, prefix="/api/v1")
+app.include_router(router_stats, prefix="/api/v1")
+app.include_router(router_friends, prefix="/api/v1")
 

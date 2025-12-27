@@ -84,6 +84,21 @@ class UserCollectionController extends _$UserCollectionController {
     }
   }
 
+  Future<void> equipAvatarByIcon(String iconName) async {
+    try {
+      final service = ref.read(collectionServiceProvider);
+      await service.equipAvatarByIcon(iconName);
+      // Refresh collection after equipping
+      await refreshCollection();
+      // Also refresh all items to get the newly created item
+      ref.read(collectionControllerProvider.notifier).refreshItems();
+      AppLogger.info('Avatar equipped successfully by icon', tag: 'UserCollectionController');
+    } catch (e) {
+      AppLogger.error('Error equipping avatar by icon', tag: 'UserCollectionController', error: e);
+      rethrow;
+    }
+  }
+
   Future<void> unlockItem(int itemId) async {
     try {
       final service = ref.read(collectionServiceProvider);

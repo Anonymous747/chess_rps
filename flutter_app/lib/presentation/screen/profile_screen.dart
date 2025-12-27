@@ -1,14 +1,29 @@
+import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/data/service/collection/collection_service.dart';
+import 'package:chess_rps/data/service/friends/friends_service.dart';
+import 'package:chess_rps/data/service/stats/stats_service.dart';
+import 'package:chess_rps/presentation/controller/auth_controller.dart';
+import 'package:chess_rps/presentation/controller/collection_controller.dart';
+import 'package:chess_rps/presentation/controller/friends_controller.dart';
+import 'package:chess_rps/presentation/controller/stats_controller.dart';
+import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/utils/avatar_utils.dart';
+import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends HookConsumerWidget {
   static const routeName = '/profile';
 
   const ProfileScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(statsControllerProvider);
+    final userCollectionAsync = ref.watch(userCollectionControllerProvider);
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -32,7 +47,7 @@ class ProfileScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      onPressed: () => context.pop(),
+                      onPressed: () => Navigator.of(context).pop(),
                       icon: Icon(Icons.arrow_back, color: Palette.textSecondary),
                     ),
                     Text(
@@ -44,8 +59,22 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      onPressed: () {},
-                      icon: Icon(Icons.share, color: Palette.textSecondary),
+                      onPressed: () async {
+                        // Logout and navigate to login screen
+                        await ref.read(authControllerProvider.notifier).logout();
+                        if (context.mounted) {
+                          context.go(AppRoutes.login);
+                        }
+                      },
+                      icon: Icon(Icons.logout, color: Palette.error),
+                      tooltip: 'Logout',
+                      style: IconButton.styleFrom(
+                        backgroundColor: Palette.error.withValues(alpha: 0.1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Palette.error.withValues(alpha: 0.3)),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -58,15 +87,15 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       // Profile Header
-                      _buildProfileHeader(),
+                      _buildProfileHeader(context, ref, statsAsync, userCollectionAsync),
                       const SizedBox(height: 24),
 
                       // Stats Grid
-                      _buildStatsGrid(),
+                      _buildStatsGrid(context, ref, statsAsync),
                       const SizedBox(height: 24),
 
                       // Performance Chart
-                      _buildPerformanceSection(),
+                      _buildPerformanceSection(statsAsync),
                       const SizedBox(height: 24),
 
                       // Achievements
@@ -87,158 +116,275 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader() {
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 112,
-              height: 112,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Palette.purpleAccent.withOpacity(0.3),
-                  width: 2,
-                  style: BorderStyle.solid,
-                ),
+  Widget _buildProfileHeader(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<UserStats> statsAsync,
+    AsyncValue<List<UserCollectionItem>> userCollectionAsync,
+  ) {
+    return statsAsync.when(
+      data: (stats) {
+        final levelProgress = stats.levelProgress;
+        final progressValue = levelProgress != null && levelProgress.xpForNextLevel > 0
+            ? levelProgress.currentLevelXp / levelProgress.xpForNextLevel
+            : 0.0;
+        final levelName = stats.levelName ?? 'Novice';
+        final level = stats.level;
+        final xpForNext = levelProgress?.xpForNextLevel ?? 100;
+        final currentXp = levelProgress?.currentLevelXp ?? 0;
+
+        // Get equipped avatar
+        UserCollectionItem? equippedAvatar;
+        try {
+          equippedAvatar = userCollectionAsync.valueOrNull?.firstWhere(
+            (uc) => uc.isEquipped && uc.item.category == CollectionCategory.AVATARS,
+          );
+        } catch (e) {
+          // No equipped avatar found
+          equippedAvatar = null;
+        }
+        final avatarPath = equippedAvatar != null
+            ? AvatarUtils.getAvatarImagePath(equippedAvatar.item.iconName)
+            : AvatarUtils.getDefaultAvatarPath();
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Palette.purpleAccent.withValues(alpha: 0.15),
+                blurRadius: 25,
+                spreadRadius: 0,
+                offset: const Offset(0, 6),
               ),
-              child: CircularProgressIndicator(
-                value: 0.3,
-                strokeWidth: 2,
-                color: Palette.purpleAccent,
-                backgroundColor: Colors.transparent,
+              BoxShadow(
+                color: Palette.black.withValues(alpha: 0.1),
+                blurRadius: 15,
+                spreadRadius: 0,
+                offset: const Offset(0, 4),
               ),
-            ),
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Palette.glassBorder, width: 2),
-              ),
-            ),
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Palette.purpleAccent, Palette.purpleAccentDark],
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Palette.purpleAccent.withOpacity(0.4),
-                    blurRadius: 25,
-                  ),
-                ],
-              ),
-              child: Icon(Icons.person, color: Palette.textPrimary, size: 48),
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Palette.background,
-                  shape: BoxShape.circle,
-                ),
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
+            ],
+          ),
+          child: Column(
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 112,
+                    height: 112,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Palette.purpleAccent.withValues(alpha: 0.3),
+                        width: 2,
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                  child: CircularProgressIndicator(
+                    value: progressValue.clamp(0.0, 1.0),
+                    strokeWidth: 2,
                     color: Palette.purpleAccent,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Palette.background, width: 2),
+                    backgroundColor: Colors.transparent,
                   ),
-                  child: Center(
-                    child: Text(
-                      '42',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Palette.textPrimary,
+                ),
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Palette.glassBorder, width: 2),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    // Navigate to collection screen with avatars tab selected
+                    context.push('${AppRoutes.collection}?tab=avatars');
+                  },
+                  child: Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Palette.purpleAccent.withValues(alpha: 0.4),
+                          blurRadius: 25,
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        ClipOval(
+                          child: Image.asset(
+                            avatarPath,
+                            width: 88,
+                            height: 88,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 88,
+                                height: 88,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Palette.purpleAccent, Palette.purpleAccentDark],
+                                  ),
+                                ),
+                                child: Icon(Icons.person, color: Palette.textPrimary, size: 48),
+                              );
+                            },
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Palette.purpleAccent,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Palette.background, width: 2),
+                            ),
+                            child: Icon(
+                              Icons.edit,
+                              color: Palette.textPrimary,
+                              size: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Palette.background,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: Palette.purpleAccent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Palette.background, width: 2),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$level',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Palette.textPrimary,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
+            const SizedBox(height: 16),
+            // Profile Name with Edit Button
+            _buildProfileNameSection(context, ref),
           ],
         ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Grandmaster',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Palette.textPrimary,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.verified, color: Palette.gold, size: 20),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'ID: 8839201 • Joined 2023',
-          style: TextStyle(
-            fontSize: 14,
-            color: Palette.textSecondary,
+      );
+      },
+      loading: () => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
           ),
         ),
-        const SizedBox(height: 20),
-        Row(
+      ),
+      error: (error, stack) => Column(
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Palette.error),
+          const SizedBox(height: 16),
+          Text(
+            'Error loading profile',
+            style: TextStyle(
+              fontSize: 16,
+              color: Palette.error,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid(BuildContext context, WidgetRef ref, AsyncValue<UserStats> statsAsync) {
+    return statsAsync.when(
+      data: (stats) {
+        final ratingChange = stats.ratingChange;
+        final ratingChangeText = ratingChange >= 0 ? '+$ratingChange' : '$ratingChange';
+        final ratingChangeColor = ratingChange >= 0 ? Palette.success : Palette.error;
+
+        final winRateText = stats.totalGames > 0 ? '${stats.winRate.toStringAsFixed(1)}%' : '0%';
+        final totalGamesText = '${stats.totalGames} Games';
+
+        // Win streak can't be negative - show 0 if current streak is negative
+        final winStreak = stats.currentStreak > 0 ? stats.currentStreak : 0;
+        final streakText = '$winStreak';
+
+        return Row(
           children: [
             Expanded(
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Palette.textPrimary,
-                  foregroundColor: Palette.background,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: Text('Add Friend'),
+              child: _buildStatCard(
+                'Rating',
+                '${stats.rating}',
+                ratingChangeText,
+                ratingChangeColor,
+                Icons.trending_up,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: OutlinedButton(
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Palette.textPrimary,
-                  side: BorderSide(color: Palette.glassBorder),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: Text('Message'),
+              child: _buildStatCard(
+                'Win Rate',
+                winRateText,
+                totalGamesText,
+                Palette.accent,
+                null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                'Streak',
+                streakText,
+                'Best: ${stats.bestStreak}',
+                Palette.purpleAccent,
+                Icons.local_fire_department,
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsGrid() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard('Rating', '1250', '+12', Palette.success, Icons.trending_up),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard('Win Rate', '58%', '240 Games', Palette.accent, null),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard('Puzzle', '2100', 'Rank 5', Palette.purpleAccent, Icons.military_tech),
-        ),
-      ],
+        );
+      },
+      loading: () => Row(
+        children: [
+          Expanded(child: SkeletonCard(height: 100)),
+          const SizedBox(width: 12),
+          Expanded(child: SkeletonCard(height: 100)),
+          const SizedBox(width: 12),
+          Expanded(child: SkeletonCard(height: 100)),
+        ],
+      ),
+      error: (error, stack) => Row(
+        children: [
+          Expanded(child: _buildStatCard('Rating', 'Error', '', Palette.error, null)),
+          const SizedBox(width: 12),
+          Expanded(child: _buildStatCard('Win Rate', 'Error', '', Palette.error, null)),
+          const SizedBox(width: 12),
+          Expanded(child: _buildStatCard('Streak', 'Error', '', Palette.error, null)),
+        ],
+      ),
     );
   }
 
@@ -249,6 +395,20 @@ class ProfileScreen extends StatelessWidget {
         color: Palette.backgroundTertiary,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Palette.glassBorder),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.25),
+            blurRadius: 18,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.15),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -281,7 +441,7 @@ class ProfileScreen extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 10,
-                  color: color.withOpacity(0.7),
+                  color: color.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -291,7 +451,9 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPerformanceSection() {
+  Widget _buildPerformanceSection(AsyncValue<UserStats> statsAsync) {
+    final selectedPeriod = useState<String>('Weekly'); // Default to Weekly
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -308,43 +470,153 @@ class ProfileScreen extends StatelessWidget {
             ),
             Row(
               children: [
-                _buildTimeFilter('Weekly', true),
+                _buildTimeFilter(
+                  'Weekly',
+                  selectedPeriod.value == 'Weekly',
+                  () => selectedPeriod.value = 'Weekly',
+                ),
                 const SizedBox(width: 8),
-                _buildTimeFilter('Monthly', false),
+                _buildTimeFilter(
+                  'Monthly',
+                  selectedPeriod.value == 'Monthly',
+                  () => selectedPeriod.value = 'Monthly',
+                ),
               ],
             ),
           ],
         ),
         const SizedBox(height: 12),
         Container(
-          height: 160,
+          height: 180,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Palette.backgroundTertiary,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Palette.glassBorder),
+            boxShadow: [
+              BoxShadow(
+                color: Palette.purpleAccent.withValues(alpha: 0.15),
+                blurRadius: 25,
+                spreadRadius: 0,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Palette.black.withValues(alpha: 0.1),
+                blurRadius: 15,
+                spreadRadius: 0,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: CustomPaint(
-            painter: _PerformanceChartPainter(),
-            child: Container(),
+          child: statsAsync.when(
+            data: (stats) {
+              final history = stats.performanceHistory;
+              if (history != null && history.isNotEmpty) {
+                // Filter history based on selected period
+                final now = DateTime.now();
+                final filteredHistory = history.where((item) {
+                  final daysDiff = now.difference(item.createdAt).inDays;
+                  if (selectedPeriod.value == 'Weekly') {
+                    return daysDiff <= 7;
+                  } else {
+                    return daysDiff <= 30;
+                  }
+                }).toList();
+                
+                if (filteredHistory.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No performance data for ${selectedPeriod.value.toLowerCase()} period',
+                      style: TextStyle(
+                        color: Palette.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }
+                
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.0, 0.1),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOut,
+                        )),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: CustomPaint(
+                    key: ValueKey('${selectedPeriod.value}_${filteredHistory.length}'),
+                    painter: _PerformanceChartPainter(filteredHistory, selectedPeriod.value),
+                    child: Container(),
+                  ),
+                );
+              } else {
+                return Center(
+                  child: Text(
+                    'No performance data yet',
+                    style: TextStyle(
+                      color: Palette.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                );
+              }
+            },
+            loading: () => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(40),
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
+                ),
+              ),
+            ),
+            error: (error, stack) => Center(
+              child: Text(
+                'Error loading performance data',
+                style: TextStyle(
+                  color: Palette.error,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTimeFilter(String label, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isActive ? Colors.white.withOpacity(0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: isActive ? Palette.textPrimary : Palette.textSecondary,
+  Widget _buildTimeFilter(String label, bool isActive, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isActive ? Palette.accent.withValues(alpha: 0.5) : Colors.transparent,
+            width: 1,
+          ),
+        ),
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+            color: isActive ? Palette.textPrimary : Palette.textSecondary,
+          ),
+          child: Text(label),
         ),
       ),
     );
@@ -379,11 +651,14 @@ class ProfileScreen extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildAchievementCard('Grandmaster', 'Reach 2500 MMR', Icons.emoji_events, Palette.gold, true),
+              _buildAchievementCard(
+                  'Grandmaster', 'Reach 2500 MMR', Icons.emoji_events, Palette.gold, true),
               const SizedBox(width: 12),
-              _buildAchievementCard('On Fire', '10 Win Streak', Icons.local_fire_department, Palette.error, true),
+              _buildAchievementCard(
+                  'On Fire', '10 Win Streak', Icons.local_fire_department, Palette.error, true),
               const SizedBox(width: 12),
-              _buildAchievementCard('Puzzle Master', 'Solve 1000 Puzzles', Icons.extension, Palette.accent, false),
+              _buildAchievementCard(
+                  'Puzzle Master', 'Solve 1000 Puzzles', Icons.extension, Palette.accent, false),
             ],
           ),
         ),
@@ -412,6 +687,20 @@ class ProfileScreen extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Palette.glassBorder),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: isUnlocked ? 0.25 : 0.1),
+            blurRadius: 18,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Palette.black.withValues(alpha: 0.15),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -419,12 +708,12 @@ class ProfileScreen extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
               boxShadow: isUnlocked
                   ? [
                       BoxShadow(
-                        color: color.withOpacity(0.2),
+                        color: color.withValues(alpha: 0.2),
                         blurRadius: 15,
                       ),
                     ]
@@ -450,7 +739,7 @@ class ProfileScreen extends StatelessWidget {
             subtitle,
             style: TextStyle(
               fontSize: 10,
-              color: isUnlocked ? Palette.textTertiary : Palette.textTertiary.withOpacity(0.5),
+              color: isUnlocked ? Palette.textTertiary : Palette.textTertiary.withValues(alpha: 0.5),
             ),
             textAlign: TextAlign.center,
           ),
@@ -475,11 +764,13 @@ class ProfileScreen extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildShowcaseItem('Void Spirit Knight', 'Legendary Skin', Icons.extension, Palette.purpleAccent),
+              child: _buildShowcaseItem(
+                  'Void Spirit Knight', 'Legendary Skin', Icons.extension, Palette.purpleAccent),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildShowcaseItem('Nebula Queen', 'Epic Skin', Icons.star, Palette.purpleAccentLight),
+              child: _buildShowcaseItem(
+                  'Nebula Queen', 'Epic Skin', Icons.star, Palette.purpleAccentLight),
             ),
           ],
         ),
@@ -500,7 +791,7 @@ class ProfileScreen extends StatelessWidget {
           Container(
             height: 128,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -542,11 +833,495 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _showAddFriendsOverlay(BuildContext context, WidgetRef ref) {
+    final searchController = ref.read(friendsSearchControllerProvider.notifier);
+    final requestsController = ref.read(friendRequestsControllerProvider.notifier);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext bottomSheetContext) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Palette.background,
+                Palette.backgroundSecondary,
+                Palette.backgroundTertiary,
+              ],
+            ),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            border: Border.all(color: Palette.glassBorder),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Palette.textTertiary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Add Friends',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Palette.textPrimary,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(bottomSheetContext).pop(),
+                      icon: Icon(Icons.close, color: Palette.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Search field
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _AddFriendsSearchField(
+                  onSearchChanged: (value) {
+                    if (value.length >= 3) {
+                      searchController.searchUsers(value);
+                    } else {
+                      searchController.clearSearch();
+                    }
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Search results
+              Expanded(
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final searchAsync = ref.watch(friendsSearchControllerProvider);
+                    final searchControllerRef = ref.read(friendsSearchControllerProvider.notifier);
+                    return _buildSearchResultsList(
+                      bottomSheetContext,
+                      ref,
+                      searchAsync,
+                      requestsController,
+                      searchControllerRef,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchResultsList(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<SearchUserResponse>> searchAsync,
+    FriendRequestsController requestsController,
+    FriendsSearchController searchController,
+  ) {
+    return searchAsync.when(
+      data: (results) {
+        if (results.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.search, size: 64, color: Palette.textTertiary),
+                const SizedBox(height: 16),
+                Text(
+                  'Search for friends',
+                  style: TextStyle(
+                    color: Palette.textSecondary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Text(
+                    'Enter at least 3 characters to search for users',
+                    style: TextStyle(
+                      color: Palette.textTertiary,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: results.length,
+          itemBuilder: (context, index) {
+            final user = results[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Palette.backgroundTertiary,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Palette.glassBorder),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Palette.backgroundSecondary, Palette.backgroundTertiary],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Palette.glassBorder),
+                      ),
+                      child: Center(
+                        child: Text(
+                          user.phoneNumber.length >= 2
+                              ? user.phoneNumber
+                                  .substring(user.phoneNumber.length - 2)
+                                  .toUpperCase()
+                              : 'U',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Palette.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                user.phoneNumber,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Palette.textPrimary,
+                                ),
+                              ),
+                              if (user.rating != null) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Palette.purpleAccent.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border:
+                                        Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
+                                  ),
+                                  child: Text(
+                                    '${user.rating}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Palette.purpleAccent,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user.isFriend
+                                ? 'Already friends'
+                                : (user.friendshipStatus == 'pending'
+                                    ? 'Request pending'
+                                    : 'Not friends'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Palette.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!user.isFriend && user.friendshipStatus != 'pending')
+                      IconButton(
+                        onPressed: () async {
+                          try {
+                            await requestsController.sendFriendRequest(user.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Friend request sent'),
+                                  backgroundColor: Palette.success,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to send request: $e'),
+                                  backgroundColor: Palette.error,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        icon: Icon(Icons.person_add, color: Palette.purpleAccent),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Palette.purpleAccent.withValues(alpha: 0.1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(color: Palette.purpleAccent.withValues(alpha: 0.2)),
+                          ),
+                        ),
+                      )
+                    else if (user.isFriend)
+                      Icon(Icons.check_circle, color: Palette.success, size: 24)
+                    else
+                      Icon(Icons.hourglass_empty, color: Palette.warning, size: 24),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+      loading: () => Center(
+        child: CircularProgressIndicator(color: Palette.accent),
+      ),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Palette.error),
+            const SizedBox(height: 16),
+            Text(
+              'Error searching users',
+              style: TextStyle(color: Palette.error, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => searchController.clearSearch(),
+              child: Text('Try again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileNameSection(BuildContext context, WidgetRef ref) {
+    return _ProfileNameSection(key: const ValueKey('profile_name_section'));
+  }
+}
+
+// Separate HookWidget for profile name section to maintain hook consistency
+class _ProfileNameSection extends HookConsumerWidget {
+  const _ProfileNameSection({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authUser = ref.watch(authControllerProvider).valueOrNull;
+    final profileName = authUser?.profileName ?? 'Player';
+    // Hooks must be called in the same order every time - using consistent types
+    final isEditing = useState<bool>(false);
+    final nameController = useTextEditingController();
+    final isLoading = useState<bool>(false);
+    
+    // Update controller text when profileName changes (but not when editing)
+    useEffect(() {
+      if (!isEditing.value) {
+        nameController.text = profileName;
+      }
+      return null;
+    }, [profileName]);
+
+    if (isEditing.value) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Palette.backgroundTertiary,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: nameController,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Palette.textPrimary,
+                ),
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Enter name',
+                  hintStyle: TextStyle(color: Palette.textSecondary),
+                ),
+                maxLength: 50,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (isLoading.value)
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Palette.purpleAccent,
+                ),
+              )
+            else
+              IconButton(
+                onPressed: () async {
+                  final newName = nameController.text.trim();
+                  if (newName.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Name cannot be empty'),
+                        backgroundColor: Palette.error,
+                      ),
+                    );
+                    return;
+                  }
+
+                  isLoading.value = true;
+                  try {
+                    await ref.read(authControllerProvider.notifier).updateProfileName(newName);
+                    
+                    // Invalidate leaderboard to refresh with updated name
+                    // Invalidate all possible limit values that might be in use
+                    ref.invalidate(leaderboardProvider(3));
+                    ref.invalidate(leaderboardProvider(10));
+                    ref.invalidate(leaderboardProvider(50));
+                    
+                    isEditing.value = false;
+                    AppLogger.info('Profile name updated: $newName', tag: 'ProfileScreen');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Profile name updated'),
+                        backgroundColor: Palette.success,
+                      ),
+                    );
+                  } catch (e) {
+                    AppLogger.error('Failed to update profile name', tag: 'ProfileScreen', error: e);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to update profile name'),
+                        backgroundColor: Palette.error,
+                      ),
+                    );
+                  } finally {
+                    isLoading.value = false;
+                  }
+                },
+                icon: Icon(Icons.check, color: Palette.success, size: 24),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(),
+              ),
+            const SizedBox(width: 4),
+            IconButton(
+              onPressed: () {
+                nameController.text = profileName;
+                isEditing.value = false;
+              },
+              icon: Icon(Icons.close, color: Palette.error, size: 24),
+              padding: EdgeInsets.zero,
+              constraints: BoxConstraints(),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          profileName,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Palette.textPrimary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: () {
+            nameController.text = profileName;
+            isEditing.value = true;
+          },
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Palette.backgroundTertiary,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Palette.glassBorder),
+            ),
+            child: Icon(
+              Icons.edit,
+              size: 16,
+              color: Palette.purpleAccent,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _PerformanceChartPainter extends CustomPainter {
+  final List<PerformanceHistoryItem> history;
+  final String period;
+
+  _PerformanceChartPainter(this.history, this.period);
+
   @override
   void paint(Canvas canvas, Size size) {
+    if (history.isEmpty) return;
+
+    // Reserve space at bottom for date labels
+    const dateLabelHeight = 20.0;
+    final chartHeight = size.height - dateLabelHeight;
+
+    // Find min and max rating for scaling
+    final ratings = history.map((h) => h.rating).toList();
+    final minRating = ratings.reduce((a, b) => a < b ? a : b);
+    final maxRating = ratings.reduce((a, b) => a > b ? a : b);
+    final ratingRange = maxRating - minRating;
+    final padding = ratingRange * 0.1; // 10% padding
+
     final paint = Paint()
       ..color = Palette.purpleAccent
       ..strokeWidth = 3
@@ -554,14 +1329,18 @@ class _PerformanceChartPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final path = Path();
-    final points = [
-      Offset(size.width * 0.0, size.height * 0.67),
-      Offset(size.width * 0.2, size.height * 0.58),
-      Offset(size.width * 0.4, size.height * 0.42),
-      Offset(size.width * 0.6, size.height * 0.5),
-      Offset(size.width * 0.8, size.height * 0.25),
-      Offset(size.width * 1.0, size.height * 0.08),
-    ];
+    final points = <Offset>[];
+
+    // Generate points from history
+    for (int i = 0; i < history.length; i++) {
+      final normalizedRating =
+          (history[i].rating - minRating + padding) / (ratingRange + padding * 2);
+      final x = size.width * (i / (history.length - 1).clamp(1, double.infinity));
+      final y = chartHeight * (1 - normalizedRating); // Invert Y axis, use chartHeight
+      points.add(Offset(x, y));
+    }
+
+    if (points.isEmpty) return;
 
     path.moveTo(points[0].dx, points[0].dy);
     for (int i = 1; i < points.length; i++) {
@@ -572,8 +1351,8 @@ class _PerformanceChartPainter extends CustomPainter {
 
     // Fill
     final fillPath = Path.from(path)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
+      ..lineTo(size.width, chartHeight)
+      ..lineTo(0, chartHeight)
       ..close();
 
     final fillPaint = Paint()
@@ -581,22 +1360,143 @@ class _PerformanceChartPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          Palette.purpleAccent.withOpacity(0.3),
-          Palette.purpleAccent.withOpacity(0),
+          Palette.purpleAccent.withValues(alpha: 0.3),
+          Palette.purpleAccent.withValues(alpha: 0),
         ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ).createShader(Rect.fromLTWH(0, 0, size.width, chartHeight))
       ..style = PaintingStyle.fill;
 
     canvas.drawPath(fillPath, fillPaint);
 
-    // Points
-    for (final point in [points[2], points[4]]) {
-      canvas.drawCircle(point, 3, Paint()..color = Palette.purpleAccent..style = PaintingStyle.fill);
-      canvas.drawCircle(point, 3, Paint()..color = Palette.background..style = PaintingStyle.stroke..strokeWidth = 2);
+    // Draw points for significant changes
+    for (int i = 0; i < points.length; i++) {
+      if (i > 0) {
+        final prevRating = history[i - 1].rating;
+        final currRating = history[i].rating;
+        if ((currRating - prevRating).abs() >= 10) {
+          // Significant change
+          canvas.drawCircle(
+              points[i],
+              4,
+              Paint()
+                ..color = Palette.purpleAccent
+                ..style = PaintingStyle.fill);
+          canvas.drawCircle(
+              points[i],
+              4,
+              Paint()
+                ..color = Palette.background
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 2);
+        }
+      }
+    }
+
+    // Draw date labels (2-3 dates evenly distributed)
+    final dateIndices = <int>[];
+    
+    if (history.length == 1) {
+      dateIndices.add(0);
+    } else if (history.length == 2) {
+      dateIndices.add(0);
+      dateIndices.add(history.length - 1);
+    } else {
+      // 3 dates: start, middle, end
+      dateIndices.add(0);
+      dateIndices.add((history.length - 1) ~/ 2);
+      dateIndices.add(history.length - 1);
+    }
+
+    final textStyle = TextStyle(
+      color: Palette.textSecondary,
+      fontSize: 10,
+      fontWeight: FontWeight.w500,
+    );
+
+    for (final index in dateIndices) {
+      if (index < points.length) {
+        final date = history[index].createdAt;
+        final dateText = _formatDate(date, period);
+        
+        // Create text span
+        final textSpan = TextSpan(
+          text: dateText,
+          style: textStyle,
+        );
+        final textPainter = TextPainter(
+          text: textSpan,
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+        
+        // Position text at bottom, centered on the point
+        final textX = points[index].dx - (textPainter.width / 2);
+        final textY = chartHeight + 4; // Position below chart
+        
+        // Ensure text doesn't go outside bounds
+        final adjustedX = textX.clamp(0.0, size.width - textPainter.width);
+        
+        textPainter.paint(canvas, Offset(adjustedX, textY));
+      }
+    }
+  }
+
+  String _formatDate(DateTime date, String period) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    final daysDiff = today.difference(dateOnly).inDays;
+
+    if (daysDiff == 0) {
+      return 'Today';
+    } else if (daysDiff == 1) {
+      return 'Yesterday';
+    } else if (period == 'Weekly' && daysDiff < 7) {
+      // For weekly, show day name
+      final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return weekdays[date.weekday - 1];
+    } else {
+      // For monthly or older dates, show M/D format
+      return '${date.month}/${date.day}';
     }
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _AddFriendsSearchField extends HookWidget {
+  final Function(String) onSearchChanged;
+
+  const _AddFriendsSearchField({
+    Key? key,
+    required this.onSearchChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final searchController = useTextEditingController();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Palette.backgroundTertiary,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Palette.glassBorder),
+      ),
+      child: TextField(
+        controller: searchController,
+        style: TextStyle(color: Palette.textPrimary),
+        decoration: InputDecoration(
+          hintText: 'Search by phone number or user ID...',
+          hintStyle: TextStyle(color: Palette.textTertiary),
+          prefixIcon: Icon(Icons.search, color: Palette.textSecondary),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        onChanged: onSearchChanged,
+      ),
+    );
+  }
 }
 

@@ -57,7 +57,7 @@ class PiecePackOverlay extends ConsumerWidget {
                           margin: const EdgeInsets.only(right: 8),
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Palette.success.withOpacity(0.1),
+                            color: Palette.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: Palette.success),
                           ),
@@ -85,7 +85,7 @@ class PiecePackOverlay extends ConsumerWidget {
                           margin: const EdgeInsets.only(right: 8),
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Palette.success.withOpacity(0.1),
+                            color: Palette.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: Palette.success),
                           ),

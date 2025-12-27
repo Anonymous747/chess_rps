@@ -5,6 +5,7 @@ import 'package:chess_rps/domain/model/cell.dart';
 import 'package:chess_rps/domain/model/position.dart';
 import 'package:chess_rps/presentation/controller/game_controller.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
+import 'package:chess_rps/presentation/state/game_state.dart';
 import 'package:chess_rps/presentation/utils/piece_pack_utils.dart';
 import 'package:chess_rps/presentation/utils/board_theme_utils.dart';
 import 'package:chess_rps/presentation/widget/custom/animated_border.dart';
@@ -44,6 +45,16 @@ class CellWidget extends HookConsumerWidget {
     final controller = ref.watch(gameControllerProvider.notifier);
     final gameState = ref.watch(gameControllerProvider);
     final settingsAsync = ref.watch(settingsControllerProvider);
+    
+    // Check if this cell is part of the last move
+    final lastMovePositions = gameState.getLastMovePositions();
+    final isLastMoveFrom = lastMovePositions != null &&
+        lastMovePositions['fromRow'] == row &&
+        lastMovePositions['fromCol'] == column;
+    final isLastMoveTo = lastMovePositions != null &&
+        lastMovePositions['toRow'] == row &&
+        lastMovePositions['toCol'] == column;
+    final isLastMove = isLastMoveFrom || isLastMoveTo;
     
     // Get piece set from settings, validate it exists, fallback to default (cardinal)
     String pieceSet = 'cardinal'; // Default fallback
@@ -127,7 +138,7 @@ class CellWidget extends HookConsumerWidget {
       child: Container(
         decoration: BoxDecoration(boxShadow: [
           BoxShadow(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             blurRadius: 4,
             blurStyle: BlurStyle.outer,
             offset: const Offset(1, 2),
@@ -156,7 +167,25 @@ class CellWidget extends HookConsumerWidget {
                   AnimatedBorder(
                     beginColor: Palette.error,
                     endColor: Palette.warning,
-                    backgroundColor: Palette.error.withOpacity(0.3),
+                    backgroundColor: Palette.error.withValues(alpha: 0.3),
+                  ),
+                // Highlight last move - show a glowing border
+                if (isLastMove)
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Palette.accent,
+                        width: 3,
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Palette.accent.withValues(alpha: 0.6),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
                   ),
                 if (cell.figure != null)
                   Container(

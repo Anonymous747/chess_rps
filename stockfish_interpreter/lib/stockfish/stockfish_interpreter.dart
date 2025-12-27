@@ -43,10 +43,54 @@ class StockfishInterpreter {
     }
   }
 
+  /// Wait for Stockfish to be ready (initialized and settings configured)
+  /// This method polls the state until it becomes ready, with a timeout
+  /// It also waits a bit after the state becomes ready to ensure setupSettings() completes
+  Future<void> waitForReady({Duration timeout = const Duration(seconds: 15)}) async {
+    final startTime = DateTime.now();
+    
+    // Poll the state until ready or timeout
+    while (DateTime.now().difference(startTime) < timeout) {
+      final currentState = _stockfishHandler.getState();
+      
+      // Check if state is disposed - this means it was disposed before initialization
+      // In this case, we can't recover, so throw an error
+      if (currentState == 'disposed') {
+        throw Exception('Stockfish was disposed during initialization. State: disposed');
+      }
+      
+      // If ready, wait a bit to ensure setupSettings() has completed
+      if (currentState == readyStatus || _isReady) {
+        // Give setupSettings() time to complete
+        await Future.delayed(const Duration(milliseconds: 500));
+        // Verify it's still ready
+        if (_stockfishHandler.getState() == readyStatus || _isReady) {
+          return;
+        }
+      }
+      
+      // Wait before checking again
+      await Future.delayed(const Duration(milliseconds: 200));
+    }
+    
+    // Timeout reached
+    throw Exception('Stockfish did not become ready within ${timeout.inSeconds} seconds. Current state: ${_stockfishHandler.getState()}');
+  }
+
   /// Initialize connection to stockfish engine
   /// Need to execute if you pass [isImmediatelyStart] as false
   ///
   void initEngine() {
+    // Remove old listener if engine was already initialized
+    // Check state first to see if engine exists
+    final currentState = _stockfishHandler.getState();
+    if (currentState != 'disposed') {
+      try {
+        _stockfishHandler.stateListenable.removeListener(_stateListener);
+      } catch (e) {
+        // Ignore errors - listener might not have been added
+      }
+    }
     _stockfishHandler.initEngine();
     _stockfishHandler.stateListenable.addListener(_stateListener);
   }

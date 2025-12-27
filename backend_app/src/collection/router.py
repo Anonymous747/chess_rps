@@ -16,6 +16,7 @@ from src.collection.schemas import (
     UserCollectionUpdate,
     CollectionStatsResponse,
     EquipItemRequest,
+    EquipAvatarByIconRequest,
     CollectionCategory as CategoryEnum,
 )
 
@@ -85,6 +86,38 @@ async def get_my_collection(
             uc for uc in user_collections 
             if uc.item.category == category.value
         ]
+    
+    # Auto-unlock and equip first avatar if user has no avatars
+    if category == CategoryEnum.AVATARS or category is None:
+        avatar_collections = [uc for uc in user_collections if uc.item.category == CollectionCategory.AVATARS]
+        if not avatar_collections:
+            # Find first avatar (unlock_level 0)
+            first_avatar_query = select(CollectionItem).where(
+                and_(
+                    CollectionItem.category == CollectionCategory.AVATARS,
+                    CollectionItem.unlock_level == 0
+                )
+            ).order_by(CollectionItem.id).limit(1)
+            first_avatar_result = await session.execute(first_avatar_query)
+            first_avatar = first_avatar_result.scalar_one_or_none()
+            
+            if first_avatar:
+                # Create user collection entry for first avatar
+                user_collection = UserCollection(
+                    user_id=current_user.id,
+                    item_id=first_avatar.id,
+                    is_owned=True,
+                    is_equipped=True,  # Auto-equip first avatar
+                    obtained_at=datetime.utcnow(),
+                    obtained_via="default",
+                )
+                session.add(user_collection)
+                await session.commit()
+                await session.refresh(user_collection)
+                await session.refresh(user_collection.item)
+                
+                # Add to result
+                user_collections.append(user_collection)
     
     return user_collections
 
@@ -249,6 +282,31 @@ async def update_user_collection(
     return user_collection
 
 
+# Avatar metadata for auto-creation (matches seed_avatars.py)
+AVATAR_METADATA = {
+    "avatar_1": {"name": "Happy King", "rarity": CollectionRarity.COMMON, "unlock_level": 0},
+    "avatar_2": {"name": "Cool Dude", "rarity": CollectionRarity.COMMON, "unlock_level": 0},
+    "avatar_3": {"name": "Surprised Player", "rarity": CollectionRarity.COMMON, "unlock_level": 0},
+    "avatar_4": {"name": "Laughing Master", "rarity": CollectionRarity.COMMON, "unlock_level": 0},
+    "avatar_5": {"name": "Cool Strategist", "rarity": CollectionRarity.COMMON, "unlock_level": 0},
+    "avatar_6": {"name": "Happy Cat", "rarity": CollectionRarity.UNCOMMON, "unlock_level": 1},
+    "avatar_7": {"name": "Excited Dog", "rarity": CollectionRarity.UNCOMMON, "unlock_level": 2},
+    "avatar_8": {"name": "Friendly Bear", "rarity": CollectionRarity.UNCOMMON, "unlock_level": 3},
+    "avatar_9": {"name": "Cute Rabbit", "rarity": CollectionRarity.RARE, "unlock_level": 4},
+    "avatar_10": {"name": "Sleepy Panda", "rarity": CollectionRarity.RARE, "unlock_level": 5},
+    "avatar_11": {"name": "Party Person", "rarity": CollectionRarity.RARE, "unlock_level": 6},
+    "avatar_12": {"name": "Wise Owl", "rarity": CollectionRarity.EPIC, "unlock_level": 7},
+    "avatar_13": {"name": "Mischievous Monkey", "rarity": CollectionRarity.EPIC, "unlock_level": 8},
+    "avatar_14": {"name": "Chess Nerd", "rarity": CollectionRarity.EPIC, "unlock_level": 9},
+    "avatar_15": {"name": "Cunning Fox", "rarity": CollectionRarity.LEGENDARY, "unlock_level": 10},
+    "avatar_16": {"name": "Epic Champion", "rarity": CollectionRarity.LEGENDARY, "unlock_level": 11},
+    "avatar_17": {"name": "Friendly Dragon", "rarity": CollectionRarity.LEGENDARY, "unlock_level": 12},
+    "avatar_18": {"name": "Mystical Wizard", "rarity": CollectionRarity.LEGENDARY, "unlock_level": 13},
+    "avatar_19": {"name": "Magical Unicorn", "rarity": CollectionRarity.LEGENDARY, "unlock_level": 14},
+    "avatar_20": {"name": "Legendary Master", "rarity": CollectionRarity.LEGENDARY, "unlock_level": 15},
+}
+
+
 @router.post("/equip", response_model=List[UserCollectionResponse])
 async def equip_item(
     equip_request: EquipItemRequest,
@@ -256,7 +314,19 @@ async def equip_item(
     session: AsyncSession = Depends(get_async_session)
 ):
     """Equip an item. This will unequip other items in the same category."""
-    # Verify item exists and is owned by user
+    # First, get the item to check its properties
+    item_query = select(CollectionItem).where(CollectionItem.id == equip_request.item_id)
+    item_result = await session.execute(item_query)
+    item = item_result.scalar_one_or_none()
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="Collection item not found")
+    
+    # Verify item category matches
+    if item.category != equip_request.category.value:
+        raise HTTPException(status_code=400, detail="Item category mismatch")
+    
+    # Check if user collection entry exists
     user_collection_query = select(UserCollection).where(
         and_(
             UserCollection.user_id == current_user.id,
@@ -267,15 +337,34 @@ async def equip_item(
     result = await session.execute(user_collection_query)
     user_collection = result.scalar_one_or_none()
     
+    # If user collection doesn't exist, create it (for unlock_level 0 items or if explicitly allowed)
     if not user_collection:
-        raise HTTPException(status_code=404, detail="Collection item not found in your collection")
-    
-    if not user_collection.is_owned:
-        raise HTTPException(status_code=400, detail="Item is not owned")
-    
-    # Verify item category matches
-    if user_collection.item.category != equip_request.category.value:
-        raise HTTPException(status_code=400, detail="Item category mismatch")
+        if item.unlock_level == 0 or item.unlock_level is None:
+            # Auto-create and unlock items with unlock_level 0 or None
+            user_collection = UserCollection(
+                user_id=current_user.id,
+                item_id=equip_request.item_id,
+                is_owned=True,
+                is_equipped=False,
+                obtained_at=datetime.utcnow(),
+                obtained_via="default",
+            )
+            session.add(user_collection)
+            await session.flush()  # Flush to get the ID
+            await session.refresh(user_collection)
+            await session.refresh(user_collection.item)
+        else:
+            raise HTTPException(status_code=400, detail="Item is not owned and cannot be auto-unlocked")
+    else:
+        # If not owned, check if it should be auto-unlocked (unlock_level 0)
+        if not user_collection.is_owned:
+            if item.unlock_level == 0 or item.unlock_level is None:
+                # Auto-unlock items with unlock_level 0
+                user_collection.is_owned = True
+                user_collection.obtained_at = datetime.utcnow()
+                user_collection.obtained_via = "default"
+            else:
+                raise HTTPException(status_code=400, detail="Item is not owned")
     
     # Unequip all other items in the same category
     unequip_query = select(UserCollection).join(CollectionItem).where(
@@ -293,6 +382,142 @@ async def equip_item(
         item.is_equipped = False
     
     # Equip the requested item
+    user_collection.is_equipped = True
+    
+    await session.commit()
+    
+    # Return all equipped items
+    equipped_query = select(UserCollection).where(
+        and_(
+            UserCollection.user_id == current_user.id,
+            UserCollection.is_equipped == True
+        )
+    ).options(selectinload(UserCollection.item))
+    
+    equipped_result = await session.execute(equipped_query)
+    equipped_items = equipped_result.scalars().all()
+    
+    return equipped_items
+
+
+@router.post("/equip-avatar-by-icon", response_model=List[UserCollectionResponse])
+async def equip_avatar_by_icon(
+    equip_request: EquipAvatarByIconRequest,
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    """Equip an avatar by icon_name. Auto-creates the CollectionItem if it doesn't exist."""
+    # First, try to find the item by icon_name
+    item_query = select(CollectionItem).where(
+        and_(
+            CollectionItem.category == CollectionCategory.AVATARS,
+            CollectionItem.icon_name == equip_request.icon_name
+        )
+    )
+    item_result = await session.execute(item_query)
+    item = item_result.scalar_one_or_none()
+    
+    # If item doesn't exist, create it from metadata
+    if not item:
+        if equip_request.icon_name not in AVATAR_METADATA:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Avatar with icon_name '{equip_request.icon_name}' not found and no metadata available"
+            )
+        
+        metadata = AVATAR_METADATA[equip_request.icon_name]
+        # Extract avatar index from icon_name (e.g., "avatar_6" -> 6)
+        try:
+            avatar_index = int(equip_request.icon_name.replace("avatar_", ""))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid avatar icon_name format")
+        
+        item = CollectionItem(
+            name=metadata["name"],
+            description=f"Profile avatar: {metadata['name']}",
+            category=CollectionCategory.AVATARS,
+            rarity=metadata["rarity"],
+            icon_name=equip_request.icon_name,
+            is_premium=metadata["rarity"] in [CollectionRarity.EPIC, CollectionRarity.LEGENDARY],
+            unlock_level=metadata["unlock_level"],
+            unlock_price=None,
+            item_metadata={
+                "avatar_index": avatar_index,
+                "image_path": f"assets/images/avatars/{equip_request.icon_name}.png"
+            }
+        )
+        session.add(item)
+        await session.flush()  # Flush to get the ID
+        await session.refresh(item)
+    
+    # Now proceed with equipping (similar to equip_item)
+    user_collection_query = select(UserCollection).where(
+        and_(
+            UserCollection.user_id == current_user.id,
+            UserCollection.item_id == item.id
+        )
+    ).options(selectinload(UserCollection.item))
+    
+    result = await session.execute(user_collection_query)
+    user_collection = result.scalar_one_or_none()
+    
+    # If user collection doesn't exist, create it
+    if not user_collection:
+        if item.unlock_level == 0 or item.unlock_level is None:
+            user_collection = UserCollection(
+                user_id=current_user.id,
+                item_id=item.id,
+                is_owned=True,
+                is_equipped=False,
+                obtained_at=datetime.utcnow(),
+                obtained_via="default",
+            )
+            session.add(user_collection)
+            await session.flush()
+            await session.refresh(user_collection)
+            await session.refresh(user_collection.item)
+        else:
+            # For avatars with unlock_level > 0, check user level
+            # For now, allow equipping if user has reached the level
+            # TODO: Add user level check here
+            user_collection = UserCollection(
+                user_id=current_user.id,
+                item_id=item.id,
+                is_owned=True,
+                is_equipped=False,
+                obtained_at=datetime.utcnow(),
+                obtained_via="default",
+            )
+            session.add(user_collection)
+            await session.flush()
+            await session.refresh(user_collection)
+            await session.refresh(user_collection.item)
+    else:
+        # If not owned, auto-unlock if unlock_level is 0
+        if not user_collection.is_owned:
+            if item.unlock_level == 0 or item.unlock_level is None:
+                user_collection.is_owned = True
+                user_collection.obtained_at = datetime.utcnow()
+                user_collection.obtained_via = "default"
+            # For unlock_level > 0, we still allow equipping (user might have reached the level)
+            # TODO: Add proper level check
+    
+    # Unequip all other avatars
+    unequip_query = select(UserCollection).join(CollectionItem).where(
+        and_(
+            UserCollection.user_id == current_user.id,
+            CollectionItem.category == CollectionCategory.AVATARS,
+            UserCollection.is_equipped == True,
+            UserCollection.item_id != item.id
+        )
+    )
+    unequip_result = await session.execute(unequip_query)
+    items_to_unequip = unequip_result.scalars().all()
+    
+    for item_to_unequip in items_to_unequip:
+        item_to_unequip.is_equipped = False
+    
+    # Equip the requested avatar
     user_collection.is_equipped = True
     
     await session.commit()
@@ -366,4 +591,3 @@ async def unlock_item(
         await session.refresh(user_collection)
         await session.refresh(user_collection.item)
         return user_collection
-

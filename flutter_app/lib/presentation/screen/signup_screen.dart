@@ -81,7 +81,7 @@ class SignupScreen extends HookConsumerWidget {
                         color: Palette.backgroundTertiary,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Palette.purpleAccent.withOpacity(0.3),
+                          color: Palette.purpleAccent.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
@@ -279,7 +279,11 @@ class SignupScreen extends HookConsumerWidget {
                                       );
                                     }
                                   } finally {
-                                    isLoading.value = false;
+                                    // Only update isLoading if widget is still mounted
+                                    // (widget may be disposed after successful signup navigation)
+                                    if (context.mounted) {
+                                      isLoading.value = false;
+                                    }
                                   }
                                 }
                               },
