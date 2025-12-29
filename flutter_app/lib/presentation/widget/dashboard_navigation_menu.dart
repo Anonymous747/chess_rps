@@ -154,45 +154,89 @@ class DashboardNavigationMenu extends ConsumerWidget {
         // Navigate to main menu if not already there - use go for smooth transition
         context.go(AppRoutes.mainMenu);
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isActive
-                ? [
-                    Palette.purpleAccent,
-                    Palette.purpleAccentDark,
-                  ]
-                : [
-                    Palette.purpleAccent.withValues(alpha: 0.8),
-                    Palette.purpleAccentDark.withValues(alpha: 0.8),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Outer glow ring (only when active)
+          if (isActive)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Palette.purpleAccent.withValues(alpha: 0.4),
+                    Palette.purpleAccent.withValues(alpha: 0.0),
                   ],
-          ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Palette.purpleAccent.withValues(alpha: isActive ? 0.4 : 0.2),
-              blurRadius: isActive ? 15 : 8,
-              spreadRadius: 0,
-              offset: const Offset(0, 4),
+                ),
+              ),
             ),
-          ],
-        ),
-        child: AnimatedScale(
-          scale: isActive ? 1.1 : 1.0,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          child: Icon(
-            Icons.play_arrow,
-            color: Palette.textPrimary,
-            size: 32,
+          // Main button container
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            width: isActive ? 68 : 56,
+            height: isActive ? 68 : 56,
+            decoration: BoxDecoration(
+              // Unselected: grey background like other icons, Selected: purple gradient
+              color: isActive ? null : Palette.backgroundTertiary,
+              gradient: isActive
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Palette.purpleAccent,
+                        Palette.purpleAccentDark,
+                      ],
+                    )
+                  : null,
+              shape: BoxShape.circle,
+              border: isActive
+                  ? Border.all(
+                      color: Palette.purpleAccent.withValues(alpha: 1.0),
+                      width: 4,
+                    )
+                  : null,
+              boxShadow: isActive
+                  ? [
+                      BoxShadow(
+                        color: Palette.purpleAccent.withValues(alpha: 0.7),
+                        blurRadius: 25,
+                        spreadRadius: 3,
+                        offset: const Offset(0, 8),
+                      ),
+                      BoxShadow(
+                        color: Palette.purpleAccent.withValues(alpha: 0.4),
+                        blurRadius: 35,
+                        spreadRadius: 6,
+                        offset: const Offset(0, 0),
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+            ),
+            child: AnimatedScale(
+              scale: isActive ? 1.2 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              child: Icon(
+                Icons.play_arrow,
+                // Unselected: purple icon, Selected: white icon
+                color: isActive ? Palette.textPrimary : Palette.purpleAccent,
+                size: isActive ? 40 : 32,
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

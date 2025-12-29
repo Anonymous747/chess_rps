@@ -115,40 +115,119 @@ flutter run -d macos
 
 ## Building the Application
 
+### Building with Flavors
+
+This project supports two flavors: **dev** (localhost backend) and **prod** (gamerbot.pro backend).
+
+For detailed flavor documentation, see [FLAVORS.md](FLAVORS.md).
+
+#### Quick Build Commands
+
+**Development Flavor:**
+```bash
+# Windows
+scripts\build_dev.bat
+
+# Linux/Mac
+./scripts/build_dev.sh
+
+# Or manually:
+flutter build apk --dart-define=ENV=dev --flavor dev --release
+```
+
+**Production Flavor:**
+```bash
+# Windows
+scripts\build_prod.bat
+
+# Linux/Mac
+./scripts/build_prod.sh
+
+# Or manually:
+flutter build apk --dart-define=ENV=prod --flavor prod --release
+```
+
+#### Using Android Studio
+
+The project includes pre-configured run/build configurations in the `.run` folder:
+- **Dev (Debug)** - Development flavor, debug mode
+- **Dev (Release)** - Development flavor, release mode
+- **Prod (Debug)** - Production flavor, debug mode
+- **Prod (Release)** - Production flavor, release mode
+
+Select the desired configuration from the run dropdown and click Run or Build.
+
 ### Android
 
 #### APK (Android Package)
 
-**Debug APK:**
+**Debug APK (Default/No Flavor):**
 ```bash
 flutter build apk --debug
 ```
 Output: `build/app/outputs/flutter-apk/app-debug.apk`
 
-**Release APK:**
+**Release APK (Default/No Flavor):**
 ```bash
 flutter build apk --release
 ```
 Output: `build/app/outputs/flutter-apk/app-release.apk`
 
+**Debug APK with Dev Flavor:**
+```bash
+flutter build apk --dart-define=ENV=dev --flavor dev --debug
+```
+Output: `build/app/outputs/flutter-apk/app-dev-debug.apk`
+
+**Release APK with Dev Flavor:**
+```bash
+flutter build apk --dart-define=ENV=dev --flavor dev --release
+```
+Output: `build/app/outputs/flutter-apk/app-dev-release.apk`
+
+**Release APK with Prod Flavor:**
+```bash
+flutter build apk --dart-define=ENV=prod --flavor prod --release
+```
+Output: `build/app/outputs/flutter-apk/app-prod-release.apk`
+
 **Split APKs by ABI (smaller file size):**
 ```bash
+# Default flavor
 flutter build apk --split-per-abi
+
+# Dev flavor
+flutter build apk --dart-define=ENV=dev --flavor dev --split-per-abi
+
+# Prod flavor
+flutter build apk --dart-define=ENV=prod --flavor prod --split-per-abi
 ```
 Output: Multiple APKs in `build/app/outputs/flutter-apk/`:
-- `app-armeabi-v7a-release.apk`
-- `app-arm64-v8a-release.apk`
-- `app-x86_64-release.apk`
+- `app-armeabi-v7a-release.apk` (or `app-dev-armeabi-v7a-release.apk` for dev flavor)
+- `app-arm64-v8a-release.apk` (or `app-dev-arm64-v8a-release.apk` for dev flavor)
+- `app-x86_64-release.apk` (or `app-dev-x86_64-release.apk` for dev flavor)
 
 #### App Bundle (for Google Play Store)
 
-**Release App Bundle:**
+**Release App Bundle (Default):**
 ```bash
 flutter build appbundle --release
 ```
 Output: `build/app/outputs/bundle/release/app-release.aab`
 
-**Note**: App bundles are required for publishing to Google Play Store.
+**Release App Bundle with Dev Flavor:**
+```bash
+flutter build appbundle --dart-define=ENV=dev --flavor dev --release
+```
+Output: `build/app/outputs/bundle/devRelease/app-dev-release.aab`
+
+**Release App Bundle with Prod Flavor:**
+```bash
+flutter build appbundle --dart-define=ENV=prod --flavor prod --release
+```
+Output: `build/app/outputs/bundle/prodRelease/app-prod-release.aab`
+
+**Note**: App bundles are required for publishing to Google Play Store. Use the **prod** flavor for production releases.
 
 ### iOS
 
@@ -263,9 +342,17 @@ Output: `build/macos/Build/Products/Release/chess_rps.app`
 
 ## Build Configuration
 
-### Environment Variables
+### Environment Variables and Flavors
 
-The app may use environment variables for configuration. Check `lib/common/endpoint.dart` for backend endpoint configuration.
+The app uses flavors to support different backend environments:
+- **dev**: Development environment using localhost backend (`http://10.0.2.2:8000` by default)
+- **prod**: Production environment using gamerbot.pro backend (`https://gamerbot.pro`)
+
+**Environment Variables:**
+- `ENV`: Set to `dev` or `prod` via `--dart-define=ENV=dev` or `--dart-define=ENV=prod`
+- `BACKEND_HOST`: Optional override for dev flavor (e.g., `--dart-define=BACKEND_HOST=localhost:8000`)
+
+Check `lib/common/endpoint.dart` for backend endpoint configuration and [FLAVORS.md](FLAVORS.md) for detailed flavor documentation.
 
 ### Code Signing
 
@@ -299,11 +386,14 @@ The app may use environment variables for configuration. Check `lib/common/endpo
 ### Common Build Options
 
 ```bash
-# Build with specific flavor (if configured)
-flutter build apk --flavor production --release
+# Build with dev flavor
+flutter build apk --dart-define=ENV=dev --flavor dev --release
+
+# Build with prod flavor
+flutter build apk --dart-define=ENV=prod --flavor prod --release
 
 # Build with specific target file
-flutter build apk --target lib/main_prod.dart
+flutter build apk --target lib/main.dart
 
 # Build with specific build number
 flutter build apk --build-number=2
@@ -316,6 +406,9 @@ flutter build apk --no-tree-shake-icons
 
 # Build with verbose output
 flutter build apk --verbose
+
+# Build with custom backend host (dev flavor only)
+flutter build apk --dart-define=ENV=dev --dart-define=BACKEND_HOST=192.168.1.100:8000 --flavor dev --release
 ```
 
 ### Performance Optimizations
@@ -488,7 +581,8 @@ See `pubspec.yaml` for the complete list of dependencies.
 - [Flutter Documentation](https://docs.flutter.dev/)
 - [Dart Documentation](https://dart.dev/guides)
 - [Riverpod Documentation](https://riverpod.dev/)
-- [Project Backend Documentation](../BACKEND.md)
+- [Flavors Documentation](FLAVORS.md) - Detailed guide on using dev and prod flavors
+- [Project Backend Documentation](../backend_app/README.md)
 - [Project DevOps Documentation](../DEVOPS.md)
 
 ## License

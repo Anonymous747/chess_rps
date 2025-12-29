@@ -1007,8 +1007,11 @@ class GameController extends _$GameController {
       }
 
       AppLogger.info('Step 3: Parsing opponent move: $bestAction', tag: 'GameController');
-      // Stockfish returns moves in format "e2e4" (4 chars) or potentially "Pe2e4" (5 chars with piece)
-      // Parse the move notation properly to handle both formats
+      // Stockfish returns moves in format:
+      // - "e2e4" (4 chars: from + to)
+      // - "Pe2e4" (5 chars: piece + from + to)
+      // - "b7c8q" (5-6 chars: from + to + promotion piece)
+      // Parse the move notation properly to handle all formats
       final parsedMove = PieceNotation.parseMoveNotation(bestAction!);
       final fromNotation = parsedMove['from'] as String? ?? '';
       final toNotation = parsedMove['to'] as String? ?? '';

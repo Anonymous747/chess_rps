@@ -25,7 +25,8 @@ class GameRoomHandler {
   Future<void> connectToRoom(String roomCode) async {
     AppLogger.info('Connecting to room: $roomCode', tag: 'GameRoomHandler');
     _roomCode = roomCode;
-    final url = 'ws://${Endpoint.opponentSocket}/$roomCode';
+    // Endpoint.opponentSocket already includes wss:// protocol, just append room code
+    final url = '${Endpoint.opponentSocket}/$roomCode';
 
     try {
       AppLogger.debug('WebSocket URL: $url', tag: 'GameRoomHandler');

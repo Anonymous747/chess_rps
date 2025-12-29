@@ -331,4 +331,3 @@ Potential improvements:
 ## Optional: Kubernetes Deployment
 
 Kubernetes manifests are available in `backend_app/k8s/` for advanced deployments, but Docker Compose is the recommended primary deployment method. Kubernetes can be used for production environments requiring advanced orchestration features.
-

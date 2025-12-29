@@ -51,6 +51,20 @@ android {
         versionName flutterVersionName
     }
 
+    flavorDimensions = ["environment"]
+    productFlavors {
+        dev {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            resValue "string", "app_name", "Chess RPS Dev"
+        }
+        prod {
+            dimension = "environment"
+            resValue "string", "app_name", "Chess RPS"
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
