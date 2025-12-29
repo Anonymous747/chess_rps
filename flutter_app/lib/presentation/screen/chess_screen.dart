@@ -19,6 +19,7 @@ import 'package:chess_rps/presentation/widget/game_over_dialog.dart';
 import 'package:chess_rps/presentation/widget/move_history_widget.dart';
 import 'package:chess_rps/presentation/widget/player_side_selection_dialog.dart';
 import 'package:chess_rps/presentation/widget/rps_overlay.dart';
+import 'package:chess_rps/presentation/widget/rps_result_display.dart';
 import 'package:chess_rps/presentation/widget/timer_widget.dart';
 import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:chess_rps/presentation/utils/effect_event.dart';
@@ -156,10 +157,12 @@ class ChessScreen extends HookConsumerWidget {
     // Note: We DON'T include timer values because timers tick during gameplay,
     // which would cause false "new game" detections. Timers are not part of game identity.
     final currentMoveHistoryLength = gameState.moveHistory.length;
+    // Check for fresh game - in RPS mode, initial time is 300 seconds, in classical mode it's 600 seconds
+    final expectedInitialTime = GameModesMediator.gameMode == GameMode.rps ? 300 : 600;
     final isFreshGame = pieceCount == 32 && 
                         currentMoveHistoryLength == 0 && 
-                        gameState.lightPlayerTimeSeconds == 600 &&
-                        gameState.darkPlayerTimeSeconds == 600;
+                        gameState.lightPlayerTimeSeconds == expectedInitialTime &&
+                        gameState.darkPlayerTimeSeconds == expectedInitialTime;
     
     // GameKey should only change when piece set or move count changes
     // NOT when timers tick (that's normal gameplay)
@@ -377,12 +380,22 @@ class ChessScreen extends HookConsumerWidget {
     
     final showRpsOverlay = gameState.showRpsOverlay;
     final waitingForRpsResult = gameState.waitingForRpsResult;
+    final playerRpsChoice = gameState.playerRpsChoice;
     final opponentRpsChoice = gameState.opponentRpsChoice;
     final playerWonRps = gameState.playerWonRps;
+    final isRpsTie = gameState.isRpsTie;
     final lightPlayerTime = gameState.lightPlayerTimeSeconds;
     final darkPlayerTime = gameState.darkPlayerTimeSeconds;
     final currentOrder = gameState.currentOrder;
-    final moveHistory = gameState.moveHistory;
+    // CRITICAL FIX: Use backup move history if state is empty or stale
+    // This ensures the UI always shows the correct move history even if state hasn't propagated
+    final stateMoveHistory = gameState.moveHistory;
+    final backupMoveHistory = controller.moveHistoryBackup;
+    final moveHistory = backupMoveHistory.length > stateMoveHistory.length
+        ? backupMoveHistory
+        : (stateMoveHistory.isNotEmpty || backupMoveHistory.isEmpty
+            ? stateMoveHistory
+            : backupMoveHistory);
 
     return Scaffold(
       body: Container(
@@ -401,9 +414,16 @@ class ChessScreen extends HookConsumerWidget {
           child: Stack(
             children: [
               SingleChildScrollView(
-                child: Column(
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                  // RPS Result Display (only show in RPS mode and when choices are made)
+                  if (GameModesMediator.gameMode == GameMode.rps)
+                    RpsResultDisplay(
+                      playerChoice: playerRpsChoice,
+                      opponentChoice: opponentRpsChoice,
+                      playerWon: playerWonRps,
+                    ),
                   // Top bar with finish button and timers in one row
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -412,11 +432,15 @@ class ChessScreen extends HookConsumerWidget {
                     ),
                     child: Column(
                       children: [
-                        // Status text row
-                        Center(
-                          child: _buildStatusText(playerWonRps),
-                        ),
-                        const SizedBox(height: 12),
+                        // Status text row (only show if not in RPS mode or if RPS result not shown)
+                        if (GameModesMediator.gameMode != GameMode.rps ||
+                            (playerRpsChoice == null && opponentRpsChoice == null))
+                          Center(
+                            child: _buildStatusText(playerWonRps),
+                          ),
+                        if (GameModesMediator.gameMode != GameMode.rps ||
+                            (playerRpsChoice == null && opponentRpsChoice == null))
+                          const SizedBox(height: 12),
                         // Timer widget with finish button
                         TimerWidget(
                           lightPlayerTimeSeconds: lightPlayerTime,
@@ -510,12 +534,36 @@ class ChessScreen extends HookConsumerWidget {
                 ),
               ),
               if (showRpsOverlay)
-                RpsOverlay(
-                  onChoiceSelected: (choice) async {
-                    await controller.handleRpsChoice(choice);
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 0.8, end: 1.0).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutBack,
+                          ),
+                        ),
+                        child: child,
+                      ),
+                    );
                   },
-                  isWaitingForOpponent: waitingForRpsResult,
-                  opponentChoice: opponentRpsChoice?.displayName,
+                  child: RpsOverlay(
+                    key: ValueKey('rps_overlay_${showRpsOverlay}_${isRpsTie}'),
+                    onChoiceSelected: (choice) async {
+                      // Hide overlay immediately when choice is selected
+                      // During tie, this will show the overlay again after processing
+                      controller.hideRpsOverlayImmediately();
+                      // Then handle the RPS choice
+                      // If it's a tie, handleRpsChoice will show the overlay again
+                      await controller.handleRpsChoice(choice);
+                    },
+                    isWaitingForOpponent: waitingForRpsResult,
+                    opponentChoice: opponentRpsChoice?.displayName,
+                    isTie: isRpsTie,
+                  ),
                 ),
             ],
           ),

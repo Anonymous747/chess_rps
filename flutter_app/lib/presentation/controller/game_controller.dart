@@ -44,6 +44,13 @@ class GameController extends _$GameController {
   StreamSubscription<Map<String, dynamic>>? _websocketSubscription;
   String? _lastSentMoveNotation; // Track last move we sent to prevent processing our own echo
   
+  // CRITICAL FIX: Maintain a local copy of move history to ensure it's never lost
+  // This acts as a backup in case Riverpod state updates don't propagate correctly
+  List<String> _moveHistoryBackup = [];
+  
+  // Expose backup move history for UI fallback
+  List<String> get moveHistoryBackup => List<String>.from(_moveHistoryBackup);
+  
   // Effect event stream
   final _effectEventController = StreamController<EffectEvent>.broadcast();
   Stream<EffectEvent> get effectEvents => _effectEventController.stream;
@@ -66,11 +73,14 @@ class GameController extends _$GameController {
     final board = Board()..startGame();
     AppLogger.debug('Board initialized', tag: 'GameController');
     
+    // In RPS mode, use 5 minutes (300 seconds) instead of 10 minutes (600 seconds)
+    final initialTimeSeconds = GameModesMediator.gameMode == GameMode.rps ? 300 : 600;
+    
     final initialState = GameState(
       board: board,
       playerSide: playerSide,
-      lightPlayerTimeSeconds: 600,
-      darkPlayerTimeSeconds: 600,
+      lightPlayerTimeSeconds: initialTimeSeconds,
+      darkPlayerTimeSeconds: initialTimeSeconds,
     );
 
     // Connect to WebSocket and set up listener for online games
@@ -138,6 +148,10 @@ class GameController extends _$GameController {
       AppLogger.info('Game fully initialized and ready', tag: 'GameController');
     });
 
+    // Initialize backup move history to empty (will be updated as moves are made)
+    _moveHistoryBackup = [];
+    AppLogger.debug('Move history backup initialized (empty)', tag: 'GameController');
+    
     AppLogger.info('GameController initialized successfully', tag: 'GameController');
     return initialState;
   }
@@ -154,7 +168,7 @@ class GameController extends _$GameController {
       (message) async {
         try {
             final type = message['type'] as String?;
-          if (type == 'timer_update' || type == 'move' || type == 'room_joined' || type == 'player_left' || type == 'error' || type == 'surrender' || type == 'disconnected') {
+          if (type == 'timer_update' || type == 'move' || type == 'room_joined' || type == 'player_left' || type == 'error' || type == 'surrender' || type == 'disconnected' || type == 'rps_result') {
             // Handle surrender - opponent surrendered, player wins
             // Only process in online mode
             if (type == 'surrender') {
@@ -215,6 +229,23 @@ class GameController extends _$GameController {
               return;
             }
             
+            // Handle RPS result messages (for online RPS games)
+            // NOTE: RPS result messages are consumed by RpsGameStrategy._getOpponentRpsChoice()
+            // which listens to the messageStream directly. We should NOT consume them here
+            // to avoid race conditions. The message will be picked up by the waiting listener.
+            if (type == 'rps_result') {
+              if (GameModesMediator.gameMode == GameMode.rps && GameModesMediator.opponentMode == OpponentMode.socket) {
+                AppLogger.debug('Received RPS result message from WebSocket - passing through to RpsGameStrategy', tag: 'GameController');
+                // Don't return here - let the message pass through to the messageStream
+                // The RpsGameStrategy._getOpponentRpsChoice() is listening for it
+                // We just log it for debugging
+                return;
+              } else {
+                AppLogger.warning('Received RPS result but not in RPS online mode - ignoring', tag: 'GameController');
+                return;
+              }
+            }
+            
             // Handle room_joined - update player side if provided
             // player_side is at the top level of the message, not in 'data'
             if (type == 'room_joined') {
@@ -236,6 +267,19 @@ class GameController extends _$GameController {
             if (data != null) {
               // Handle opponent move
               if (type == 'move') {
+                // In RPS mode, if we're waiting for RPS result, queue the move or skip it
+                // The move will be processed after RPS result is received
+                final isRpsMode = GameModesMediator.gameMode == GameMode.rps;
+                final isWaitingForRps = state.waitingForRpsResult;
+                
+                if (isRpsMode && isWaitingForRps) {
+                  AppLogger.info('Received move message while waiting for RPS result - will process after RPS result', tag: 'GameController');
+                  // Don't process the move yet - wait for RPS result first
+                  // The move will be processed when the opponent makes it after RPS
+                  // For now, we'll skip it and let the normal flow handle it
+                  return;
+                }
+                
                 final moveNotation = data['move_notation'] as String?;
                 // Accept both formats: "e2e4" (4 chars, old format) or "Pe2e4" (5 chars, with piece type)
                 if (moveNotation != null && (moveNotation.length == 4 || moveNotation.length == 5)) {
@@ -351,10 +395,19 @@ class GameController extends _$GameController {
       }
       
       // Second check: If currentOrder matches our side, it's likely our move
-      if (state.currentOrder == state.playerSide) {
+      // In RPS mode, if opponent won RPS, they can make moves even if currentOrder doesn't match
+      final isRpsMode = GameModesMediator.gameMode == GameMode.rps;
+      final opponentWonRps = isRpsMode && state.playerWonRps == false;
+      
+      if (state.currentOrder == state.playerSide && !opponentWonRps) {
         AppLogger.info('=== _processOpponentMove: Skipping - it\'s our turn (our move echoed) ===', tag: 'GameController');
         AppLogger.info('  - Current order is ${state.playerSide} (our side), so this is our move', tag: 'GameController');
         return;
+      }
+      
+      if (opponentWonRps) {
+        AppLogger.info('=== RPS mode: Opponent won RPS, allowing move regardless of currentOrder ===', tag: 'GameController');
+        AppLogger.info('  - Current order: ${state.currentOrder}, Player side: ${state.playerSide}, Opponent won RPS: true', tag: 'GameController');
       }
       
       final fromCell = state.board.getCellAt(fromPosition.row, fromPosition.col);
@@ -450,6 +503,17 @@ class GameController extends _$GameController {
           AppLogger.info('Piece captured: ${capturedFigure.role} (${capturedFigure.side})', tag: 'GameController');
           state.board.pushKnockedFigure(capturedFigure);
           AppLogger.debug('Captured piece added to knocked figures', tag: 'GameController');
+          
+          // Check if king was captured - game ends immediately
+          if (capturedFigure.role == Role.king) {
+            AppLogger.warning(
+              'KING CAPTURED! ${capturedFigure.side.name} king was captured by ${currentFromCell.figure!.side.name}. Game over!',
+              tag: 'GameController'
+            );
+            // The side that captured the king wins, the side whose king was captured loses
+            _endGameWithCheckmate(capturedFigure.side);
+            return;
+          }
         }
         
         // Apply move to board
@@ -537,9 +601,49 @@ class GameController extends _$GameController {
           }
         }
         
-        final updatedMoveHistory = [...state.moveHistory, moveWithPiece];
+        // CRITICAL FIX: Read the latest state and use backup if state is incomplete
+        final currentStateForOpponentMove = state;
+        final stateMoveHistoryForOpponent = List<String>.from(currentStateForOpponentMove.moveHistory);
+        
+        // Use backup if it's more complete than state
+        final currentMoveHistoryForOpponent = _moveHistoryBackup.length > stateMoveHistoryForOpponent.length
+            ? _moveHistoryBackup
+            : (stateMoveHistoryForOpponent.isNotEmpty || _moveHistoryBackup.isEmpty
+                ? stateMoveHistoryForOpponent
+                : _moveHistoryBackup);
+        
+        AppLogger.debug('Current move history before update (opponent move): ${currentMoveHistoryForOpponent.length} moves - $currentMoveHistoryForOpponent', tag: 'GameController');
+        if (_moveHistoryBackup.length > stateMoveHistoryForOpponent.length) {
+          AppLogger.warning('Using backup move history (${_moveHistoryBackup.length} moves) instead of state (${stateMoveHistoryForOpponent.length} moves) for opponent move', tag: 'GameController');
+        }
+        
+        final updatedMoveHistory = [...currentMoveHistoryForOpponent, moveWithPiece];
+        AppLogger.debug('Updated move history will have ${updatedMoveHistory.length} moves: $updatedMoveHistory', tag: 'GameController');
+        
+        // Update both state and backup
+        // CRITICAL: Update state with moveHistory to ensure it persists
         state = state.copyWith(moveHistory: updatedMoveHistory);
+        _moveHistoryBackup = List<String>.from(updatedMoveHistory);
+        
+        // Force a synchronous state read to verify the update
+        final verifyState = state;
+        AppLogger.debug('State updated. Verifying move history after update (opponent move): ${verifyState.moveHistory.length} moves - ${verifyState.moveHistory}', tag: 'GameController');
+        
+        // If state update didn't persist, force update again
+        if (verifyState.moveHistory.length != updatedMoveHistory.length) {
+          AppLogger.error('CRITICAL: Move history not persisted in state! Expected ${updatedMoveHistory.length} moves but got ${verifyState.moveHistory.length}', tag: 'GameController');
+          AppLogger.error('Forcing state update again...', tag: 'GameController');
+          state = state.copyWith(moveHistory: updatedMoveHistory);
+          // Update backup again to ensure consistency
+          _moveHistoryBackup = List<String>.from(updatedMoveHistory);
+        }
         AppLogger.info('Move history updated. Total moves: ${updatedMoveHistory.length}. Latest: $moveWithPiece', tag: 'GameController');
+        
+        // In RPS mode for online games, after opponent makes a move, show RPS overlay for next round
+        if (isRpsMode && GameModesMediator.opponentMode == OpponentMode.socket) {
+          AppLogger.info('RPS online mode: Showing RPS overlay after opponent move', tag: 'GameController');
+          showRpsOverlay();
+        }
         
         // Restart timer for new turn
         AppLogger.debug('Step 9: Restarting timer', tag: 'GameController');
@@ -568,6 +672,12 @@ class GameController extends _$GameController {
     _timerCountdown = Timer.periodic(const Duration(seconds: 1), (timer) {
       final currentState = state;
       if (currentState.currentTurnStartedAt == null) return;
+
+      // Freeze timer when RPS overlay is shown (in RPS mode)
+      if (GameModesMediator.gameMode == GameMode.rps && currentState.showRpsOverlay) {
+        AppLogger.debug('Timer frozen - RPS overlay is showing', tag: 'GameController');
+        return; // Don't decrement timer while RPS overlay is open
+      }
 
       // Simply decrement by 1 second since timer fires every second
       final currentTime = currentState.currentOrder == Side.light
@@ -612,6 +722,11 @@ class GameController extends _$GameController {
 
   void _restartTimerCountdown() {
     _startTimerCountdown();
+  }
+
+  /// Restart timer countdown (public method for game strategies)
+  void restartTimerCountdown() {
+    _restartTimerCountdown();
   }
 
   Future<void> onPressed(Cell pressedCell) async {
@@ -915,12 +1030,32 @@ class GameController extends _$GameController {
     final opponentSide = state.playerSide.opposite;
     AppLogger.info('  - Opponent side: $opponentSide', tag: 'GameController');
     
-    // Verify it's actually the opponent's turn
-    if (state.currentOrder != opponentSide) {
+    // In RPS mode, allow opponent moves if they won RPS, even if currentOrder doesn't match
+    // In classical mode, verify it's actually the opponent's turn
+    final isRpsMode = GameModesMediator.gameMode == GameMode.rps;
+    final opponentWonRps = isRpsMode && state.playerWonRps == false;
+    
+    if (!isRpsMode && state.currentOrder != opponentSide) {
       AppLogger.warning('=== makeOpponentsMove() ABORTED: Not opponent\'s turn ===', tag: 'GameController');
       AppLogger.warning('  - Current order: ${state.currentOrder.name}, Expected: ${opponentSide.name}', tag: 'GameController');
       AppLogger.warning('  - This should not happen - AI move triggered at wrong time', tag: 'GameController');
       return false;
+    }
+    
+    // In RPS mode, if opponent won RPS, allow move regardless of currentOrder
+    // In classical mode or if opponent didn't win RPS, only allow if it's opponent's turn
+    if (isRpsMode) {
+      if (opponentWonRps) {
+        AppLogger.info('=== RPS mode: Opponent won RPS, allowing move regardless of chess turn order ===', tag: 'GameController');
+      } else {
+        // Opponent didn't win RPS, so only allow if it's actually their turn
+        if (state.currentOrder != opponentSide) {
+          AppLogger.warning('=== makeOpponentsMove() ABORTED: Not opponent\'s turn in RPS mode ===', tag: 'GameController');
+          AppLogger.warning('  - Current order: ${state.currentOrder.name}, Expected: ${opponentSide.name}', tag: 'GameController');
+          AppLogger.warning('  - Opponent did not win RPS, cannot make move', tag: 'GameController');
+          return false;
+        }
+      }
     }
     
     // Verify game is not over
@@ -930,10 +1065,86 @@ class GameController extends _$GameController {
     }
     
     try {
+      // CRITICAL: Always rebuild Stockfish's board from move history before getting opponent move
+      // This ensures Stockfish's board state matches the actual game board
+      if (GameModesMediator.opponentMode == OpponentMode.ai) {
+        final aiHandler = actionHandler;
+        if (aiHandler is AIActionHandler) {
+          try {
+            AppLogger.info('Step 1: Rebuilding Stockfish board from move history to sync board state', tag: 'GameController');
+            // Read the latest state to ensure we have the most up-to-date move history
+            final currentState = state;
+            final stateMoveHistory = List<String>.from(currentState.moveHistory);
+            
+            // CRITICAL FIX: Always use the backup move history if it's more complete than the state
+            // This ensures we never lose moves even if the state is reset or stale
+            final moveHistoryToUse = _moveHistoryBackup.length > stateMoveHistory.length
+                ? _moveHistoryBackup
+                : (stateMoveHistory.isNotEmpty || _moveHistoryBackup.isEmpty
+                    ? stateMoveHistory
+                    : _moveHistoryBackup);
+            
+            if (_moveHistoryBackup.length > stateMoveHistory.length) {
+              AppLogger.warning('Backup move history (${_moveHistoryBackup.length} moves) is more complete than state (${stateMoveHistory.length} moves) - using backup for rebuild', tag: 'GameController');
+              AppLogger.warning('Backup move history: $_moveHistoryBackup', tag: 'GameController');
+              AppLogger.warning('State move history: $stateMoveHistory', tag: 'GameController');
+            } else if (stateMoveHistory.isEmpty && _moveHistoryBackup.isNotEmpty) {
+              AppLogger.warning('State move history is empty but backup has ${_moveHistoryBackup.length} moves - using backup for rebuild', tag: 'GameController');
+            }
+            
+            AppLogger.info('Move history length: ${moveHistoryToUse.length}', tag: 'GameController');
+            AppLogger.info('Move history contents: $moveHistoryToUse', tag: 'GameController');
+            
+            // CRITICAL FIX: If move history is incomplete (only contains opponent's last move),
+            // we should NOT rebuild from it because it will reset Stockfish to an incorrect state.
+            // Instead, we should get the current FEN from Stockfish and verify it matches the board state.
+            // If it doesn't match, we should set the FEN directly based on the current board state.
+            // For now, we'll still rebuild from move history, but we'll add a check to ensure
+            // the move history is not incomplete.
+            
+            // In RPS mode, if opponent won and we're at starting position, set turn to opponent's side
+            final isRpsMode = GameModesMediator.gameMode == GameMode.rps;
+            final opponentWonRps = isRpsMode && currentState.playerWonRps == false;
+            final isStartingPosition = moveHistoryToUse.isEmpty;
+            
+            String? turnForRebuild;
+            if (isRpsMode && opponentWonRps && isStartingPosition) {
+              final expectedTurn = currentState.currentOrder.isLight ? 'w' : 'b';
+              turnForRebuild = expectedTurn;
+              AppLogger.info('RPS mode: Opponent won at starting position, setting turn to: $expectedTurn', tag: 'GameController');
+            }
+            
+            // CRITICAL FIX: Always rebuild from move history, but if it's incomplete, we need to
+            // ensure Stockfish's board state matches the actual game board state.
+            // The issue is that if move history is incomplete, rebuilding will reset Stockfish
+            // to an incorrect state. Instead, we should get the current FEN from Stockfish
+            // and compare it with the expected board state.
+            // For now, we'll always rebuild, but we'll add better error handling.
+            if (moveHistoryToUse.isEmpty && turnForRebuild != null) {
+              // Starting position with specific turn - use setPositionWithTurn
+              await aiHandler.rebuildBoardFromMoves(moveHistoryToUse, turn: turnForRebuild);
+            } else if (moveHistoryToUse.isNotEmpty) {
+              // We have moves - rebuild from move history
+              await aiHandler.rebuildBoardFromMoves(moveHistoryToUse, turn: turnForRebuild);
+            } else {
+              // Empty move history and no turn specified - this shouldn't happen, but handle it
+              AppLogger.warning('Move history is empty and no turn specified. Rebuilding from empty history.', tag: 'GameController');
+              await aiHandler.rebuildBoardFromMoves(moveHistoryToUse, turn: turnForRebuild);
+            }
+            AppLogger.info('Board rebuilt from move history - continuing to verify board state', tag: 'GameController');
+          } catch (e, stackTrace) {
+            AppLogger.warning('Error rebuilding board from move history: $e', tag: 'GameController');
+            AppLogger.warning('Stack trace: $stackTrace', tag: 'GameController');
+            AppLogger.warning('Continuing anyway - will try to sync board state during FEN check', tag: 'GameController');
+          }
+        }
+      }
+      
       // Ensure board state is synced before getting opponent move
       // After a player move, we need to verify Stockfish's board state matches our game state
-      AppLogger.info('Step 1: Verifying board state is synced', tag: 'GameController');
+      AppLogger.info('Step 2: Verifying board state is synced', tag: 'GameController');
       await actionHandler.visualizeBoard();
+      AppLogger.info('Board visualization completed - continuing to FEN check', tag: 'GameController');
       
       // For AI games, verify the FEN position matches our game state
       // This ensures Stockfish knows whose turn it is
@@ -959,41 +1170,103 @@ class GameController extends _$GameController {
                   'Board state mismatch detected! FEN shows $turnInFen but game state shows ${state.currentOrder.name}',
                   tag: 'GameController'
                 );
-                AppLogger.warning(
-                  'Rebuilding Stockfish board state from move history...',
-                  tag: 'GameController'
-                );
-                // Rebuild board from move history to fix the mismatch
-                await aiHandler.rebuildBoardFromMoves(state.moveHistory);
                 
-                // Verify the fix worked
-                final fenAfterRebuild = await aiHandler.getFenPosition();
-                final fenPartsAfter = fenAfterRebuild.split(' ');
-                if (fenPartsAfter.length >= 2) {
-                  final turnAfterRebuild = fenPartsAfter[1];
+                // In RPS mode, if opponent won RPS, we need to set the FEN to opponent's turn
+                // This allows Stockfish to return a move for the correct side
+                // Check RPS mode and opponent win status locally
+                final isRpsModeHere = GameModesMediator.gameMode == GameMode.rps;
+                final opponentWonRpsHere = isRpsModeHere && state.playerWonRps == false;
+                
+                if (isRpsModeHere && opponentWonRpsHere) {
                   AppLogger.info(
-                    'After rebuild: FEN turn: $turnAfterRebuild, Expected: $expectedTurn',
+                    'RPS mode: Opponent won RPS, FEN turn mismatch detected. In RPS mode, we allow moves regardless of FEN turn.',
                     tag: 'GameController'
                   );
-                  if (turnAfterRebuild != expectedTurn) {
-                    AppLogger.error(
-                      'Board rebuild failed! FEN still shows wrong turn: $turnAfterRebuild',
+                  AppLogger.info(
+                    '  - FEN turn: $turnInFen, Game state turn: $expectedTurn',
+                    tag: 'GameController'
+                  );
+                  AppLogger.info(
+                    '  - In RPS mode, Stockfish\'s turn is based on move history, which may not match game state.',
+                    tag: 'GameController'
+                  );
+                  AppLogger.info(
+                    '  - We will accept any move from opponent\'s pieces, regardless of FEN turn.',
+                    tag: 'GameController'
+                  );
+                  // In RPS mode, don't force the turn - let Stockfish determine it from move history
+                  // The turn validation will accept moves from opponent's pieces even if FEN turn doesn't match
+                  // Just rebuild the board normally to ensure it's in sync
+                  final currentStateForFenFix = state;
+                  final stateMoveHistoryForFenFix = List<String>.from(currentStateForFenFix.moveHistory);
+                  final moveHistoryForFenFix = _moveHistoryBackup.length > stateMoveHistoryForFenFix.length
+                      ? _moveHistoryBackup
+                      : (stateMoveHistoryForFenFix.isNotEmpty || _moveHistoryBackup.isEmpty
+                          ? stateMoveHistoryForFenFix
+                          : _moveHistoryBackup);
+                  
+                  AppLogger.info(
+                    'Rebuilding board from ${moveHistoryForFenFix.length} moves (letting Stockfish determine turn from move history)',
+                    tag: 'GameController'
+                  );
+                  // Rebuild from move history WITHOUT forcing the turn - let Stockfish determine it
+                  await aiHandler.rebuildBoardFromMoves(moveHistoryForFenFix);
+                  
+                  // Verify the board was rebuilt
+                  await Future.delayed(const Duration(milliseconds: 200)); // Give Stockfish time to process
+                  final fenAfterSet = await aiHandler.getFenPosition();
+                  final fenPartsAfterSet = fenAfterSet.split(' ');
+                  if (fenPartsAfterSet.length >= 2) {
+                    final turnAfterSet = fenPartsAfterSet[1];
+                    AppLogger.info(
+                      'After rebuilding board: turn=$turnAfterSet (Stockfish determined from move history)',
+                      tag: 'GameController'
+                    );
+                    AppLogger.info(
+                      '  - Game state expects: $expectedTurn, but Stockfish has: $turnAfterSet',
+                      tag: 'GameController'
+                    );
+                    AppLogger.info(
+                      '  - This is OK in RPS mode - we will accept moves from opponent\'s pieces regardless of turn',
                       tag: 'GameController'
                     );
                   }
+                } else {
+                  AppLogger.warning(
+                    'Rebuilding Stockfish board state from move history...',
+                    tag: 'GameController'
+                  );
+                  // Rebuild board from move history to fix the mismatch
+                  // Read the latest state and use backup if state is incomplete
+                  final currentStateForRebuild = state;
+                  final stateMoveHistoryForRebuild = List<String>.from(currentStateForRebuild.moveHistory);
+                  final moveHistoryForRebuild = _moveHistoryBackup.length > stateMoveHistoryForRebuild.length
+                      ? _moveHistoryBackup
+                      : (stateMoveHistoryForRebuild.isNotEmpty || _moveHistoryBackup.isEmpty
+                          ? stateMoveHistoryForRebuild
+                          : _moveHistoryBackup);
+                  
+                  if (_moveHistoryBackup.length > stateMoveHistoryForRebuild.length) {
+                    AppLogger.warning('Using backup move history (${_moveHistoryBackup.length} moves) instead of state (${stateMoveHistoryForRebuild.length} moves) for FEN fix', tag: 'GameController');
+                  }
+                  
+                  AppLogger.info('Rebuilding board from move history (${moveHistoryForRebuild.length} moves): $moveHistoryForRebuild', tag: 'GameController');
+                  await aiHandler.rebuildBoardFromMoves(moveHistoryForRebuild);
                 }
               }
             }
-          } catch (e) {
+          } catch (e, stackTrace) {
             AppLogger.warning('Could not verify FEN position: $e', tag: 'GameController');
+            AppLogger.warning('Exception details: $e', tag: 'GameController');
+            AppLogger.warning('Stack trace: $stackTrace', tag: 'GameController');
             // Continue anyway - the move request might still work
           }
         }
       }
       
-      AppLogger.info('Board state verification completed', tag: 'GameController');
+      AppLogger.info('Board state verification completed - proceeding to request opponent move', tag: 'GameController');
       
-      AppLogger.info('Step 2: Requesting opponent move from action handler', tag: 'GameController');
+      AppLogger.info('Step 3: Requesting opponent move from action handler', tag: 'GameController');
       final bestAction = await actionHandler.getOpponentsMove();
       AppLogger.info('Action handler returned: ${bestAction ?? "null"}', tag: 'GameController');
 
@@ -1023,6 +1296,31 @@ class GameController extends _$GameController {
       }
       
       AppLogger.info('Parsed move: from=$fromNotation, to=$toNotation', tag: 'GameController');
+      
+      // In RPS mode, check if the move is for the opponent's side based on the starting row
+      // This allows us to accept moves even if Stockfish's FEN turn doesn't match
+      final isRpsModeForMoveCheck = GameModesMediator.gameMode == GameMode.rps;
+      final opponentWonRpsForMoveCheck = isRpsModeForMoveCheck && state.playerWonRps == false;
+      bool moveIsForOpponentSide = false;
+      
+      if (opponentWonRpsForMoveCheck && fromNotation.length >= 2) {
+        final fromRow = int.tryParse(fromNotation[1]);
+        if (fromRow != null) {
+          // Rows 1-2 are white's starting rows, rows 7-8 are black's starting rows
+          final opponentIsWhite = opponentSide.isLight;
+          if (opponentIsWhite) {
+            // Opponent is white, so moves from rows 1-2 are for the opponent
+            moveIsForOpponentSide = fromRow >= 1 && fromRow <= 2;
+          } else {
+            // Opponent is black, so moves from rows 7-8 are for the opponent
+            moveIsForOpponentSide = fromRow >= 7 && fromRow <= 8;
+          }
+          AppLogger.info(
+            'RPS mode move check: From row=$fromRow, Opponent is ${opponentIsWhite ? "white" : "black"}, Move is for opponent: $moveIsForOpponentSide',
+            tag: 'GameController'
+          );
+        }
+      }
       
       // Parse algebraic notation
       final fromCol = boardLetters.indexOf(fromNotation[0]);
@@ -1097,7 +1395,7 @@ class GameController extends _$GameController {
       AppLogger.info('  - To cell isOccupied: ${targetCell.isOccupied}, figure: ${targetCell.figure?.role}', tag: 'GameController');
 
       // Check if the move is valid before executing
-      AppLogger.info('Step 4: Validating move', tag: 'GameController');
+      AppLogger.info('Step 5: Validating move', tag: 'GameController');
       if (fromCell.figure == null) {
         AppLogger.warning('=== makeOpponentsMove() FAILED: No figure at source position ===', tag: 'GameController');
         AppLogger.warning('  - Source position (absolute): $fromNotation', tag: 'GameController');
@@ -1124,18 +1422,38 @@ class GameController extends _$GameController {
       AppLogger.info('  - Source cell has figure: ${fromCell.figure!.role} (${fromCell.figure!.side})', tag: 'GameController');
 
       // Check if it's the opponent's turn
-      // currentOrder should match the figure's side for the opponent's move to be valid
+      // In RPS mode, if opponent won RPS, allow the move even if currentOrder doesn't match
+      // In classical mode, currentOrder should match the figure's side
       AppLogger.info('Step 5: Checking turn validity', tag: 'GameController');
       AppLogger.info('  - Figure side: ${fromCell.figure!.side}', tag: 'GameController');
       AppLogger.info('  - Current order: ${state.currentOrder}', tag: 'GameController');
       AppLogger.info('  - Match: ${fromCell.figure!.side == state.currentOrder}', tag: 'GameController');
       
-      if (fromCell.figure!.side != state.currentOrder) {
-        AppLogger.warning('=== makeOpponentsMove() FAILED: Not opponent\'s turn ===', tag: 'GameController');
-        AppLogger.warning('  - Expected side: ${state.currentOrder}', tag: 'GameController');
-        AppLogger.warning('  - Figure side: ${fromCell.figure!.side}', tag: 'GameController');
-        AppLogger.warning('  - This suggests a board state mismatch or Stockfish returned wrong side move', tag: 'GameController');
-        return false;
+      final isRpsMode = GameModesMediator.gameMode == GameMode.rps;
+      final opponentWonRps = isRpsMode && state.playerWonRps == false;
+      final figureSideMatches = fromCell.figure!.side == state.currentOrder;
+      
+      // In RPS mode, if opponent won, allow move if figure is opponent's piece OR if move notation indicates opponent's side
+      // In classical mode, require currentOrder to match
+      if (!figureSideMatches) {
+        // Check if move is for opponent's side (either by piece on board or by move notation)
+        final pieceIsOpponentSide = fromCell.figure!.side == opponentSide;
+        final moveNotationIsOpponentSide = moveIsForOpponentSide;
+        
+        if (isRpsMode && opponentWonRps && (pieceIsOpponentSide || moveNotationIsOpponentSide)) {
+          // In RPS mode, opponent won, so they can move their pieces even if currentOrder doesn't match
+          AppLogger.info('=== RPS mode: Opponent won RPS, allowing move (bypassing turn check) ===', tag: 'GameController');
+          AppLogger.info('  - Figure side: ${fromCell.figure?.side}, Opponent side: $opponentSide, Current order: ${state.currentOrder}', tag: 'GameController');
+          AppLogger.info('  - Piece is opponent side: $pieceIsOpponentSide, Move notation is opponent side: $moveNotationIsOpponentSide', tag: 'GameController');
+        } else {
+          AppLogger.warning('=== makeOpponentsMove() FAILED: Not opponent\'s turn ===', tag: 'GameController');
+          AppLogger.warning('  - Expected side: ${state.currentOrder}', tag: 'GameController');
+          AppLogger.warning('  - Figure side: ${fromCell.figure?.side}', tag: 'GameController');
+          AppLogger.warning('  - RPS mode: $isRpsMode, Opponent won RPS: $opponentWonRps', tag: 'GameController');
+          AppLogger.warning('  - Piece is opponent side: $pieceIsOpponentSide, Move notation is opponent side: $moveNotationIsOpponentSide', tag: 'GameController');
+          AppLogger.warning('  - This suggests a board state mismatch or Stockfish returned wrong side move', tag: 'GameController');
+          return false;
+        }
       }
 
       // Create move notation with piece type
@@ -1392,6 +1710,17 @@ class GameController extends _$GameController {
         'Piece captured: ${capturedFigure.role} (${capturedFigure.side})',
         tag: 'GameController',
       );
+      
+      // Check if king was captured - game ends immediately
+      if (capturedFigure.role == Role.king) {
+        AppLogger.warning(
+          'KING CAPTURED! ${capturedFigure.side.name} king was captured by ${selectedCell.figure!.side.name}. Game over!',
+          tag: 'GameController'
+        );
+        // The side that captured the king wins, the side whose king was captured loses
+        _endGameWithCheckmate(capturedFigure.side);
+        return true;
+      }
     }
 
     // Log move execution details
@@ -1450,14 +1779,87 @@ class GameController extends _$GameController {
     // Use the new current order's check status
     final finalCheckStatus = kingInCheck ?? previousSideInCheck;
 
+    // Use historyNotation if provided, otherwise use action
+    final notationForHistory = historyNotation ?? action;
+    
+    // Update move history BEFORE updating other state fields to ensure it's available immediately
+    actionLogger.add(action);
+    AppLogger.debug('Move logged: $action (history: $notationForHistory)', tag: 'GameController');
+    
+    // CRITICAL FIX: Read the latest state to ensure we have the most up-to-date move history
+    // Also use the backup move history if state is empty (in case state was reset)
+    final currentStateForMoveHistory = state;
+    final stateMoveHistory = List<String>.from(currentStateForMoveHistory.moveHistory);
+    
+    // CRITICAL FIX: Always use the backup if it's more complete than the state
+    // This ensures we never lose moves even if the state is stale or incomplete
+    final currentMoveHistory = _moveHistoryBackup.length > stateMoveHistory.length
+        ? _moveHistoryBackup
+        : (stateMoveHistory.isNotEmpty || _moveHistoryBackup.isEmpty
+            ? stateMoveHistory
+            : _moveHistoryBackup);
+    
+    AppLogger.debug('Current move history before update: ${currentMoveHistory.length} moves - $currentMoveHistory', tag: 'GameController');
+    if (_moveHistoryBackup.length > stateMoveHistory.length) {
+      AppLogger.warning('Backup move history (${_moveHistoryBackup.length} moves) is more complete than state (${stateMoveHistory.length} moves) - using backup', tag: 'GameController');
+      AppLogger.warning('Backup move history: $_moveHistoryBackup', tag: 'GameController');
+      AppLogger.warning('State move history: $stateMoveHistory', tag: 'GameController');
+    } else if (stateMoveHistory.isEmpty && _moveHistoryBackup.isNotEmpty) {
+      AppLogger.warning('State move history is empty but backup has ${_moveHistoryBackup.length} moves - using backup', tag: 'GameController');
+    }
+    
+    // Update move history in state (use historyNotation if provided for player perspective display)
+    // Always append to the existing move history - never reset it
+    AppLogger.debug('About to append move: $notationForHistory to history with ${currentMoveHistory.length} moves', tag: 'GameController');
+    final updatedMoveHistory = [...currentMoveHistory, notationForHistory];
+    AppLogger.debug('Updated move history will have ${updatedMoveHistory.length} moves: $updatedMoveHistory', tag: 'GameController');
+    AppLogger.info('MOVE HISTORY UPDATE: Adding move $notationForHistory. History now has ${updatedMoveHistory.length} moves.', tag: 'GameController');
+    
+    // Update the backup as well
+    _moveHistoryBackup = List<String>.from(updatedMoveHistory);
+    AppLogger.debug('Backup move history updated: ${_moveHistoryBackup.length} moves - $_moveHistoryBackup', tag: 'GameController');
+
+    // Update state with board, currentOrder, AND moveHistory all at once to ensure consistency
+    // CRITICAL: Use the updatedMoveHistory we just constructed, not state.moveHistory
+    // This ensures we always append to the correct history, even if state hasn't propagated yet
+    // CRITICAL FIX: Use state = ... to trigger Riverpod's state update mechanism
+    // This ensures the UI will rebuild with the new state
     state = state.copyWith(
       board: updatedBoard,
       selectedFigure: null,
       currentOrder: newCurrentOrder,
       currentTurnStartedAt: DateTime.now(),
       kingInCheck: finalCheckStatus,
+      moveHistory: updatedMoveHistory, // Include moveHistory in the same update
     );
     
+    // CRITICAL FIX: Immediately read the state again to ensure it was updated
+    // Riverpod's state updates are synchronous, so this should reflect the update
+    final verifyState = state;
+    AppLogger.debug('State updated. Verifying move history after update: ${verifyState.moveHistory.length} moves - ${verifyState.moveHistory}', tag: 'GameController');
+    AppLogger.debug('Backup move history after state update: ${_moveHistoryBackup.length} moves - $_moveHistoryBackup', tag: 'GameController');
+    
+    // CRITICAL CHECK: If the state update didn't persist the move history, force update again
+    if (verifyState.moveHistory.length != updatedMoveHistory.length) {
+      AppLogger.error('CRITICAL: Move history was not persisted correctly! Expected ${updatedMoveHistory.length} moves but state has ${verifyState.moveHistory.length} moves', tag: 'GameController');
+      AppLogger.error('Expected move history: $updatedMoveHistory', tag: 'GameController');
+      AppLogger.error('Actual move history in state: ${verifyState.moveHistory}', tag: 'GameController');
+      AppLogger.error('Backup move history: $_moveHistoryBackup', tag: 'GameController');
+      // Force state update again - use the current state as base to ensure we don't lose other fields
+      state = verifyState.copyWith(moveHistory: updatedMoveHistory);
+      AppLogger.warning('Forced state update again to fix move history persistence', tag: 'GameController');
+      // Verify again after forced update
+      final verifyState2 = state;
+      if (verifyState2.moveHistory.length != updatedMoveHistory.length) {
+        AppLogger.error('CRITICAL: Move history still not persisted after forced update! State has ${verifyState2.moveHistory.length} moves', tag: 'GameController');
+      } else {
+        AppLogger.info('Move history successfully persisted after forced update', tag: 'GameController');
+      }
+    } else {
+      AppLogger.info('MOVE HISTORY VERIFIED: State has ${verifyState.moveHistory.length} moves, backup has ${_moveHistoryBackup.length} moves. Both match expected ${updatedMoveHistory.length} moves.', tag: 'GameController');
+    }
+    
+    AppLogger.info('Move history updated. Total moves: ${updatedMoveHistory.length}. Latest: $notationForHistory', tag: 'GameController');
     AppLogger.debug('Turn switched to: ${newCurrentOrder.name}', tag: 'GameController');
     if (finalCheckStatus != null) {
       AppLogger.info('King in check detected for: ${finalCheckStatus.name}', tag: 'GameController');
@@ -1480,6 +1882,9 @@ class GameController extends _$GameController {
       return true;
     }
     
+    // Restart timer for new turn
+    _restartTimerCountdown();
+    
     // For AI games, trigger opponent move after player move (not after opponent moves)
     // For online games, opponent moves come via WebSocket
     final opponentMode = GameModesMediator.opponentMode;
@@ -1487,27 +1892,48 @@ class GameController extends _$GameController {
     if (isPlayerMove && opponentMode == OpponentMode.ai && newCurrentOrder == opponentSide) {
       AppLogger.info('Triggering AI opponent move after player move', tag: 'GameController');
       AppLogger.info('  - Player side: ${state.playerSide.name}, Opponent side: $opponentSide, New current order: ${newCurrentOrder.name}', tag: 'GameController');
-      // Trigger opponent move asynchronously
-      Future.microtask(() => makeOpponentsMove());
+      // CRITICAL FIX: Pass the updated move history directly to the callback instead of reading from state
+      // This ensures we always have the correct move history even if state hasn't propagated yet
+      final moveHistoryForCallback = List<String>.from(updatedMoveHistory);
+      AppLogger.info('Triggering opponent move - move history to use: ${moveHistoryForCallback.length} moves - $moveHistoryForCallback', tag: 'GameController');
+      
+      // Trigger opponent move asynchronously after state update is complete
+      // Use a small delay to ensure state is fully updated and visible
+      // The state should now have currentOrder = newCurrentOrder (opponent's side) AND moveHistory updated
+      Future.delayed(const Duration(milliseconds: 100), () async {
+        // Re-read state to ensure we have the latest value
+        final currentState = state;
+        AppLogger.info('Triggering opponent move - current order in state: ${currentState.currentOrder.name}, expected: ${opponentSide.name}', tag: 'GameController');
+        AppLogger.info('Triggering opponent move - move history in state: ${currentState.moveHistory.length} moves - ${currentState.moveHistory}', tag: 'GameController');
+        AppLogger.info('Triggering opponent move - move history from callback: ${moveHistoryForCallback.length} moves - $moveHistoryForCallback', tag: 'GameController');
+        
+        // Use the move history from the callback if state hasn't updated yet
+        final moveHistoryToUse = currentState.moveHistory.length >= moveHistoryForCallback.length 
+            ? currentState.moveHistory 
+            : moveHistoryForCallback;
+        AppLogger.info('Using move history: ${moveHistoryToUse.length} moves - $moveHistoryToUse', tag: 'GameController');
+        
+        // Verify state is correct before calling makeOpponentsMove
+        if (currentState.currentOrder == opponentSide) {
+          await makeOpponentsMove();
+        } else {
+          AppLogger.warning('State not updated yet - currentOrder is ${currentState.currentOrder.name}, expected ${opponentSide.name}. Retrying...', tag: 'GameController');
+          // Retry after another delay
+          Future.delayed(const Duration(milliseconds: 100), () async {
+            final retryState = state;
+            AppLogger.info('Retry - move history in state: ${retryState.moveHistory.length} moves - ${retryState.moveHistory}', tag: 'GameController');
+            if (retryState.currentOrder == opponentSide) {
+              await makeOpponentsMove();
+            } else {
+              AppLogger.error('State still not updated after retry. Current order: ${retryState.currentOrder.name}. Proceeding anyway.', tag: 'GameController');
+              await makeOpponentsMove();
+            }
+          });
+        }
+      });
     } else if (!isPlayerMove) {
       AppLogger.debug('Skipping AI trigger - this was an opponent move', tag: 'GameController');
     }
-    
-    // Restart timer for new turn
-    _restartTimerCountdown();
-
-    // Use historyNotation if provided, otherwise use action
-    final notationForHistory = historyNotation ?? action;
-    
-    actionLogger.add(action);
-    AppLogger.debug('Move logged: $action (history: $notationForHistory)', tag: 'GameController');
-    
-    // Update move history in state (use historyNotation if provided for player perspective display)
-    final updatedMoveHistory = [...state.moveHistory, notationForHistory];
-    state = state.copyWith(
-      moveHistory: updatedMoveHistory,
-    );
-    AppLogger.info('Move history updated. Total moves: ${updatedMoveHistory.length}. Latest: $notationForHistory', tag: 'GameController');
 
     return true;
   }
@@ -1535,6 +1961,11 @@ class GameController extends _$GameController {
       playerWonRps: null,
       waitingForRpsResult: false,
     );
+  }
+
+  /// Hide RPS overlay immediately (called when choice is selected)
+  void hideRpsOverlayImmediately() {
+    state = state.copyWith(showRpsOverlay: false);
   }
 
   /// Handle RPS choice selection

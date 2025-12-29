@@ -19,6 +19,8 @@ class GameState with _$GameState {
     @Default(null) RpsChoice? opponentRpsChoice,
     @Default(false) bool waitingForRpsResult,
     @Default(null) bool? playerWonRps,
+    @Default(false) bool isRpsTie, // Indicates if the current RPS round is a tie
+    @Default(0) int playerRpsMovesRemaining, // Number of chess moves player can make from consecutive RPS wins
     @Default(600) int lightPlayerTimeSeconds, // 10 minutes
     @Default(600) int darkPlayerTimeSeconds, // 10 minutes
     @Default(null) DateTime? currentTurnStartedAt,

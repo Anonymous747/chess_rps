@@ -25,6 +25,8 @@ mixin _$GameState {
   RpsChoice? get opponentRpsChoice => throw _privateConstructorUsedError;
   bool get waitingForRpsResult => throw _privateConstructorUsedError;
   bool? get playerWonRps => throw _privateConstructorUsedError;
+  bool get isRpsTie => throw _privateConstructorUsedError;
+  int get playerRpsMovesRemaining => throw _privateConstructorUsedError;
   int get lightPlayerTimeSeconds => throw _privateConstructorUsedError;
   int get darkPlayerTimeSeconds => throw _privateConstructorUsedError;
   DateTime? get currentTurnStartedAt => throw _privateConstructorUsedError;
@@ -57,6 +59,8 @@ abstract class $GameStateCopyWith<$Res> {
       RpsChoice? opponentRpsChoice,
       bool waitingForRpsResult,
       bool? playerWonRps,
+      bool isRpsTie,
+      int playerRpsMovesRemaining,
       int lightPlayerTimeSeconds,
       int darkPlayerTimeSeconds,
       DateTime? currentTurnStartedAt,
@@ -92,6 +96,8 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
     Object? opponentRpsChoice = freezed,
     Object? waitingForRpsResult = null,
     Object? playerWonRps = freezed,
+    Object? isRpsTie = null,
+    Object? playerRpsMovesRemaining = null,
     Object? lightPlayerTimeSeconds = null,
     Object? darkPlayerTimeSeconds = null,
     Object? currentTurnStartedAt = freezed,
@@ -139,6 +145,14 @@ class _$GameStateCopyWithImpl<$Res, $Val extends GameState>
           ? _value.playerWonRps
           : playerWonRps // ignore: cast_nullable_to_non_nullable
               as bool?,
+      isRpsTie: null == isRpsTie
+          ? _value.isRpsTie
+          : isRpsTie // ignore: cast_nullable_to_non_nullable
+              as bool,
+      playerRpsMovesRemaining: null == playerRpsMovesRemaining
+          ? _value.playerRpsMovesRemaining
+          : playerRpsMovesRemaining // ignore: cast_nullable_to_non_nullable
+              as int,
       lightPlayerTimeSeconds: null == lightPlayerTimeSeconds
           ? _value.lightPlayerTimeSeconds
           : lightPlayerTimeSeconds // ignore: cast_nullable_to_non_nullable
@@ -197,6 +211,8 @@ abstract class _$$GameStateImplCopyWith<$Res>
       RpsChoice? opponentRpsChoice,
       bool waitingForRpsResult,
       bool? playerWonRps,
+      bool isRpsTie,
+      int playerRpsMovesRemaining,
       int lightPlayerTimeSeconds,
       int darkPlayerTimeSeconds,
       DateTime? currentTurnStartedAt,
@@ -230,6 +246,8 @@ class __$$GameStateImplCopyWithImpl<$Res>
     Object? opponentRpsChoice = freezed,
     Object? waitingForRpsResult = null,
     Object? playerWonRps = freezed,
+    Object? isRpsTie = null,
+    Object? playerRpsMovesRemaining = null,
     Object? lightPlayerTimeSeconds = null,
     Object? darkPlayerTimeSeconds = null,
     Object? currentTurnStartedAt = freezed,
@@ -277,6 +295,14 @@ class __$$GameStateImplCopyWithImpl<$Res>
           ? _value.playerWonRps
           : playerWonRps // ignore: cast_nullable_to_non_nullable
               as bool?,
+      isRpsTie: null == isRpsTie
+          ? _value.isRpsTie
+          : isRpsTie // ignore: cast_nullable_to_non_nullable
+              as bool,
+      playerRpsMovesRemaining: null == playerRpsMovesRemaining
+          ? _value.playerRpsMovesRemaining
+          : playerRpsMovesRemaining // ignore: cast_nullable_to_non_nullable
+              as int,
       lightPlayerTimeSeconds: null == lightPlayerTimeSeconds
           ? _value.lightPlayerTimeSeconds
           : lightPlayerTimeSeconds // ignore: cast_nullable_to_non_nullable
@@ -330,6 +356,8 @@ class _$GameStateImpl implements _GameState {
       this.opponentRpsChoice = null,
       this.waitingForRpsResult = false,
       this.playerWonRps = null,
+      this.isRpsTie = false,
+      this.playerRpsMovesRemaining = 0,
       this.lightPlayerTimeSeconds = 600,
       this.darkPlayerTimeSeconds = 600,
       this.currentTurnStartedAt = null,
@@ -368,6 +396,12 @@ class _$GameStateImpl implements _GameState {
   final bool? playerWonRps;
   @override
   @JsonKey()
+  final bool isRpsTie;
+  @override
+  @JsonKey()
+  final int playerRpsMovesRemaining;
+  @override
+  @JsonKey()
   final int lightPlayerTimeSeconds;
   @override
   @JsonKey()
@@ -396,7 +430,7 @@ class _$GameStateImpl implements _GameState {
 
   @override
   String toString() {
-    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure, playerSide: $playerSide, showRpsOverlay: $showRpsOverlay, playerRpsChoice: $playerRpsChoice, opponentRpsChoice: $opponentRpsChoice, waitingForRpsResult: $waitingForRpsResult, playerWonRps: $playerWonRps, lightPlayerTimeSeconds: $lightPlayerTimeSeconds, darkPlayerTimeSeconds: $darkPlayerTimeSeconds, currentTurnStartedAt: $currentTurnStartedAt, kingInCheck: $kingInCheck, moveHistory: $moveHistory, gameOver: $gameOver, winner: $winner, isCheckmate: $isCheckmate, isStalemate: $isStalemate)';
+    return 'GameState(board: $board, currentOrder: $currentOrder, selectedFigure: $selectedFigure, playerSide: $playerSide, showRpsOverlay: $showRpsOverlay, playerRpsChoice: $playerRpsChoice, opponentRpsChoice: $opponentRpsChoice, waitingForRpsResult: $waitingForRpsResult, playerWonRps: $playerWonRps, isRpsTie: $isRpsTie, playerRpsMovesRemaining: $playerRpsMovesRemaining, lightPlayerTimeSeconds: $lightPlayerTimeSeconds, darkPlayerTimeSeconds: $darkPlayerTimeSeconds, currentTurnStartedAt: $currentTurnStartedAt, kingInCheck: $kingInCheck, moveHistory: $moveHistory, gameOver: $gameOver, winner: $winner, isCheckmate: $isCheckmate, isStalemate: $isStalemate)';
   }
 
   @override
@@ -421,6 +455,10 @@ class _$GameStateImpl implements _GameState {
                 other.waitingForRpsResult == waitingForRpsResult) &&
             (identical(other.playerWonRps, playerWonRps) ||
                 other.playerWonRps == playerWonRps) &&
+            (identical(other.isRpsTie, isRpsTie) ||
+                other.isRpsTie == isRpsTie) &&
+            (identical(other.playerRpsMovesRemaining, playerRpsMovesRemaining) ||
+                other.playerRpsMovesRemaining == playerRpsMovesRemaining) &&
             (identical(other.lightPlayerTimeSeconds, lightPlayerTimeSeconds) ||
                 other.lightPlayerTimeSeconds == lightPlayerTimeSeconds) &&
             (identical(other.darkPlayerTimeSeconds, darkPlayerTimeSeconds) ||
@@ -483,6 +521,8 @@ abstract class _GameState implements GameState {
       final RpsChoice? opponentRpsChoice,
       final bool waitingForRpsResult,
       final bool? playerWonRps,
+      final bool isRpsTie,
+      final int playerRpsMovesRemaining,
       final int lightPlayerTimeSeconds,
       final int darkPlayerTimeSeconds,
       final DateTime? currentTurnStartedAt,
@@ -511,6 +551,10 @@ abstract class _GameState implements GameState {
   bool get waitingForRpsResult;
   @override
   bool? get playerWonRps;
+  @override
+  bool get isRpsTie;
+  @override
+  int get playerRpsMovesRemaining;
   @override
   int get lightPlayerTimeSeconds;
   @override

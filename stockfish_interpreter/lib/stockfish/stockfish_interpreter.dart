@@ -147,9 +147,11 @@ class StockfishInterpreter {
       // not both), and that they didn't specify a new value for UCI_LimitStrength.
       // So, update UCI_LimitStrength, in case it's not the right value currently.
       if (newParams.containsKey(skillLevel)) {
-        newParams.update(uciLimitStrength, (value) => false);
+        // Use assignment instead of update since the key might not exist
+        newParams[uciLimitStrength] = false;
       } else if (newParams.containsKey(uciElo)) {
-        newParams.update(uciLimitStrength, (value) => true);
+        // Use assignment instead of update since the key might not exist
+        newParams[uciLimitStrength] = true;
       }
     }
 
@@ -260,6 +262,37 @@ class StockfishInterpreter {
     await makeMovesFromCurrentPosition(moves);
   }
 
+  /// Sets current board position with a specific turn indicator
+  /// This is useful for RPS mode where the turn order doesn't follow standard chess rules
+  /// [turn] should be 'w' for white or 'b' for black
+  /// [moves] is an optional list of moves to apply after setting the position
+  /// Note: Stockfish may reject a FEN with black to move at starting position.
+  /// In that case, this method will still set the position, but Stockfish may correct the turn.
+  ///
+  Future<void> setPositionWithTurn(String turn, [List<String> moves = const []]) async {
+    final startingFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR $turn KQkq - 0 1';
+    try {
+      await setFenPosition(
+        fenPosition: startingFen,
+        sendUcinewgameToken: true,
+      );
+      // If moves list is empty, we're done
+      if (moves.isEmpty) {
+        return;
+      }
+      await makeMovesFromCurrentPosition(moves);
+    } catch (e) {
+      // If setting FEN fails (e.g., Stockfish rejects black to move at start),
+      // fall back to standard starting position
+      await setFenPosition(
+        fenPosition: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+        sendUcinewgameToken: true,
+      );
+      await makeMovesFromCurrentPosition(moves);
+      rethrow; // Re-throw to let caller know the turn setting failed
+    }
+  }
+
   /// Sets current skill level of stockfish engine
   ///
   Future<void> setSkillLevel({int skillLevel = 20}) async {
@@ -324,8 +357,18 @@ class StockfishInterpreter {
     if (sendUcinewgameToken) {
       applyCommand('ucinewgame');
 
-      await _stockfishHandler.outputStream
-          .firstWhere((output) => output.startsWith(uciok));
+      try {
+        await _stockfishHandler.outputStream
+            .firstWhere((output) => output.startsWith(uciok))
+            .timeout(const Duration(seconds: 5), onTimeout: () {
+          _log('Warning: _prepareForNewPosition timeout waiting for uciok - continuing anyway');
+          return uciok; // Return dummy value to continue
+        });
+      } catch (e) {
+        // If timeout or error, log but continue - Stockfish might still be ready
+        _log('Warning: _prepareForNewPosition error: $e - continuing anyway');
+        // Continue anyway - the position command might still work
+      }
     }
   }
 

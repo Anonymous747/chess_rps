@@ -145,15 +145,19 @@ class AIActionHandler extends ActionHandler {
 
   /// Rebuild Stockfish board state from move history
   /// This is used when board state gets out of sync
-  Future<void> rebuildBoardFromMoves(List<String> moveHistory) async {
+  /// [turn] is an optional turn indicator ('w' or 'b') to set when at starting position
+  /// This is useful for RPS mode where the turn order doesn't follow standard chess rules
+  Future<void> rebuildBoardFromMoves(List<String> moveHistory, {String? turn}) async {
     AppLogger.info('Rebuilding Stockfish board from ${moveHistory.length} moves', tag: 'AIActionHandler');
     
     // Extract moves without piece prefixes (Stockfish format: "e2e4")
     final stockfishMoves = <String>[];
     for (final move in moveHistory) {
-      // Remove piece prefix if present (e.g., "Pe2e4" -> "e2e4")
+      // Remove piece prefix if present (e.g., "Pe2e4" -> "e2e4", "Pe2e4q" -> "e2e4q")
+      // Moves can be 4 chars (e2e4), 5 chars (Pe2e4), or 6 chars (Pe2e4q for promotion)
       String stockfishMove = move;
-      if (move.length == 5) {
+      if (move.length >= 5 && move[0].toUpperCase() == move[0] && move[0].contains(RegExp(r'[PNBRQK]'))) {
+        // Has piece prefix, remove it (keep the rest including promotion suffix)
         stockfishMove = move.substring(1);
       }
       stockfishMoves.add(stockfishMove);
@@ -161,10 +165,101 @@ class AIActionHandler extends ActionHandler {
     
     AppLogger.info('Rebuilding board with moves: $stockfishMoves', tag: 'AIActionHandler');
     
-    // Reset to starting position and apply all moves
-    await _stockfishInterpreter.setPosition(stockfishMoves);
+    // Determine the initial turn based on the first move if not explicitly provided
+    String? initialTurn = turn;
+    if (initialTurn == null && stockfishMoves.isNotEmpty) {
+      // Determine which side the first move belongs to based on the starting square
+      // In chess notation, rows 1-2 are white's starting rows, rows 7-8 are black's starting rows
+      final firstMove = stockfishMoves[0];
+      if (firstMove.length >= 2) {
+        final fromRow = int.tryParse(firstMove[1]);
+        if (fromRow != null) {
+          // Row 1-2 = white's starting rows, Row 7-8 = black's starting rows
+          if (fromRow >= 1 && fromRow <= 2) {
+            initialTurn = 'w'; // White to move first
+            AppLogger.info('Detected first move is white\'s (from row $fromRow), setting initial turn to w', tag: 'AIActionHandler');
+          } else if (fromRow >= 7 && fromRow <= 8) {
+            initialTurn = 'b'; // Black to move first
+            AppLogger.info('Detected first move is black\'s (from row $fromRow), setting initial turn to b', tag: 'AIActionHandler');
+          }
+        }
+      }
+    }
+    
+    // If at starting position (no moves) and turn is specified, use setPositionWithTurn
+    // If we have moves and detected the initial turn, use setPositionWithTurn
+    // Otherwise, use standard setPosition
+    if (stockfishMoves.isEmpty && initialTurn != null) {
+      AppLogger.info('Setting starting position with turn: $initialTurn', tag: 'AIActionHandler');
+      try {
+        AppLogger.info('Attempting to set starting position with turn: $initialTurn', tag: 'AIActionHandler');
+        await _stockfishInterpreter.setPositionWithTurn(initialTurn, stockfishMoves);
+        AppLogger.info('Starting position set with turn: $initialTurn', tag: 'AIActionHandler');
+      } catch (e) {
+        AppLogger.warning('Failed to set starting position with turn $initialTurn: $e', tag: 'AIActionHandler');
+        AppLogger.warning('Falling back to standard starting position (white to move)', tag: 'AIActionHandler');
+        // Fall back to standard starting position
+        try {
+          await _stockfishInterpreter.setPosition(stockfishMoves);
+          AppLogger.info('Standard starting position set successfully', tag: 'AIActionHandler');
+        } catch (e2) {
+          AppLogger.error('Failed to set standard starting position: $e2', tag: 'AIActionHandler');
+          // Continue anyway - the move request might still work
+        }
+      }
+    } else if (stockfishMoves.isNotEmpty && initialTurn != null) {
+      // We have moves and detected the initial turn - use setPositionWithTurn
+      AppLogger.info('Setting starting position with detected turn: $initialTurn, then applying ${stockfishMoves.length} moves', tag: 'AIActionHandler');
+      try {
+        await _stockfishInterpreter.setPositionWithTurn(initialTurn, stockfishMoves);
+        AppLogger.info('Board rebuilt with initial turn $initialTurn and ${stockfishMoves.length} moves', tag: 'AIActionHandler');
+      } catch (e) {
+        AppLogger.warning('Failed to set position with turn $initialTurn: $e', tag: 'AIActionHandler');
+        AppLogger.warning('Falling back to standard starting position (white to move)', tag: 'AIActionHandler');
+        // Fall back to standard starting position
+        try {
+          await _stockfishInterpreter.setPosition(stockfishMoves);
+          AppLogger.info('Standard starting position set successfully', tag: 'AIActionHandler');
+        } catch (e2) {
+          AppLogger.error('Failed to set standard starting position: $e2', tag: 'AIActionHandler');
+          // Continue anyway - the move request might still work
+        }
+      }
+    } else {
+      // Reset to starting position and apply all moves (standard chess - white to move first)
+      AppLogger.info('Using standard starting position (white to move first)', tag: 'AIActionHandler');
+      await _stockfishInterpreter.setPosition(stockfishMoves);
+    }
     
     AppLogger.info('Board rebuilt successfully', tag: 'AIActionHandler');
+  }
+
+  /// Set FEN position with a specific turn indicator
+  /// This is useful in RPS mode when we need to set the turn to match the RPS winner
+  Future<void> setFenPosition(String fenPosition) async {
+    AppLogger.info('Setting FEN position: $fenPosition', tag: 'AIActionHandler');
+    await _stockfishInterpreter.setFenPosition(fenPosition: fenPosition, sendUcinewgameToken: false);
+    
+    // Verify the FEN was set correctly by reading it back
+    await Future.delayed(const Duration(milliseconds: 100)); // Small delay to ensure FEN is processed
+    final verifyFen = await _stockfishInterpreter.getFenPosition();
+    AppLogger.info('FEN position set. Verification: $verifyFen', tag: 'AIActionHandler');
+    
+    // Check if turn matches
+    final fenParts = verifyFen.split(' ');
+    final setFenParts = fenPosition.split(' ');
+    if (fenParts.length >= 2 && setFenParts.length >= 2) {
+      final actualTurn = fenParts[1];
+      final expectedTurn = setFenParts[1];
+      if (actualTurn != expectedTurn) {
+        AppLogger.warning(
+          'FEN turn mismatch! Set: $expectedTurn, Actual: $actualTurn',
+          tag: 'AIActionHandler'
+        );
+      } else {
+        AppLogger.info('FEN turn verified: $actualTurn', tag: 'AIActionHandler');
+      }
+    }
   }
 
   @override
