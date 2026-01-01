@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/rps_choice.dart';
 import 'package:chess_rps/data/service/socket/game_room_handler.dart';
@@ -45,6 +46,11 @@ class SocketActionHandler extends ActionHandler {
   Future<void> sendSurrender() async {
     AppLogger.info('Sending surrender via SocketActionHandler', tag: 'SocketActionHandler');
     await _roomHandler.sendSurrender();
+  }
+
+  Future<void> sendGameOver(Side winner, Side loser) async {
+    AppLogger.info('Sending game over via SocketActionHandler: winner=${winner.name}, loser=${loser.name}', tag: 'SocketActionHandler');
+    await _roomHandler.sendGameOver(winner, loser);
   }
 
   /// This method works under the assumption that when the opponent makes a move,

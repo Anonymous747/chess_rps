@@ -537,6 +537,8 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str):
                         await handle_rps_choice(session, websocket, room.id, message.get("data", {}))
                     elif message_type == "surrender":
                         await handle_surrender(session, websocket, room.id)
+                    elif message_type == "game_over":
+                        await handle_game_over(session, websocket, room.id, message.get("data", {}))
                     elif message_type == "heartbeat":
                         # Heartbeat message - user is still waiting, just acknowledge
                         # No response needed, connection staying alive is the acknowledgment
@@ -817,6 +819,34 @@ async def handle_rps_choice(session: AsyncSession, websocket: WebSocket, room_id
                 "waiting_for_opponent": True
             }
         }))
+
+
+async def handle_game_over(session: AsyncSession, websocket: WebSocket, room_id: int, data: dict):
+    """Handle game over message - broadcast to opponent"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    connection = room_manager.get_connection(websocket)
+    if not connection or not connection.playerId:
+        await websocket.send_text(json.dumps({
+            "type": "error",
+            "message": "Not connected to room"
+        }))
+        return
+    
+    logger.info(f"Player {connection.playerId} game over in room {room_id}")
+    
+    # Broadcast game_over message to opponent (all other players in room)
+    await room_manager.send_to_room(
+        room_id,
+        json.dumps({
+            "type": "game_over",
+            "data": data
+        }),
+        exclude_websocket=websocket  # Don't send back to the player who sent it
+    )
+    
+    logger.info(f"Game over message broadcast to opponent in room {room_id}")
 
 
 async def handle_surrender(session: AsyncSession, websocket: WebSocket, room_id: int):

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/endpoint.dart';
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/rps_choice.dart';
@@ -288,6 +289,33 @@ class GameRoomHandler {
           tag: 'GameRoomHandler');
     } catch (e) {
       AppLogger.error('Failed to send surrender: $e',
+          tag: 'GameRoomHandler', error: e);
+      rethrow;
+    }
+  }
+
+  Future<void> sendGameOver(Side winner, Side loser) async {
+    if (!_isConnected || _channel == null) {
+      AppLogger.warning('Cannot send game over: not connected',
+          tag: 'GameRoomHandler');
+      return;
+    }
+
+    AppLogger.info('Sending game over message: winner=${winner.name}, loser=${loser.name}', tag: 'GameRoomHandler');
+    final message = {
+      'type': 'game_over',
+      'data': {
+        'winner': winner.name, // 'light' or 'dark'
+        'loser': loser.name,
+      },
+    };
+
+    try {
+      _channel!.sink.add(json.encode(message));
+      AppLogger.debug('Game over message sent successfully',
+          tag: 'GameRoomHandler');
+    } catch (e) {
+      AppLogger.error('Failed to send game over: $e',
           tag: 'GameRoomHandler', error: e);
       rethrow;
     }

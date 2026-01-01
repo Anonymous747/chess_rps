@@ -168,7 +168,40 @@ class GameController extends _$GameController {
       (message) async {
         try {
             final type = message['type'] as String?;
-          if (type == 'timer_update' || type == 'move' || type == 'room_joined' || type == 'player_left' || type == 'error' || type == 'surrender' || type == 'disconnected' || type == 'rps_result') {
+          if (type == 'timer_update' || type == 'move' || type == 'room_joined' || type == 'player_left' || type == 'error' || type == 'surrender' || type == 'disconnected' || type == 'rps_result' || type == 'game_over') {
+            // Handle game_over messages FIRST (for online RPS games when opponent's game ends)
+            // This must be checked before player_left to ensure correct win/loss dialogs
+            if (type == 'game_over') {
+              if (GameModesMediator.gameMode == GameMode.rps && GameModesMediator.opponentMode == OpponentMode.socket) {
+                AppLogger.info('Received game over message from WebSocket', tag: 'GameController');
+                final data = message['data'] as Map<String, dynamic>?;
+                if (data != null) {
+                  final winnerStr = data['winner'] as String?; // 'light' or 'dark'
+                  final loserStr = data['loser'] as String?;
+                  if (winnerStr != null && loserStr != null) {
+                    final winnerSide = winnerStr == 'light' ? Side.light : Side.dark;
+                    final loserSide = loserStr == 'light' ? Side.light : Side.dark;
+                    AppLogger.info('Game over: winner=${winnerSide.name}, loser=${loserSide.name}', tag: 'GameController');
+                    // End the game - the opponent won, so we (the current player) lost
+                    // Don't send another game_over message since we already received it
+                    if (!state.gameOver) {
+                      _endGameWithCheckmate(loserSide, notifyOpponent: false);
+                    } else {
+                      AppLogger.info('Game already over, ignoring game_over message', tag: 'GameController');
+                    }
+                  } else {
+                    AppLogger.warning('Game over message missing winner/loser data', tag: 'GameController');
+                  }
+                } else {
+                  AppLogger.warning('Game over message missing data', tag: 'GameController');
+                }
+                return;
+              } else {
+                AppLogger.warning('Received game over but not in RPS online mode - ignoring', tag: 'GameController');
+                return;
+              }
+            }
+
             // Handle surrender - opponent surrendered, player wins
             // Only process in online mode
             if (type == 'surrender') {
@@ -187,18 +220,21 @@ class GameController extends _$GameController {
             
             // Handle player_left - opponent disconnected, player wins
             // Only process in online mode
+            // NOTE: In RPS mode, game_over messages should be handled first
+            // player_left may be sent when the winner disconnects after game ends
             if (type == 'player_left') {
               if (GameModesMediator.opponentMode == OpponentMode.socket) {
-                AppLogger.info('Received player_left message - opponent disconnected, player wins!', tag: 'GameController');
+                AppLogger.info('Received player_left message - opponent disconnected', tag: 'GameController');
                 AppLogger.info('Current game state before player_left: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
                 // Only end game if it's not already over
+                // If game is already over (e.g., from game_over message), ignore player_left
                 if (!state.gameOver) {
-                  // End game with player winning
+                  // End game with player winning (opponent disconnected)
                   final opponentSide = state.playerSide.opposite;
                   _endGameWithSurrender(opponentSide);
                   AppLogger.info('Game state after player_left: gameOver=${state.gameOver}, winner=${state.winner?.name}', tag: 'GameController');
                 } else {
-                  AppLogger.info('Game already over, ignoring player_left message', tag: 'GameController');
+                  AppLogger.info('Game already over, ignoring player_left message (likely sent after game_over)', tag: 'GameController');
                 }
               } else {
                 AppLogger.warning('Received player_left message but not in online mode - ignoring', tag: 'GameController');
@@ -569,8 +605,18 @@ class GameController extends _$GameController {
               'CHECKMATE detected after opponent move! ${newCurrentOrder.name} is checkmated.',
               tag: 'GameController'
             );
-            _endGameWithCheckmate(newCurrentOrder);
-            return;
+            // In RPS online mode, don't end game immediately - allow player to capture king if possible
+            if (GameModesMediator.gameMode == GameMode.rps && 
+                GameModesMediator.opponentMode == OpponentMode.socket) {
+              AppLogger.info(
+                'RPS online mode: Checkmate detected but game continues - player can capture king to win',
+                tag: 'GameController'
+              );
+              // Don't end game - allow play to continue
+            } else {
+              _endGameWithCheckmate(newCurrentOrder);
+              return;
+            }
           } else if (ActionChecker.isStalemate(updatedBoard, newCurrentOrder)) {
             AppLogger.warning(
               'STALEMATE detected after opponent move! ${newCurrentOrder.name} is stalemated.',
@@ -769,7 +815,19 @@ class GameController extends _$GameController {
             'CHECKMATE! ${movingSide.name} has no legal moves and king is in check.',
             tag: 'GameController'
           );
-          _endGameWithCheckmate(movingSide);
+          // In RPS online mode, don't end game immediately - allow opponent to capture king if possible
+          if (GameModesMediator.gameMode == GameMode.rps && 
+              GameModesMediator.opponentMode == OpponentMode.socket) {
+            AppLogger.info(
+              'RPS online mode: Checkmate detected but game continues - opponent can capture king to win',
+              tag: 'GameController'
+            );
+            // Don't end game - allow play to continue
+            // Don't return - allow showing available moves
+          } else {
+            _endGameWithCheckmate(movingSide);
+            return; // Don't display any moves, game is over
+          }
         } else {
           // Stalemate - the side has no legal moves but king is not in check
           AppLogger.warning(
@@ -777,9 +835,45 @@ class GameController extends _$GameController {
             tag: 'GameController'
           );
           _endGameWithStalemate(movingSide);
+          return; // Don't display any moves, game is over
         }
-        return; // Don't display any moves, game is over
       }
+    }
+
+    // CRITICAL: Check if any available move would capture the opponent's king
+    // If so, immediately end the game without allowing the move
+    Side? opponentKingSideToCapture;
+    for (final hash in availableHashes) {
+      final position = hash.toPosition();
+      final target = state.board.getCellAt(position.row, position.col);
+
+      // Check if this move would capture the opponent's king
+      if (target.isOccupied &&
+          target.figure != null &&
+          target.figure!.role == Role.king &&
+          fromCell.figure != null &&
+          target.figure!.side != fromCell.figure!.side) {
+        opponentKingSideToCapture = target.figure!.side;
+        AppLogger.warning(
+          'KING CAPTURE MOVE DETECTED! ${fromCell.figure!.side.name} can capture ${opponentKingSideToCapture.name} king. Game over!',
+          tag: 'GameController'
+        );
+        break; // Found a king capture move - game is over
+      }
+    }
+
+    // If a king capture move is available, immediately end the game
+    if (opponentKingSideToCapture != null) {
+      AppLogger.warning(
+        'Game ending immediately: ${fromCell.figure!.side.name} has a move that would capture ${opponentKingSideToCapture.name} king',
+        tag: 'GameController'
+      );
+      // The side that can capture the king wins, the side whose king would be captured loses
+      // _endGameWithCheckmate(opponentKingSideToCapture) sets winner = opponentKingSideToCapture.opposite
+      // So: capturing side wins, opponent (whose king can be captured) loses
+      // This means the opponent will see a loss dialog (winner != playerSide)
+      _endGameWithCheckmate(opponentKingSideToCapture);
+      return; // Don't display any moves, game is over
     }
 
     for (final hash in availableHashes) {
@@ -1614,6 +1708,18 @@ class GameController extends _$GameController {
       return false;
     }
 
+    // CRITICAL: Check if this move will capture the opponent's king BEFORE executing the move
+    // This must be checked here because _makeMoveViaAction is called with skipCapture: true
+    // Store the captured king's side BEFORE moveFigure executes (which will move/clear the target cell)
+    Side? capturedKingSide;
+    final willCaptureKing = target.isOccupied && 
+                            target.figure != null && 
+                            target.figure!.role == Role.king &&
+                            target.figure!.side != selectedCell.figure!.side;
+    if (willCaptureKing) {
+      capturedKingSide = target.figure!.side; // Store before moveFigure clears it
+    }
+    
     final isMoveAvailable = selectedCell.moveFigure(board, target);
     if (!isMoveAvailable) {
       AppLogger.warning(
@@ -1661,6 +1767,21 @@ class GameController extends _$GameController {
     final success = await _makeMoveViaAction(action, selectedCell, target, skipCapture: true);
     if (success) {
       AppLogger.info('Move executed successfully: $action', tag: 'GameController');
+      
+      // If king was captured, end the game now
+      if (capturedKingSide != null) {
+        AppLogger.warning(
+          'KING CAPTURED! ${capturedKingSide.name} king was captured by ${selectedCell.figure!.side.name}. Game over!',
+          tag: 'GameController'
+        );
+        // The side that captured the king wins, the side whose king was captured loses
+        _endGameWithCheckmate(capturedKingSide);
+        AppLogger.info(
+          '=== GameController.makeMove END (success: $success, game ended) ===',
+          tag: 'GameController'
+        );
+        return success;
+      }
     } else {
       AppLogger.warning('Failed to execute move: $action', tag: 'GameController');
     }
@@ -1871,8 +1992,18 @@ class GameController extends _$GameController {
         'CHECKMATE detected after move! ${newCurrentOrder.name} is checkmated.',
         tag: 'GameController'
       );
-      _endGameWithCheckmate(newCurrentOrder);
-      return true;
+      // In RPS online mode, don't end game immediately - allow player to capture king if possible
+      if (GameModesMediator.gameMode == GameMode.rps && 
+          GameModesMediator.opponentMode == OpponentMode.socket) {
+        AppLogger.info(
+          'RPS online mode: Checkmate detected but game continues - player can capture king to win',
+          tag: 'GameController'
+        );
+        // Don't end game - allow play to continue
+      } else {
+        _endGameWithCheckmate(newCurrentOrder);
+        return true;
+      }
     } else if (ActionChecker.isStalemate(updatedBoard, newCurrentOrder)) {
       AppLogger.warning(
         'STALEMATE detected after move! ${newCurrentOrder.name} is stalemated.',
@@ -2005,7 +2136,8 @@ class GameController extends _$GameController {
 
   /// End the game with checkmate
   /// [losingSide] is the side that was checkmated (lost)
-  void _endGameWithCheckmate(Side losingSide) {
+  /// [notifyOpponent] if true, sends game_over message to opponent (default: true)
+  void _endGameWithCheckmate(Side losingSide, {bool notifyOpponent = true}) {
     final winningSide = losingSide.opposite;
     
     AppLogger.info(
@@ -2023,6 +2155,19 @@ class GameController extends _$GameController {
       isCheckmate: true,
       isStalemate: false,
     );
+
+    // In online RPS mode, notify the opponent that the game is over
+    if (notifyOpponent &&
+        GameModesMediator.gameMode == GameMode.rps && 
+        GameModesMediator.opponentMode == OpponentMode.socket &&
+        actionHandler is SocketActionHandler) {
+      AppLogger.info('RPS online mode: Sending game over message to opponent', tag: 'GameController');
+      // Don't await - fire and forget, but log errors
+      (actionHandler as SocketActionHandler).sendGameOver(winningSide, losingSide).catchError((e) {
+        AppLogger.error('Failed to send game over message: $e', tag: 'GameController', error: e);
+      });
+      AppLogger.debug('Game over message sent to opponent (async)', tag: 'GameController');
+    }
   }
 
   /// End the game with stalemate
