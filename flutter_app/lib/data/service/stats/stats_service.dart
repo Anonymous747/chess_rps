@@ -59,6 +59,7 @@ class LevelProgress {
 class UserStats {
   final int id;
   final int userId;
+  final String? username;
   final int rating;
   final int ratingChange;
   final int totalGames;
@@ -80,6 +81,7 @@ class UserStats {
   UserStats({
     required this.id,
     required this.userId,
+    this.username,
     required this.rating,
     required this.ratingChange,
     required this.totalGames,
@@ -103,6 +105,7 @@ class UserStats {
     return UserStats(
       id: json['id'] as int,
       userId: json['user_id'] as int,
+      username: json['username'] as String?,
       rating: json['rating'] as int,
       ratingChange: json['rating_change'] as int,
       totalGames: json['total_games'] as int,

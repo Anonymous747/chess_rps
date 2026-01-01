@@ -1154,8 +1154,11 @@ class _ProfileNameSection extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Get username from stats (which comes from backend) as primary source
+    // Fallback to auth controller if stats not available
+    final statsAsync = ref.watch(statsControllerProvider);
     final authUser = ref.watch(authControllerProvider).valueOrNull;
-    final profileName = authUser?.profileName ?? 'Player';
+    final profileName = statsAsync.valueOrNull?.username ?? authUser?.profileName ?? 'Player';
     // Hooks must be called in the same order every time - using consistent types
     final isEditing = useState<bool>(false);
     final nameController = useTextEditingController();

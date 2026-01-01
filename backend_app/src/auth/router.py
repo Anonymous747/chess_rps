@@ -123,7 +123,8 @@ async def register(
         refresh_token=refresh_token,
         token_type="bearer",
         user_id=new_user.id,
-        phone_number=new_user.phone_number
+        phone_number=new_user.phone_number,
+        profile_name=new_user.profile_name
     )
 
 
@@ -199,7 +200,8 @@ async def login(
         refresh_token=refresh_token,
         token_type="bearer",
         user_id=user.id,
-        phone_number=user.phone_number
+        phone_number=user.phone_number,
+        profile_name=user.profile_name
     )
 
 
@@ -352,7 +354,8 @@ async def refresh_token(
             refresh_token=new_refresh_token,
             token_type="bearer",
             user_id=user.id,
-            phone_number=user.phone_number
+            phone_number=user.phone_number,
+            profile_name=user.profile_name
         )
         
     except jwt.ExpiredSignatureError:

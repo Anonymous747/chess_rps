@@ -140,6 +140,7 @@ async def get_my_stats(
     response_data = {
         "id": user_stats.id,
         "user_id": user_stats.user_id,
+        "username": current_user.profile_name,
         "rating": user_stats.rating,
         "rating_change": user_stats.rating_change,
         "total_games": user_stats.total_games,
@@ -304,6 +305,7 @@ async def record_game_result(
             new_stats=UserStatsResponse(
                 id=user_stats.id,
                 user_id=user_stats.user_id,
+                username=current_user.profile_name,
                 rating=user_stats.rating,
                 rating_change=user_stats.rating_change,
                 total_games=user_stats.total_games,

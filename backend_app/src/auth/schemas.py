@@ -40,6 +40,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user_id: int
     phone_number: str
+    profile_name: str
 
     class Config:
         from_attributes = True

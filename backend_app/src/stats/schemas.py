@@ -24,6 +24,7 @@ class PerformanceHistoryItem(BaseModel):
 class UserStatsResponse(BaseModel):
     id: int
     user_id: int
+    username: Optional[str] = None  # profile_name from User
     rating: int
     rating_change: int
     total_games: int
