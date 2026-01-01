@@ -10,6 +10,7 @@ from src.collection.router import router as router_collection
 from src.stats.router import router as router_stats
 from src.friends.router import router as router_friends
 from src.assets.router import router as router_assets
+from src.tournament.router import router as router_tournament
 from src.database import get_async_session, engine
 from src.database import Base
 
@@ -20,6 +21,7 @@ from src.auth.settings_models import UserSettings  # noqa: F401
 from src.collection.models import CollectionItem, UserCollection  # noqa: F401
 from src.stats.models import UserStats, PerformanceHistory  # noqa: F401
 from src.friends.models import Friendship  # noqa: F401
+from src.tournament.models import Tournament, TournamentParticipant, TournamentMatch, TournamentRound, TournamentRating  # noqa: F401
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -95,4 +97,5 @@ app.include_router(router_collection, prefix="/api/v1")
 app.include_router(router_stats, prefix="/api/v1")
 app.include_router(router_friends, prefix="/api/v1")
 app.include_router(router_assets, prefix="/api/v1")
+app.include_router(router_tournament, prefix="/api/v1")
 

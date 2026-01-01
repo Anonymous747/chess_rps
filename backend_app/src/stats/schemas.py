@@ -8,6 +8,7 @@ class GameResultRequest(BaseModel):
     opponent_rating: Optional[int] = None  # For future ELO calculation
     game_mode: Optional[str] = None  # "classical" or "rps"
     end_type: Optional[str] = None  # "checkmate", "stalemate", "timeout", etc.
+    opponent_mode: Optional[str] = None  # "ai" or "socket" - determines if rating should be updated
 
 
 class PerformanceHistoryItem(BaseModel):

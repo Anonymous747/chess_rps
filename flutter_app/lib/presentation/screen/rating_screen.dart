@@ -1,15 +1,94 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/data/service/stats/stats_service.dart';
+import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class RatingScreen extends StatelessWidget {
+class RatingScreen extends ConsumerWidget {
   static const routeName = '/rating';
 
   const RatingScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(statsControllerProvider);
+    
+    return statsAsync.when(
+      data: (stats) => _buildContent(context, stats),
+      loading: () => _buildLoading(context),
+      error: (error, stack) => _buildError(context, error),
+    );
+  }
+
+  Widget _buildLoading(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Palette.background,
+              Palette.backgroundSecondary,
+              Palette.backgroundTertiary,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildError(BuildContext context, Object error) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Palette.background,
+              Palette.backgroundSecondary,
+              Palette.backgroundTertiary,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: Palette.error),
+                const SizedBox(height: 16),
+                Text(
+                  'Error loading rating',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Palette.error,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => context.pop(),
+                  child: Text('Go Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, stats) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -76,15 +155,15 @@ class RatingScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       // Rating Card
-                      _buildRatingCard(),
+                      _buildRatingCard(stats),
                       const SizedBox(height: 32),
                       
                       // History Section
-                      _buildHistorySection(),
+                      _buildHistorySection(stats),
                       const SizedBox(height: 32),
                       
                       // Mode Breakdown
-                      _buildModeBreakdown(),
+                      _buildModeBreakdown(stats),
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -97,7 +176,23 @@ class RatingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRatingCard() {
+  Widget _buildRatingCard(UserStats stats) {
+    // Use level name from stats, or fallback to "Level X"
+    final tierDisplay = stats.levelName ?? 'Level ${stats.level}';
+    
+    // Format rating with comma
+    final ratingText = _formatNumber(stats.rating);
+    
+    // Rating change
+    final ratingChange = stats.ratingChange;
+    final ratingChangeText = ratingChange >= 0 ? '+$ratingChange' : '$ratingChange';
+    final ratingChangeColor = ratingChange >= 0 ? Palette.success : Palette.error;
+    
+    // Win rate
+    final winRateText = stats.totalGames > 0 ? '${stats.winRate.toStringAsFixed(1)}%' : '0%';
+    
+    // Total games
+    final gamesText = _formatNumber(stats.totalGames);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -163,7 +258,7 @@ class RatingScreen extends StatelessWidget {
                     border: Border.all(color: Palette.purpleAccent),
                   ),
                   child: Text(
-                    'Tier 7',
+                    'Level ${stats.level}',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -179,7 +274,7 @@ class RatingScreen extends StatelessWidget {
           
           // MMR
           Text(
-            '2,458',
+            ratingText,
             style: TextStyle(
               fontSize: 48,
               fontWeight: FontWeight.bold,
@@ -194,45 +289,51 @@ class RatingScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Grandmaster II',
+                tierDisplay,
                 style: TextStyle(
                   fontSize: 14,
                   color: Palette.textSecondary,
                 ),
               ),
-              const SizedBox(width: 8),
-              Container(
-                width: 4,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Palette.textTertiary,
-                  shape: BoxShape.circle,
+              if (ratingChange != 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  width: 4,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Palette.textTertiary,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Palette.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Palette.success.withValues(alpha: 0.2)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.trending_up, size: 14, color: Palette.success),
-                    const SizedBox(width: 4),
-                    Text(
-                      '+24',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Palette.success,
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: ratingChangeColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: ratingChangeColor.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        ratingChange >= 0 ? Icons.trending_up : Icons.trending_down,
+                        size: 14,
+                        color: ratingChangeColor,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      Text(
+                        ratingChangeText,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: ratingChangeColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
           
@@ -242,15 +343,15 @@ class RatingScreen extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _buildStatItem('Win Rate', '58%', Palette.textPrimary),
+                child: _buildStatItem('Win Rate', winRateText, Palette.textPrimary),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildStatItem('Percentile', 'Top 1.2%', Palette.purpleAccent),
+                child: _buildStatItem('Level', '${stats.level}', Palette.purpleAccent),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildStatItem('Games', '1,240', Palette.textPrimary),
+                child: _buildStatItem('Games', gamesText, Palette.textPrimary),
               ),
             ],
           ),
@@ -290,7 +391,7 @@ class RatingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHistorySection() {
+  Widget _buildHistorySection(UserStats stats) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -353,21 +454,12 @@ class RatingScreen extends StatelessWidget {
             ],
           ),
           child: CustomPaint(
-            painter: _ChartPainter(),
+            painter: _ChartPainter(stats.performanceHistory ?? []),
             child: Container(),
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Oct 1', style: TextStyle(fontSize: 10, color: Palette.textTertiary)),
-            Text('Oct 8', style: TextStyle(fontSize: 10, color: Palette.textTertiary)),
-            Text('Oct 15', style: TextStyle(fontSize: 10, color: Palette.textTertiary)),
-            Text('Oct 22', style: TextStyle(fontSize: 10, color: Palette.textTertiary)),
-            Text('Today', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Palette.purpleAccent)),
-          ],
-        ),
+        _buildHistoryLabels(stats.performanceHistory ?? []),
       ],
     );
   }
@@ -390,7 +482,49 @@ class RatingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildModeBreakdown() {
+  Widget _buildHistoryLabels(List<PerformanceHistoryItem> history) {
+    if (history.isEmpty) {
+      return SizedBox.shrink();
+    }
+    
+    // Get first and last dates
+    final firstDate = history.first.createdAt;
+    final lastDate = history.last.createdAt;
+    
+    // Calculate interval dates (divide into 5 segments)
+    final duration = lastDate.difference(firstDate);
+    final interval = duration.inDays > 0 ? duration.inDays ~/ 5 : 1;
+    
+    final labels = <Widget>[];
+    for (int i = 0; i < 5; i++) {
+      final date = firstDate.add(Duration(days: interval * i));
+      final isLast = i == 4;
+      labels.add(
+        Text(
+          isLast ? 'Today' : '${date.month}/${date.day}',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
+            color: isLast ? Palette.purpleAccent : Palette.textTertiary,
+          ),
+        ),
+      );
+    }
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: labels,
+    );
+  }
+
+  String _formatNumber(int value) {
+    if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(1)}k';
+    }
+    return value.toString();
+  }
+
+  Widget _buildModeBreakdown(UserStats stats) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -409,11 +543,9 @@ class RatingScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        _buildModeItem('Blitz', '3+2 • 5 min', 2310, 12, true, Icons.bolt, Palette.purpleAccent),
+        _buildModeItem('Classical', 'Standard Chess', stats.rating, stats.ratingChange, stats.ratingChange >= 0, Icons.extension, Palette.purpleAccent),
         const SizedBox(height: 12),
-        _buildModeItem('Bullet', '1+0 • 2+1', 2150, -5, false, Icons.rocket_launch, Palette.gold),
-        const SizedBox(height: 12),
-        _buildModeItem('Chess RPS', 'Hybrid Mode', 2560, 45, true, Icons.extension, Palette.purpleAccent, isFeatured: true),
+        _buildModeItem('RPS Mode', 'Rock Paper Scissors', stats.rating, stats.ratingChange, stats.ratingChange >= 0, Icons.extension, Palette.purpleAccent, isFeatured: true),
       ],
     );
   }
@@ -518,7 +650,7 @@ class RatingScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '$rating',
+                _formatNumber(rating),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -552,8 +684,23 @@ class RatingScreen extends StatelessWidget {
 }
 
 class _ChartPainter extends CustomPainter {
+  final List<PerformanceHistoryItem> history;
+  
+  _ChartPainter(this.history);
+  
   @override
   void paint(Canvas canvas, Size size) {
+    if (history.isEmpty) {
+      return;
+    }
+    
+    // Find min and max rating for scaling
+    final ratings = history.map((h) => h.rating).toList();
+    final minRating = ratings.reduce((a, b) => a < b ? a : b);
+    final maxRating = ratings.reduce((a, b) => a > b ? a : b);
+    final ratingRange = maxRating - minRating;
+    final scaleY = ratingRange > 0 ? size.height / ratingRange : 1.0;
+    
     final paint = Paint()
       ..color = Palette.purpleAccent
       ..strokeWidth = 3
@@ -561,15 +708,17 @@ class _ChartPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final path = Path();
-    final points = [
-      Offset(0, size.height * 0.7),
-      Offset(size.width * 0.2, size.height * 0.5),
-      Offset(size.width * 0.4, size.height * 0.45),
-      Offset(size.width * 0.6, size.height * 0.3),
-      Offset(size.width * 0.8, size.height * 0.35),
-      Offset(size.width, size.height * 0.1),
-    ];
-
+    final points = <Offset>[];
+    
+    for (int i = 0; i < history.length; i++) {
+      final x = history.length > 1 ? (size.width / (history.length - 1)) * i : size.width / 2;
+      final normalizedRating = maxRating - history[i].rating;
+      final y = normalizedRating * scaleY;
+      points.add(Offset(x, y));
+    }
+    
+    if (points.isEmpty) return;
+    
     path.moveTo(points[0].dx, points[0].dy);
     for (int i = 1; i < points.length; i++) {
       path.lineTo(points[i].dx, points[i].dy);
@@ -595,15 +744,28 @@ class _ChartPainter extends CustomPainter {
       ..close();
     canvas.drawPath(fillPath, fillPaint);
 
-    // Draw point
-    final pointPaint = Paint()
-      ..color = Palette.textPrimary
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(points[points.length - 1], 5, pointPaint);
-    canvas.drawCircle(points[points.length - 1], 5, Paint()..color = Palette.purpleAccent..style = PaintingStyle.stroke..strokeWidth = 2);
+    // Draw point on last rating
+    if (points.isNotEmpty) {
+      final lastPoint = points.last;
+      final pointPaint = Paint()
+        ..color = Palette.textPrimary
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(lastPoint, 5, pointPaint);
+      canvas.drawCircle(lastPoint, 5, Paint()..color = Palette.purpleAccent..style = PaintingStyle.stroke..strokeWidth = 2);
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    if (oldDelegate is! _ChartPainter) return true;
+    if (oldDelegate.history.length != history.length) return true;
+    for (int i = 0; i < history.length; i++) {
+      if (oldDelegate.history[i].rating != history[i].rating ||
+          oldDelegate.history[i].createdAt != history[i].createdAt) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
 

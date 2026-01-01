@@ -2,7 +2,7 @@
 Level System for Chess RPS
 Implements an XP-based leveling system with chess-inspired titles.
 """
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Any
 
 # Level system constants
 BASE_XP = 100  # Base XP for level 1
@@ -121,7 +121,7 @@ def calculate_xp_reward(
     return max(MIN_XP_PER_GAME, total_xp)
 
 
-def get_level_progress(total_xp: int) -> Dict[str, any]:
+def get_level_progress(total_xp: int) -> Dict[str, Any]:
     """
     Get detailed level progress information.
     

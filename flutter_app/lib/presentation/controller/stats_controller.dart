@@ -56,23 +56,26 @@ class StatsController extends _$StatsController {
     }
   }
 
-  Future<void> recordGameResult({
+  Future<StatsUpdateResponse> recordGameResult({
     required String result,
     int? opponentRating,
     String? gameMode,
     String? endType,
+    String? opponentMode, // "ai" or "socket"
   }) async {
     try {
       final service = ref.read(statsServiceProvider);
-      await service.recordGameResult(
+      final response = await service.recordGameResult(
         result: result,
         opponentRating: opponentRating,
         gameMode: gameMode,
         endType: endType,
+        opponentMode: opponentMode,
       );
       // Refresh stats after recording result
       await refreshStats();
       AppLogger.info('Game result recorded successfully', tag: 'StatsController');
+      return response;
     } catch (e) {
       AppLogger.error('Error recording game result', tag: 'StatsController', error: e);
       rethrow;

@@ -598,9 +598,19 @@ class GameController extends _$GameController {
         AppLogger.info('Turn switched to: ${newCurrentOrder.name}', tag: 'GameController');
         
         // Check for checkmate or stalemate after the move
+        // After opponent's move, check if the CURRENT player (whose turn it is now) is checkmated/stalemated
         AppLogger.debug('Step 7: Checking for end game conditions', tag: 'GameController');
         try {
-          if (ActionChecker.isCheckmate(updatedBoard, newCurrentOrder)) {
+          // newCurrentOrder is now the side whose turn it is (the player who just received the move)
+          // Check if they are checkmated or stalemated
+          final isCheckmateResult = ActionChecker.isCheckmate(updatedBoard, newCurrentOrder);
+          final isStalemateResult = ActionChecker.isStalemate(updatedBoard, newCurrentOrder);
+          AppLogger.info(
+            'End game check results for ${newCurrentOrder.name}: checkmate=$isCheckmateResult, stalemate=$isStalemateResult',
+            tag: 'GameController'
+          );
+          
+          if (isCheckmateResult) {
             AppLogger.warning(
               'CHECKMATE detected after opponent move! ${newCurrentOrder.name} is checkmated.',
               tag: 'GameController'
@@ -1987,7 +1997,17 @@ class GameController extends _$GameController {
     }
     
     // Check for checkmate or stalemate after the move
-    if (ActionChecker.isCheckmate(updatedBoard, newCurrentOrder)) {
+    // After opponent move (isPlayerMove: false), newCurrentOrder is the player's side
+    // After player move (isPlayerMove: true), newCurrentOrder is the opponent's side
+    AppLogger.debug('Checking for checkmate/stalemate after move (isPlayerMove: $isPlayerMove, newCurrentOrder: ${newCurrentOrder.name})', tag: 'GameController');
+    final isCheckmateResult = ActionChecker.isCheckmate(updatedBoard, newCurrentOrder);
+    final isStalemateResult = ActionChecker.isStalemate(updatedBoard, newCurrentOrder);
+    AppLogger.info(
+      'End game check results (isPlayerMove: $isPlayerMove): ${newCurrentOrder.name} - checkmate=$isCheckmateResult, stalemate=$isStalemateResult',
+      tag: 'GameController'
+    );
+    
+    if (isCheckmateResult) {
       AppLogger.warning(
         'CHECKMATE detected after move! ${newCurrentOrder.name} is checkmated.',
         tag: 'GameController'
@@ -2004,7 +2024,7 @@ class GameController extends _$GameController {
         _endGameWithCheckmate(newCurrentOrder);
         return true;
       }
-    } else if (ActionChecker.isStalemate(updatedBoard, newCurrentOrder)) {
+    } else if (isStalemateResult) {
       AppLogger.warning(
         'STALEMATE detected after move! ${newCurrentOrder.name} is stalemated.',
         tag: 'GameController'

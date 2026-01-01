@@ -270,15 +270,17 @@ class StatsService {
   /// [opponentRating] - Optional opponent rating for ELO calculation
   /// [gameMode] - Optional game mode ("classical" or "rps")
   /// [endType] - Optional end type ("checkmate", "stalemate", "timeout", etc.)
+  /// [opponentMode] - "ai" or "socket" - determines if rating should be updated (only socket games update rating)
   Future<StatsUpdateResponse> recordGameResult({
     required String result,
     int? opponentRating,
     String? gameMode,
     String? endType,
+    String? opponentMode,
   }) async {
     try {
       AppLogger.info(
-        'Recording game result: $result',
+        'Recording game result: $result (opponentMode: $opponentMode)',
         tag: 'StatsService',
       );
       final response = await _dio.post(
@@ -288,6 +290,7 @@ class StatsService {
           if (opponentRating != null) 'opponent_rating': opponentRating,
           if (gameMode != null) 'game_mode': gameMode,
           if (endType != null) 'end_type': endType,
+          if (opponentMode != null) 'opponent_mode': opponentMode,
         },
       );
 

@@ -9,6 +9,9 @@ class GameOverDialog extends StatelessWidget {
   final bool isCheckmate;
   final bool isStalemate;
   final VoidCallback onReturnToMenu;
+  final int? xpGained;
+  final int? ratingChange;
+  final bool isOnlineGame; // If false (AI game), don't show rating change
 
   const GameOverDialog({
     Key? key,
@@ -17,6 +20,9 @@ class GameOverDialog extends StatelessWidget {
     required this.isCheckmate,
     required this.isStalemate,
     required this.onReturnToMenu,
+    this.xpGained,
+    this.ratingChange,
+    this.isOnlineGame = true,
   }) : super(key: key);
 
   bool get playerWon => winner == playerSide;
@@ -61,6 +67,10 @@ class GameOverDialog extends StatelessWidget {
               const SizedBox(height: 24),
               // Result Message
               _buildResultMessage(),
+              const SizedBox(height: 24),
+              // XP and Rating Changes
+              if (xpGained != null || (ratingChange != null && ratingChange != 0 && isOnlineGame))
+                _buildRewardsSection(),
               const SizedBox(height: 32),
               // Return to Menu Button
               _buildReturnButton(context),
@@ -206,6 +216,75 @@ class GameOverDialog extends StatelessWidget {
           height: 1.5,
         ),
       ),
+    );
+  }
+
+  Widget _buildRewardsSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Palette.backgroundElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Palette.glassBorder,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          if (xpGained != null)
+            _buildRewardRow(
+              icon: Icons.star,
+              label: 'Experience',
+              value: '+$xpGained XP',
+              color: Palette.accent,
+            ),
+          if (xpGained != null && ratingChange != null && ratingChange != 0 && isOnlineGame)
+            const SizedBox(height: 12),
+          if (ratingChange != null && ratingChange != 0 && isOnlineGame)
+            _buildRewardRow(
+              icon: Icons.trending_up,
+              label: 'Rating',
+              value: ratingChange! >= 0 ? '+$ratingChange' : '$ratingChange',
+              color: ratingChange! >= 0 ? Palette.success : Palette.error,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRewardRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: Palette.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 

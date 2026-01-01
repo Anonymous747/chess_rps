@@ -20,6 +20,7 @@ import 'package:chess_rps/presentation/screen/profile_screen.dart';
 import 'package:chess_rps/presentation/screen/rating_screen.dart';
 import 'package:chess_rps/presentation/screen/settings_screen.dart';
 import 'package:chess_rps/presentation/screen/signup_screen.dart';
+import 'package:chess_rps/presentation/screen/tournaments_screen.dart';
 import 'package:chess_rps/presentation/screen/waiting_room_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -43,6 +44,9 @@ class AppRoutes {
   static const chat = '/chat';
   static const profile = '/profile';
   static const levels = '/levels';
+  static const tournaments = '/tournaments';
+  static const tournamentCreate = '/tournaments/create';
+  static const tournamentDetails = '/tournaments/details';
 }
 
 // ValueNotifier to trigger router refresh when auth state changes
@@ -233,6 +237,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.levels,
         name: 'levels',
         builder: (context, state) => const LevelsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.tournaments,
+        name: 'tournaments',
+        builder: (context, state) => const TournamentsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.tournamentCreate,
+        name: 'tournament-create',
+        builder: (context, state) => const TournamentsScreen(), // TODO: Create TournamentCreateScreen
+      ),
+      GoRoute(
+        path: AppRoutes.tournamentDetails,
+        name: 'tournament-details',
+        builder: (context, state) {
+          final tournamentId = state.uri.queryParameters['id'];
+          if (tournamentId == null) {
+            return Scaffold(
+              backgroundColor: Palette.background,
+              body: Center(
+                child: Text(
+                  'Tournament ID required',
+                  style: TextStyle(color: Palette.textPrimary),
+                ),
+              ),
+            );
+          }
+          return const TournamentsScreen(); // TODO: Create TournamentDetailsScreen
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

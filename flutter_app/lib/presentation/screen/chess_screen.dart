@@ -678,7 +678,7 @@ class ChessScreen extends HookConsumerWidget {
     );
   }
 
-  void _showGameOverDialog(
+  Future<void> _showGameOverDialog(
     BuildContext context,
     GameController controller,
     WidgetRef ref, {
@@ -686,7 +686,7 @@ class ChessScreen extends HookConsumerWidget {
     required Side playerSide,
     required bool isCheckmate,
     required bool isStalemate,
-  }) {
+  }) async {
     // Prevent showing dialog multiple times
     if (!context.mounted) {
       AppLogger.warning(
@@ -701,8 +701,63 @@ class ChessScreen extends HookConsumerWidget {
       tag: 'ChessScreen'
     );
     
+    // Record game result first to get XP and rating changes
+    int? xpGained;
+    int? ratingChange;
+    final isOnlineGame = GameModesMediator.opponentMode.isRealOpponent;
+    
+    try {
+      // Determine game result
+      final playerWon = winner == playerSide;
+      final isDraw = isStalemate || winner == null;
+      final result = isDraw ? "draw" : (playerWon ? "win" : "loss");
+      
+      // Determine end type
+      String? endType;
+      if (isCheckmate) {
+        endType = "checkmate";
+      } else if (isStalemate) {
+        endType = "stalemate";
+      }
+      
+      // Get game mode
+      final gameMode = GameModesMediator.gameMode.name; // "classical" or "rps"
+      final opponentMode = GameModesMediator.opponentMode.name; // "ai" or "socket"
+      
+      // Record game result to get stats update
+      final statsController = ref.read(statsControllerProvider.notifier);
+      final statsUpdate = await statsController.recordGameResult(
+        result: result,
+        gameMode: gameMode,
+        endType: endType,
+        opponentMode: opponentMode,
+      );
+      
+      xpGained = statsUpdate.xpGained;
+      ratingChange = statsUpdate.ratingChange;
+      
+      AppLogger.info(
+        'Game result recorded: XP=$xpGained, Rating=$ratingChange (online=$isOnlineGame)',
+        tag: 'ChessScreen'
+      );
+      
+      // Invalidate leaderboard to refresh with updated ratings
+      ref.invalidate(leaderboardProvider(3));
+      ref.invalidate(leaderboardProvider(10));
+      ref.invalidate(leaderboardProvider(50));
+    } catch (e) {
+      AppLogger.error(
+        'Failed to record game result before showing dialog: $e',
+        tag: 'ChessScreen',
+        error: e,
+      );
+      // Continue to show dialog even if stats recording fails
+    }
+    
     try {
       // Show dialog with highest priority - it blocks all other interactions
+      if (!context.mounted) return;
+      
       showDialog(
         context: context,
         barrierDismissible: false, // Prevent dismissing by tapping outside
@@ -714,6 +769,9 @@ class ChessScreen extends HookConsumerWidget {
             playerSide: playerSide,
             isCheckmate: isCheckmate,
             isStalemate: isStalemate,
+            xpGained: xpGained,
+            ratingChange: ratingChange,
+            isOnlineGame: isOnlineGame,
             onReturnToMenu: () {
               _handleGameOver(context, controller, ref, winner, playerSide, isCheckmate, isStalemate);
             },
@@ -773,30 +831,9 @@ class ChessScreen extends HookConsumerWidget {
       tag: 'ChessScreen',
     );
     
-    // Submit game result to backend
-    try {
-      final statsController = ref.read(statsControllerProvider.notifier);
-      await statsController.recordGameResult(
-        result: result,
-        gameMode: gameMode,
-        endType: endType,
-      );
-      AppLogger.info('Game result submitted successfully', tag: 'ChessScreen');
-      
-      // Invalidate leaderboard to refresh with updated ratings
-      // We invalidate all common limits to ensure standings are always up-to-date
-      ref.invalidate(leaderboardProvider(3));
-      ref.invalidate(leaderboardProvider(10));
-      ref.invalidate(leaderboardProvider(50));
-      AppLogger.info('Leaderboard invalidated to refresh standings', tag: 'ChessScreen');
-    } catch (e) {
-      AppLogger.error(
-        'Failed to submit game result: $e',
-        tag: 'ChessScreen',
-        error: e,
-      );
-      // Continue even if submission fails
-    }
+    // Game result was already recorded in _showGameOverDialog
+    // No need to record again here
+    AppLogger.info('Game over handled - stats already recorded', tag: 'ChessScreen');
     
     // Dispose controller and navigate to main menu with play tab selected
     controller.dispose();

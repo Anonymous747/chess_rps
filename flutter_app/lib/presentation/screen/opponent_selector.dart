@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 const _aiOpponentText = 'Play with AI';
+const _aiOpponentTextSoon = 'Скоро...';
 const _onlineOpponentText = 'Play Online';
 
 class OpponentSelector extends ConsumerStatefulWidget {
@@ -167,14 +168,18 @@ class OpponentSelectorContent extends ConsumerWidget {
                             _buildOpponentButton(
                               context,
                               ref,
-                              title: _aiOpponentText,
+                              title: GameModesMediator.gameMode == GameMode.rps 
+                                  ? _aiOpponentTextSoon 
+                                  : _aiOpponentText,
                               icon: Icons.smart_toy,
                               color: Palette.accent,
-                              onPressed: () {
-                                AppLogger.info('User selected AI opponent',
-                                    tag: 'OpponentSelector');
-                                ref.read(playFlowStateProvider.notifier).goToDifficultySelector();
-                              },
+                              onPressed: GameModesMediator.gameMode == GameMode.rps
+                                  ? null // Disabled in RPS mode
+                                  : () {
+                                      AppLogger.info('User selected AI opponent',
+                                          tag: 'OpponentSelector');
+                                      ref.read(playFlowStateProvider.notifier).goToDifficultySelector();
+                                    },
                             ),
                             const SizedBox(height: 20),
                             _buildOpponentButton(
@@ -242,67 +247,74 @@ class OpponentSelectorContent extends ConsumerWidget {
     required String title,
     required IconData icon,
     required Color color,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed, // Changed to nullable
   }) {
+    final isEnabled = onPressed != null;
+    final effectiveColor = isEnabled ? color : Palette.textSecondary;
+    
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: isEnabled ? [
           BoxShadow(
             color: color.withValues(alpha: 0.3),
             blurRadius: 20,
             spreadRadius: 0,
             offset: const Offset(0, 8),
           ),
-        ],
+        ] : null,
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: Palette.backgroundElevated,
-              border: Border.all(
-                color: color.withValues(alpha: 0.5),
-                width: 2,
+          child: Opacity(
+            opacity: isEnabled ? 1.0 : 0.5,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: Palette.backgroundElevated,
+                border: Border.all(
+                  color: effectiveColor.withValues(alpha: 0.5),
+                  width: 2,
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: effectiveColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 28,
+                      color: effectiveColor,
+                    ),
                   ),
-                  child: Icon(
-                    icon,
-                    size: 28,
-                    color: color,
+                  const SizedBox(width: 20),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Palette.textPrimary,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 20),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Palette.textPrimary,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 18,
-                  color: color,
-                ),
-              ],
+                  const Spacer(),
+                  if (isEnabled)
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 18,
+                      color: effectiveColor,
+                    ),
+                ],
+              ),
             ),
           ),
         ),

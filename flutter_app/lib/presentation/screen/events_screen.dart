@@ -2,6 +2,7 @@ import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class EventsScreen extends HookConsumerWidget {
@@ -216,7 +217,9 @@ class EventsScreen extends HookConsumerWidget {
                     children: [
                       _buildFilterTab('All Events', true),
                       const SizedBox(width: 12),
-                      _buildFilterTab('Tournaments', false),
+                      _buildFilterTab('Tournaments', false, onTap: () {
+                        context.push('/tournaments');
+                      }),
                       const SizedBox(width: 12),
                       _buildFilterTab('Challenges', false),
                       const SizedBox(width: 12),
@@ -262,9 +265,8 @@ class EventsScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildFilterTab(String label, bool isActive) {
+  Widget _buildFilterTab(String label, bool isActive, {VoidCallback? onTap}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isActive ? Palette.purpleAccent : Palette.backgroundTertiary,
         borderRadius: BorderRadius.circular(12),
@@ -289,12 +291,19 @@ class EventsScreen extends HookConsumerWidget {
                 ),
               ],
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: isActive ? Palette.textPrimary : Palette.textSecondary,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isActive ? Palette.textPrimary : Palette.textSecondary,
+            ),
+          ),
         ),
       ),
     );

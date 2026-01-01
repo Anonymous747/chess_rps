@@ -13,7 +13,7 @@ class UserStats(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False, index=True)
     
     # Rating system (ELO-like)
-    rating = Column(Integer, default=1200, nullable=False)
+    rating = Column(Integer, default=0, nullable=False)
     rating_change = Column(Integer, default=0)  # Last rating change
     
     # Game statistics
