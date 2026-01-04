@@ -57,11 +57,11 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-            resValue "string", "app_name", "Chess RPS Dev"
+            resValue "string", "app_name", "Chess Arena Dev"
         }
         prod {
             dimension = "environment"
-            resValue "string", "app_name", "Chess RPS"
+            resValue "string", "app_name", "Chess Arena"
         }
     }
 

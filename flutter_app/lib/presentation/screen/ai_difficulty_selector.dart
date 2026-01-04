@@ -5,6 +5,7 @@ import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/screen/play_flow_screen.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/widget/dashboard_navigation_menu.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -51,6 +52,7 @@ class AIDifficultySelectorContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -147,8 +149,8 @@ class AIDifficultySelectorContent extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                const Text(
-                                  'Select Difficulty',
+                                Text(
+                                  l10n.selectDifficulty,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 28,
@@ -161,7 +163,7 @@ class AIDifficultySelectorContent extends ConsumerWidget {
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   child: Text(
-                                    'Choose the AI difficulty level',
+                                    l10n.chooseAIDifficulty,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 14,
@@ -178,12 +180,12 @@ class AIDifficultySelectorContent extends ConsumerWidget {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
-                              children: _difficultyLevels.asMap().entries.map((entry) {
+                              children: _getDifficultyLevels(l10n).asMap().entries.map((entry) {
                                 final index = entry.key;
                                 final level = entry.value;
                                 return Padding(
                                   padding: EdgeInsets.only(
-                                      bottom: index < _difficultyLevels.length - 1 ? 12 : 0),
+                                      bottom: index < _getDifficultyLevels(l10n).length - 1 ? 12 : 0),
                                   child: _buildDifficultyButton(
                                     context,
                                     ref,
@@ -218,43 +220,45 @@ class AIDifficultySelectorContent extends ConsumerWidget {
     );
   }
 
-  static const List<AIDifficultyLevel> _difficultyLevels = [
-    AIDifficultyLevel(
-      name: 'Beginner',
-      description: 'Perfect for learning the basics',
-      skillLevel: 5,
-      icon: Icons.sentiment_very_satisfied,
-      color: Palette.success,
-    ),
-    AIDifficultyLevel(
-      name: 'Easy',
-      description: 'A gentle challenge',
-      skillLevel: 10,
-      icon: Icons.sentiment_satisfied,
-      color: Palette.info,
-    ),
-    AIDifficultyLevel(
-      name: 'Medium',
-      description: 'A balanced opponent',
-      skillLevel: 15,
-      icon: Icons.sentiment_neutral,
-      color: Palette.accent,
-    ),
-    AIDifficultyLevel(
-      name: 'Hard',
-      description: 'A tough challenge',
-      skillLevel: 18,
-      icon: Icons.sentiment_dissatisfied,
-      color: Palette.warning,
-    ),
-    AIDifficultyLevel(
-      name: 'Expert',
-      description: 'Maximum difficulty',
-      skillLevel: 20,
-      icon: Icons.sentiment_very_dissatisfied,
-      color: Palette.error,
-    ),
-  ];
+  static List<AIDifficultyLevel> _getDifficultyLevels(AppLocalizations l10n) {
+    return [
+      AIDifficultyLevel(
+        name: l10n.beginner,
+        description: l10n.beginnerDescription,
+        skillLevel: 5,
+        icon: Icons.sentiment_very_satisfied,
+        color: Palette.success,
+      ),
+      AIDifficultyLevel(
+        name: l10n.easy,
+        description: l10n.easyDescription,
+        skillLevel: 10,
+        icon: Icons.sentiment_satisfied,
+        color: Palette.info,
+      ),
+      AIDifficultyLevel(
+        name: l10n.medium,
+        description: l10n.mediumDescription,
+        skillLevel: 15,
+        icon: Icons.sentiment_neutral,
+        color: Palette.accent,
+      ),
+      AIDifficultyLevel(
+        name: l10n.hard,
+        description: l10n.hardDescription,
+        skillLevel: 18,
+        icon: Icons.sentiment_dissatisfied,
+        color: Palette.warning,
+      ),
+      AIDifficultyLevel(
+        name: l10n.expert,
+        description: l10n.expertDescription,
+        skillLevel: 20,
+        icon: Icons.sentiment_very_dissatisfied,
+        color: Palette.error,
+      ),
+    ];
+  }
 
   Widget _buildDifficultyButton(
     BuildContext context,
@@ -317,6 +321,8 @@ class AIDifficultySelectorContent extends ConsumerWidget {
                           color: Palette.textPrimary,
                           letterSpacing: 0.5,
                         ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -326,6 +332,8 @@ class AIDifficultySelectorContent extends ConsumerWidget {
                           color: Palette.textSecondary,
                           letterSpacing: 0.3,
                         ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ],
                   ),

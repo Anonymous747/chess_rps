@@ -1,7 +1,10 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/stats/stats_service.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:chess_rps/presentation/controller/stats_controller.dart';
+import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -13,12 +16,13 @@ class RatingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final statsAsync = ref.watch(statsControllerProvider);
     
     return statsAsync.when(
-      data: (stats) => _buildContent(context, stats),
+      data: (stats) => _buildContent(context, ref, stats, l10n),
       loading: () => _buildLoading(context),
-      error: (error, stack) => _buildError(context, error),
+      error: (error, stack) => _buildError(context, error, l10n),
     );
   }
 
@@ -47,7 +51,7 @@ class RatingScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildError(BuildContext context, Object error) {
+  Widget _buildError(BuildContext context, Object error, AppLocalizations l10n) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -69,7 +73,7 @@ class RatingScreen extends ConsumerWidget {
                 Icon(Icons.error_outline, size: 64, color: Palette.error),
                 const SizedBox(height: 16),
                 Text(
-                  'Error loading rating',
+                  l10n.errorLoadingRating,
                   style: TextStyle(
                     fontSize: 16,
                     color: Palette.error,
@@ -78,7 +82,7 @@ class RatingScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => context.pop(),
-                  child: Text('Go Back'),
+                  child: Text(l10n.goBack),
                 ),
               ],
             ),
@@ -88,7 +92,7 @@ class RatingScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, stats) {
+  Widget _buildContent(BuildContext context, WidgetRef ref, stats, AppLocalizations l10n) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -123,7 +127,7 @@ class RatingScreen extends ConsumerWidget {
                     ),
                     const Spacer(),
                     Text(
-                      'Rating Overview',
+                      l10n.ratingOverview,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -155,15 +159,19 @@ class RatingScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       // Rating Card
-                      _buildRatingCard(stats),
+                      _buildRatingCard(stats, l10n),
+                      const SizedBox(height: 32),
+                      
+                      // Top Players Section
+                      _buildTopPlayersSection(context, ref, l10n),
                       const SizedBox(height: 32),
                       
                       // History Section
-                      _buildHistorySection(stats),
+                      _buildHistorySection(stats, l10n),
                       const SizedBox(height: 32),
                       
                       // Mode Breakdown
-                      _buildModeBreakdown(stats),
+                      _buildModeBreakdown(stats, l10n),
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -176,7 +184,7 @@ class RatingScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRatingCard(UserStats stats) {
+  Widget _buildRatingCard(UserStats stats, AppLocalizations l10n) {
     // Use level name from stats, or fallback to "Level X"
     final tierDisplay = stats.levelName ?? 'Level ${stats.level}';
     
@@ -343,15 +351,15 @@ class RatingScreen extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: _buildStatItem('Win Rate', winRateText, Palette.textPrimary),
+                child: _buildStatItem(l10n.winRate, winRateText, Palette.textPrimary),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildStatItem('Level', '${stats.level}', Palette.purpleAccent),
+                child: _buildStatItem(l10n.level(stats.level), '${stats.level}', Palette.purpleAccent),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildStatItem('Games', gamesText, Palette.textPrimary),
+                child: _buildStatItem(l10n.games(stats.totalGames), gamesText, Palette.textPrimary),
               ),
             ],
           ),
@@ -391,7 +399,7 @@ class RatingScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHistorySection(UserStats stats) {
+  Widget _buildHistorySection(UserStats stats, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -403,7 +411,7 @@ class RatingScreen extends ConsumerWidget {
                 Icon(Icons.analytics, color: Palette.purpleAccent, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'History',
+                  l10n.history,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -524,7 +532,7 @@ class RatingScreen extends ConsumerWidget {
     return value.toString();
   }
 
-  Widget _buildModeBreakdown(UserStats stats) {
+  Widget _buildModeBreakdown(UserStats stats, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -533,7 +541,7 @@ class RatingScreen extends ConsumerWidget {
             Icon(Icons.category, color: Palette.purpleAccent, size: 20),
             const SizedBox(width: 8),
             Text(
-              'Mode Breakdown',
+              l10n.modeBreakdown,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -543,9 +551,9 @@ class RatingScreen extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
-        _buildModeItem('Classical', 'Standard Chess', stats.rating, stats.ratingChange, stats.ratingChange >= 0, Icons.extension, Palette.purpleAccent),
+        _buildModeItem(l10n.classicalMode, l10n.standardChess, stats.rating, stats.ratingChange, stats.ratingChange >= 0, Icons.extension, Palette.purpleAccent, l10n),
         const SizedBox(height: 12),
-        _buildModeItem('RPS Mode', 'Rock Paper Scissors', stats.rating, stats.ratingChange, stats.ratingChange >= 0, Icons.extension, Palette.purpleAccent, isFeatured: true),
+        _buildModeItem(l10n.rpsMode, l10n.rockPaperScissors, stats.rating, stats.ratingChange, stats.ratingChange >= 0, Icons.extension, Palette.purpleAccent, l10n, isFeatured: true),
       ],
     );
   }
@@ -557,7 +565,8 @@ class RatingScreen extends ConsumerWidget {
     int change,
     bool isPositive,
     IconData icon,
-    Color iconColor, {
+    Color iconColor,
+    AppLocalizations l10n, {
     bool isFeatured = false,
   }) {
     return Container(
@@ -678,6 +687,211 @@ class RatingScreen extends ConsumerWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTopPlayersSection(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+    final leaderboardAsync = ref.watch(leaderboardProvider(3));
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.leaderboard, color: Palette.purpleAccent, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.topStandings,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Palette.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            TextButton(
+              onPressed: () {
+                context.push(AppRoutes.leaderboard);
+              },
+              child: Text(
+                l10n.viewAll,
+                style: TextStyle(color: Palette.purpleAccent),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        leaderboardAsync.when(
+          data: (leaderboard) {
+            if (leaderboard.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Palette.backgroundTertiary,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Palette.glassBorder),
+                ),
+                child: Center(
+                  child: Text(
+                    l10n.noStandingsAvailable,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Palette.textSecondary,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return Container(
+              decoration: BoxDecoration(
+                color: Palette.backgroundTertiary,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Palette.glassBorder),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(width: 24, child: Text('#', style: TextStyle(fontSize: 12, color: Palette.textSecondary))),
+                        Expanded(child: Text(l10n.player, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
+                        SizedBox(width: 64, child: Text(l10n.rating, textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
+                      ],
+                    ),
+                  ),
+                  ...leaderboard.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final player = entry.value;
+                    final isFirst = index == 0;
+                    return Column(
+                      children: [
+                        if (index > 0) Divider(color: Palette.glassBorder, height: 1),
+                        _buildStandingRow(
+                          player.rank,
+                          player.username,
+                          player.rating,
+                          isFirst,
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ],
+              ),
+            );
+          },
+          loading: () => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Palette.purpleAccent),
+              ),
+            ),
+          ),
+          error: (error, stack) => Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Palette.backgroundTertiary,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Palette.glassBorder),
+            ),
+            child: Center(
+              child: Text(
+                l10n.failedToLoadStandings,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Palette.error,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStandingRow(int rank, String name, int points, bool isFirst) {
+    Color rankColor;
+    IconData? rankIcon;
+    
+    if (rank == 1) {
+      rankColor = Palette.gold;
+      rankIcon = Icons.looks_one;
+    } else if (rank == 2) {
+      rankColor = Palette.silver;
+      rankIcon = Icons.looks_two;
+    } else if (rank == 3) {
+      rankColor = Palette.bronze;
+      rankIcon = Icons.looks_3;
+    } else {
+      rankColor = Palette.textSecondary;
+      rankIcon = null;
+    }
+
+    return ListTile(
+      leading: SizedBox(
+        width: 24,
+        child: rankIcon != null
+            ? Icon(rankIcon, color: rankColor, size: 20)
+            : Text(
+                '$rank',
+                style: TextStyle(
+                  fontSize: isFirst ? 18 : 16,
+                  fontWeight: isFirst ? FontWeight.bold : FontWeight.normal,
+                  color: rankColor,
+                ),
+              ),
+      ),
+      title: Row(
+        children: [
+          UserAvatarByIconWidget(
+            size: 32,
+            border: isFirst
+                ? Border.all(color: rankColor, width: 2)
+                : Border.all(color: Palette.glassBorder, width: 1),
+            shadow: isFirst
+                ? BoxShadow(
+                    color: rankColor.withValues(alpha: 0.5),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  )
+                : null,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              name,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Palette.textPrimary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      trailing: Text(
+        '$points',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Palette.textPrimary,
+        ),
       ),
     );
   }

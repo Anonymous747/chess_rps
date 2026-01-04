@@ -1,5 +1,6 @@
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Beautiful dialog shown when game ends (checkmate or stalemate)
@@ -63,14 +64,14 @@ class GameOverDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Icon and Title
-              _buildIconAndTitle(),
+              _buildIconAndTitle(context),
               const SizedBox(height: 24),
               // Result Message
-              _buildResultMessage(),
+              _buildResultMessage(context),
               const SizedBox(height: 24),
               // XP and Rating Changes
               if (xpGained != null || (ratingChange != null && ratingChange != 0 && isOnlineGame))
-                _buildRewardsSection(),
+                _buildRewardsSection(context),
               const SizedBox(height: 32),
               // Return to Menu Button
               _buildReturnButton(context),
@@ -81,7 +82,8 @@ class GameOverDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildIconAndTitle() {
+  Widget _buildIconAndTitle(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (isDraw) {
       return Column(
         children: [
@@ -103,7 +105,7 @@ class GameOverDialog extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Draw!',
+            l10n.draw,
             style: TextStyle(
               color: Palette.textPrimary,
               fontSize: 32,
@@ -133,7 +135,7 @@ class GameOverDialog extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Victory!',
+            l10n.victory,
             style: TextStyle(
               color: Palette.success,
               fontSize: 32,
@@ -163,7 +165,7 @@ class GameOverDialog extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Defeat',
+            l10n.defeat,
             style: TextStyle(
               color: Palette.error,
               fontSize: 32,
@@ -175,24 +177,25 @@ class GameOverDialog extends StatelessWidget {
     }
   }
 
-  Widget _buildResultMessage() {
+  Widget _buildResultMessage(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     String message;
     Color messageColor;
 
     if (isDraw) {
       message = isStalemate
-          ? 'The game ended in a stalemate.\nNeither player wins.'
-          : 'The game ended in a draw.';
+          ? l10n.stalemateMessage
+          : l10n.drawMessage;
       messageColor = Palette.warning;
     } else if (playerWon) {
       message = isCheckmate
-          ? 'Congratulations! You won by checkmate!'
-          : 'Congratulations! You won!';
+          ? l10n.checkmateWin
+          : l10n.winMessage;
       messageColor = Palette.success;
     } else {
       message = isCheckmate
-          ? 'You were checkmated.\nBetter luck next time!'
-          : 'You lost the game.\nBetter luck next time!';
+          ? l10n.checkmateLoss
+          : l10n.lossMessage;
       messageColor = Palette.error;
     }
 
@@ -219,7 +222,8 @@ class GameOverDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildRewardsSection() {
+  Widget _buildRewardsSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -235,8 +239,8 @@ class GameOverDialog extends StatelessWidget {
           if (xpGained != null)
             _buildRewardRow(
               icon: Icons.star,
-              label: 'Experience',
-              value: '+$xpGained XP',
+              label: l10n.experience,
+              value: l10n.xpGained(xpGained!),
               color: Palette.accent,
             ),
           if (xpGained != null && ratingChange != null && ratingChange != 0 && isOnlineGame)
@@ -244,7 +248,7 @@ class GameOverDialog extends StatelessWidget {
           if (ratingChange != null && ratingChange != 0 && isOnlineGame)
             _buildRewardRow(
               icon: Icons.trending_up,
-              label: 'Rating',
+              label: l10n.rating,
               value: ratingChange! >= 0 ? '+$ratingChange' : '$ratingChange',
               color: ratingChange! >= 0 ? Palette.success : Palette.error,
             ),
@@ -314,7 +318,7 @@ class GameOverDialog extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'Return to Menu',
+              AppLocalizations.of(context)!.returnToMenu,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

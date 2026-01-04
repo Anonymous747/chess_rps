@@ -24,6 +24,7 @@ import 'package:chess_rps/presentation/widget/timer_widget.dart';
 import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:chess_rps/presentation/utils/effect_event.dart';
 import 'package:chess_rps/presentation/utils/game_effect_handler.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -436,7 +437,7 @@ class ChessScreen extends HookConsumerWidget {
                         if (GameModesMediator.gameMode != GameMode.rps ||
                             (playerRpsChoice == null && opponentRpsChoice == null))
                           Center(
-                            child: _buildStatusText(playerWonRps),
+                            child: _buildStatusText(context, playerWonRps),
                           ),
                         if (GameModesMediator.gameMode != GameMode.rps ||
                             (playerRpsChoice == null && opponentRpsChoice == null))
@@ -572,7 +573,8 @@ class ChessScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildStatusText(bool? playerWonRps) {
+  Widget _buildStatusText(BuildContext context, bool? playerWonRps) {
+    final l10n = AppLocalizations.of(context)!;
     if (playerWonRps == true) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -594,7 +596,7 @@ class ChessScreen extends HookConsumerWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'You won RPS! Make your move',
+              l10n.youWonRps,
               style: TextStyle(
                 color: Palette.success,
                 fontWeight: FontWeight.w600,
@@ -625,7 +627,7 @@ class ChessScreen extends HookConsumerWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'Opponent won RPS. Waiting...',
+              l10n.opponentWonRps,
               style: TextStyle(
                 color: Palette.warning,
                 fontWeight: FontWeight.w600,

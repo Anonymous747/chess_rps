@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:chess_rps/common/enum.dart';
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Dialog for selecting player side when playing against AI
@@ -60,29 +61,38 @@ class PlayerSideSelectionDialog extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Title
-                Text(
-                  'Choose Your Side',
-                  style: TextStyle(
-                    color: Palette.textPrimary,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'White always moves first',
-                  style: TextStyle(
-                    color: Palette.textSecondary,
-                    fontSize: 14,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Column(
+                      children: [
+                        Text(
+                          l10n.chooseYourSide,
+                          style: TextStyle(
+                            color: Palette.textPrimary,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.whiteMovesFirst,
+                          style: TextStyle(
+                            color: Palette.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 32),
                 // White option
                 _buildSideOption(
                   context,
                   side: Side.light,
-                  label: 'White',
+                  label: AppLocalizations.of(context)!.white,
                   icon: Icons.circle_outlined,
                   onTap: () {
                     Navigator.of(context).pop();
@@ -94,7 +104,7 @@ class PlayerSideSelectionDialog extends StatelessWidget {
                 _buildSideOption(
                   context,
                   side: Side.dark,
-                  label: 'Black',
+                  label: AppLocalizations.of(context)!.black,
                   icon: Icons.circle,
                   onTap: () {
                     Navigator.of(context).pop();
@@ -106,7 +116,7 @@ class PlayerSideSelectionDialog extends StatelessWidget {
                 _buildSideOption(
                   context,
                   side: null, // null means randomize
-                  label: 'Randomize',
+                  label: AppLocalizations.of(context)!.randomize,
                   icon: Icons.shuffle,
                   onTap: () {
                     Navigator.of(context).pop();
@@ -180,7 +190,9 @@ class PlayerSideSelectionDialog extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      side == Side.light ? 'Moves First' : 'AI Moves First',
+                      side == Side.light 
+                          ? AppLocalizations.of(context)!.movesFirst 
+                          : AppLocalizations.of(context)!.aiMovesFirst,
                       style: TextStyle(
                         color: side == Side.light
                             ? Palette.textPrimary

@@ -1,6 +1,7 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/tournament/tournament_service.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -14,6 +15,7 @@ class TournamentsScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final tournamentService = TournamentService();
     final tournamentsAsync = useState<List<TournamentModel>>([]);
     final isLoading = useState(true);
@@ -31,9 +33,10 @@ class TournamentsScreen extends HookConsumerWidget {
       } catch (e) {
         AppLogger.error('Failed to load tournaments: $e', tag: 'TournamentsScreen', error: e);
         if (context.mounted) {
+          final l10n = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to load tournaments: ${e.toString()}'),
+              content: Text(l10n != null ? l10n.failedToLoadTournaments(e.toString()) : 'Failed to load tournaments: ${e.toString()}'),
               backgroundColor: Palette.error,
             ),
           );
@@ -90,7 +93,7 @@ class TournamentsScreen extends HookConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Tournaments',
+                            l10n.tournamentGames,
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
@@ -99,7 +102,7 @@ class TournamentsScreen extends HookConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Compete and climb the rankings',
+                            l10n.competeAndClimb,
                             style: TextStyle(
                               fontSize: 14,
                               color: Palette.textSecondary,
@@ -144,15 +147,15 @@ class TournamentsScreen extends HookConsumerWidget {
                         ),
                         child: DropdownButton<String>(
                           value: selectedGameMode.value,
-                          hint: Text('All Modes', style: TextStyle(color: Palette.textSecondary)),
+                          hint: Text(l10n.allModes, style: TextStyle(color: Palette.textSecondary)),
                           isExpanded: true,
                           underline: const SizedBox(),
                           dropdownColor: Palette.backgroundElevated,
                           style: TextStyle(color: Palette.textPrimary),
                           items: [
-                            const DropdownMenuItem(value: null, child: Text('All Modes')),
-                            const DropdownMenuItem(value: 'classical', child: Text('Classical')),
-                            const DropdownMenuItem(value: 'rps', child: Text('RPS')),
+                            DropdownMenuItem(value: null, child: Text(l10n.allModes)),
+                            DropdownMenuItem(value: 'classical', child: Text(l10n.classical)),
+                            DropdownMenuItem(value: 'rps', child: Text(l10n.rpsMode)),
                           ],
                           onChanged: (value) {
                             selectedGameMode.value = value;
@@ -172,16 +175,16 @@ class TournamentsScreen extends HookConsumerWidget {
                         ),
                         child: DropdownButton<String>(
                           value: selectedStatus.value,
-                          hint: Text('All Status', style: TextStyle(color: Palette.textSecondary)),
+                          hint: Text(l10n.allStatus, style: TextStyle(color: Palette.textSecondary)),
                           isExpanded: true,
                           underline: const SizedBox(),
                           dropdownColor: Palette.backgroundElevated,
                           style: TextStyle(color: Palette.textPrimary),
                           items: [
-                            const DropdownMenuItem(value: null, child: Text('All Status')),
-                            const DropdownMenuItem(value: 'registration', child: Text('Registration')),
-                            const DropdownMenuItem(value: 'started', child: Text('In Progress')),
-                            const DropdownMenuItem(value: 'finished', child: Text('Finished')),
+                            DropdownMenuItem(value: null, child: Text(l10n.allStatus)),
+                            DropdownMenuItem(value: 'registration', child: Text(l10n.registrationOpen)),
+                            DropdownMenuItem(value: 'started', child: Text(l10n.inProgress)),
+                            DropdownMenuItem(value: 'finished', child: Text(l10n.finished)),
                           ],
                           onChanged: (value) {
                             selectedStatus.value = value;
@@ -209,7 +212,7 @@ class TournamentsScreen extends HookConsumerWidget {
                                 Icon(Icons.tour, size: 64, color: Palette.textSecondary),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'No tournaments found',
+                                  l10n.noTournamentsFound,
                                   style: TextStyle(
                                     fontSize: 18,
                                     color: Palette.textSecondary,
@@ -217,7 +220,7 @@ class TournamentsScreen extends HookConsumerWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Create a new tournament to get started',
+                                  l10n.createNewTournament,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Palette.textSecondary,
@@ -251,12 +254,13 @@ class TournamentsScreen extends HookConsumerWidget {
     TournamentModel tournament,
     Future<void> Function() refreshCallback,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final gameModeColor = tournament.gameMode == 'classical'
         ? Palette.accent
         : Palette.purpleAccent;
     
     final statusColor = _getStatusColor(tournament.status);
-    final statusText = _getStatusText(tournament.status);
+    final statusText = _getStatusText(tournament.status, l10n);
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -339,7 +343,7 @@ class TournamentsScreen extends HookConsumerWidget {
                   children: [
                     _buildInfoChip(
                       icon: Icons.sports_esports,
-                      label: tournament.gameMode == 'classical' ? 'Classical' : 'RPS',
+                      label: tournament.gameMode == 'classical' ? l10n.classical : l10n.rpsMode,
                       color: gameModeColor,
                     ),
                     const SizedBox(width: 8),
@@ -351,7 +355,7 @@ class TournamentsScreen extends HookConsumerWidget {
                     const SizedBox(width: 8),
                     _buildInfoChip(
                       icon: Icons.format_list_bulleted,
-                      label: _formatTournamentFormat(tournament.format),
+                      label: _formatTournamentFormat(tournament.format, l10n),
                       color: Palette.textSecondary,
                     ),
                   ],
@@ -362,7 +366,7 @@ class TournamentsScreen extends HookConsumerWidget {
                     Icon(Icons.access_time, size: 16, color: Palette.textSecondary),
                     const SizedBox(width: 8),
                     Text(
-                      _formatDateRange(tournament.registrationStart, tournament.registrationEnd),
+                      _formatDateRange(tournament.registrationStart, tournament.registrationEnd, l10n),
                       style: TextStyle(
                         fontSize: 12,
                         color: Palette.textSecondary,
@@ -422,59 +426,59 @@ class TournamentsScreen extends HookConsumerWidget {
     }
   }
 
-  String _getStatusText(String status) {
+  String _getStatusText(String status, AppLocalizations l10n) {
     switch (status) {
       case 'registration':
-        return 'Registration';
+        return l10n.registrationOpen;
       case 'started':
-        return 'In Progress';
+        return l10n.inProgress;
       case 'finished':
-        return 'Finished';
+        return l10n.finished;
       case 'cancelled':
-        return 'Cancelled';
+        return l10n.cancelled;
       default:
         return status;
     }
   }
 
-  String _formatTournamentFormat(String format) {
+  String _formatTournamentFormat(String format, AppLocalizations l10n) {
     switch (format) {
       case 'single_elimination':
-        return 'Single Elim';
+        return l10n.singleElim;
       case 'double_elimination':
-        return 'Double Elim';
+        return l10n.doubleElim;
       case 'swiss':
-        return 'Swiss';
+        return l10n.swiss;
       case 'round_robin':
-        return 'Round Robin';
+        return l10n.roundRobin;
       default:
         return format;
     }
   }
 
-  String _formatDateRange(DateTime start, DateTime end) {
+  String _formatDateRange(DateTime start, DateTime end, AppLocalizations l10n) {
     final now = DateTime.now();
     if (end.isBefore(now)) {
-      return 'Registration ended';
+      return l10n.registrationEnded;
     } else if (start.isAfter(now)) {
-      return 'Starts ${_formatRelativeDate(start)}';
+      return '${l10n.startsIn('')} ${_formatRelativeDate(start, l10n)}';
     } else {
-      return 'Ends ${_formatRelativeDate(end)}';
+      return '${l10n.endsInDays(0, '')} ${_formatRelativeDate(end, l10n)}';
     }
   }
 
-  String _formatRelativeDate(DateTime date) {
+  String _formatRelativeDate(DateTime date, AppLocalizations l10n) {
     final now = DateTime.now();
     final difference = date.difference(now);
 
     if (difference.inDays > 0) {
-      return 'in ${difference.inDays} day${difference.inDays == 1 ? '' : 's'}';
+      return l10n.startsInDays(difference.inDays, difference.inDays == 1 ? '' : 's');
     } else if (difference.inHours > 0) {
-      return 'in ${difference.inHours} hour${difference.inHours == 1 ? '' : 's'}';
+      return l10n.startsInHours(difference.inHours, difference.inHours == 1 ? '' : 's');
     } else if (difference.inMinutes > 0) {
-      return 'in ${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'}';
+      return l10n.startsInMinutes(difference.inMinutes, difference.inMinutes == 1 ? '' : 's');
     } else {
-      return 'soon';
+      return l10n.soon;
     }
   }
 }

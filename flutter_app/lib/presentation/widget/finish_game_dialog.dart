@@ -1,4 +1,5 @@
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Stylish dialog for finishing/surrendering a game
@@ -56,10 +57,10 @@ class FinishGameDialog extends StatelessWidget {
               _buildFlagIcon(),
               const SizedBox(height: 24),
               // Title
-              _buildTitle(),
+              _buildTitle(context),
               const SizedBox(height: 16),
               // Warning Message
-              _buildWarningMessage(),
+              _buildWarningMessage(context),
               const SizedBox(height: 32),
               // Buttons
               _buildButtons(context),
@@ -103,9 +104,10 @@ class FinishGameDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildTitle() {
+  Widget _buildTitle(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Text(
-      'Finish Game?',
+      l10n.finishGame,
       style: TextStyle(
         color: Palette.textPrimary,
         fontSize: 28,
@@ -115,7 +117,8 @@ class FinishGameDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildWarningMessage() {
+  Widget _buildWarningMessage(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
@@ -138,7 +141,7 @@ class FinishGameDialog extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Warning',
+                l10n.warning,
                 style: TextStyle(
                   color: Palette.warning,
                   fontSize: 14,
@@ -149,7 +152,7 @@ class FinishGameDialog extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Are you sure you want to finish this game?\nYour progress will be lost.',
+            l10n.finishGameWarning,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Palette.textSecondary,
@@ -206,7 +209,7 @@ class FinishGameDialog extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Cancel',
+                  AppLocalizations.of(context)!.cancel,
                   style: TextStyle(
                     color: Palette.textSecondary,
                     fontSize: 16,
@@ -258,7 +261,7 @@ class FinishGameDialog extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Finish',
+                  AppLocalizations.of(context)!.finish,
                   style: TextStyle(
                     color: Palette.textPrimary,
                     fontSize: 16,

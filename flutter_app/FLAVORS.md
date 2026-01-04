@@ -97,7 +97,7 @@ The prod flavor uses `https://gamerbot.pro` (production server with HTTPS).
 1. **Environment Variable**: The `ENV` variable is passed via `--dart-define=ENV=dev` or `--dart-define=ENV=prod`
 2. **Endpoint Configuration**: `lib/common/endpoint.dart` reads the `ENV` variable and sets the appropriate backend URL
 3. **Android Flavors**: The `build.gradle` file defines `dev` and `prod` flavors with different application IDs
-4. **App Name**: Dev flavor shows "Chess RPS Dev" in the app launcher, prod shows "Chess RPS"
+4. **App Name**: Dev flavor shows "Chess Arena Dev" in the app launcher, prod shows "Chess Arena"
 5. **Android Studio Configurations**: The `.run` folder contains pre-configured run configurations for easy switching between flavors
 
 ## Android Flavors

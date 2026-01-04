@@ -1,4 +1,5 @@
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -66,7 +68,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     Row(
                       children: [
                         Text(
-                          'Chat',
+                          l10n.chat,
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -104,13 +106,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _buildChannelTab('Global Lobby', 0, _selectedChannel == 0),
+                          _buildChannelTab(l10n.globalLobby, 0, _selectedChannel == 0),
                           const SizedBox(width: 12),
-                          _buildChannelTab('Clan', 1, _selectedChannel == 1),
+                          _buildChannelTab(l10n.clan, 1, _selectedChannel == 1),
                           const SizedBox(width: 12),
-                          _buildChannelTab('Friends', 2, _selectedChannel == 2, hasNotification: true),
+                          _buildChannelTab(l10n.friends, 2, _selectedChannel == 2, hasNotification: true),
                           const SizedBox(width: 12),
-                          _buildChannelTab('Mentions', 3, _selectedChannel == 3),
+                          _buildChannelTab(l10n.mentions, 3, _selectedChannel == 3),
                         ],
                       ),
                     ),
@@ -123,9 +125,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
-                    _buildDateDivider('Today'),
+                    _buildDateDivider(l10n.today),
                     const SizedBox(height: 20),
-                    _buildWelcomeMessage(),
+                    _buildWelcomeMessage(l10n),
                     const SizedBox(height: 20),
                     _buildMessage(
                       'Grandmaster_Flash',
@@ -133,6 +135,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       '10:42 AM',
                       false,
                       Palette.gold,
+                      l10n,
                     ),
                     const SizedBox(height: 12),
                     _buildMessage(
@@ -141,14 +144,16 @@ class _ChatScreenState extends State<ChatScreen> {
                       '10:44 AM',
                       false,
                       Palette.success,
+                      l10n,
                     ),
                     const SizedBox(height: 12),
                     _buildMessage(
-                      'You',
+                      l10n.you,
                       'I\'ve been trying the Albin Countergambit. It\'s risky but catches people off guard in blitz!',
                       '10:45 AM',
                       true,
                       null,
+                      l10n,
                     ),
                     const SizedBox(height: 12),
                     _buildMessage(
@@ -157,15 +162,17 @@ class _ChatScreenState extends State<ChatScreen> {
                       '10:46 AM',
                       false,
                       Palette.gold,
+                      l10n,
                       isReply: true,
                     ),
                     const SizedBox(height: 12),
                     _buildMessage(
-                      'You',
+                      l10n.you,
                       'Sure, send the invite!',
                       '10:46 AM',
                       true,
                       null,
+                      l10n,
                       isRead: true,
                     ),
                   ],
@@ -207,7 +214,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           controller: _messageController,
                           style: TextStyle(color: Palette.textPrimary),
                           decoration: InputDecoration(
-                            hintText: 'Type a message...',
+                            hintText: l10n.typeAMessage,
                             hintStyle: TextStyle(color: Palette.textSecondary),
                             border: InputBorder.none,
                           ),
@@ -324,7 +331,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildWelcomeMessage() {
+  Widget _buildWelcomeMessage(AppLocalizations l10n) {
     return Center(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -334,7 +341,7 @@ class _ChatScreenState extends State<ChatScreen> {
           border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
         ),
         child: Text(
-          'Welcome to the Global Strategy Channel',
+          l10n.welcomeToGlobalStrategy,
           style: TextStyle(
             fontSize: 11,
             color: Palette.purpleAccentLight,
@@ -349,7 +356,8 @@ class _ChatScreenState extends State<ChatScreen> {
     String message,
     String time,
     bool isMe,
-    Color? usernameColor, {
+    Color? usernameColor,
+    AppLocalizations l10n, {
     bool isReply = false,
     bool isRead = false,
   }) {
@@ -508,7 +516,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Replying to you',
+                                l10n.replyingToYou,
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: Palette.purpleAccentLight,

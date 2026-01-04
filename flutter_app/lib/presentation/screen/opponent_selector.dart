@@ -9,10 +9,7 @@ import 'package:chess_rps/presentation/widget/dashboard_navigation_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-const _aiOpponentText = 'Play with AI';
-const _aiOpponentTextSoon = 'Скоро...';
-const _onlineOpponentText = 'Play Online';
+import 'package:chess_rps/l10n/app_localizations.dart';
 
 class OpponentSelector extends ConsumerStatefulWidget {
   static const routeName = "opponentSelector";
@@ -40,6 +37,7 @@ class OpponentSelectorContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -133,8 +131,8 @@ class OpponentSelectorContent extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            const Text(
-                              'Select Opponent',
+                            Text(
+                              l10n.selectOpponent,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 28,
@@ -147,7 +145,7 @@ class OpponentSelectorContent extends ConsumerWidget {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
-                                'Choose who you want to play with',
+                                l10n.chooseOpponentDescription,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -169,8 +167,8 @@ class OpponentSelectorContent extends ConsumerWidget {
                               context,
                               ref,
                               title: GameModesMediator.gameMode == GameMode.rps 
-                                  ? _aiOpponentTextSoon 
-                                  : _aiOpponentText,
+                                  ? l10n.comingSoon 
+                                  : l10n.playWithAI,
                               icon: Icons.smart_toy,
                               color: Palette.accent,
                               onPressed: GameModesMediator.gameMode == GameMode.rps
@@ -185,7 +183,7 @@ class OpponentSelectorContent extends ConsumerWidget {
                             _buildOpponentButton(
                               context,
                               ref,
-                              title: _onlineOpponentText,
+                              title: l10n.playOnline,
                               icon: Icons.people,
                               color: Palette.purpleAccent,
                               onPressed: () async {
@@ -219,7 +217,7 @@ class OpponentSelectorContent extends ConsumerWidget {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Failed to find match: $e'),
+                                        content: Text(l10n.failedToFindMatch(e.toString())),
                                         backgroundColor: Palette.error,
                                       ),
                                     );

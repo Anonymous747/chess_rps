@@ -1,6 +1,6 @@
 {
-    "name": "Chess RPS",
-    "short_name": "Chess RPS",
+    "name": "Chess Arena",
+    "short_name": "Chess Arena",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0A0E27",

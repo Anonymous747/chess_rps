@@ -88,10 +88,69 @@ Future<List<LeaderboardEntry>> leaderboard(Ref ref, int limit) async {
   AppLogger.info('Fetching leaderboard (limit: $limit)', tag: 'LeaderboardController');
   final service = ref.read(statsServiceProvider);
   try {
-    return await service.getLeaderboard(limit: limit);
+    return await service.getLeaderboard(limit: limit, page: 1);
   } catch (e) {
     AppLogger.error('Error loading leaderboard', tag: 'LeaderboardController', error: e);
     return [];
+  }
+}
+
+@riverpod
+class LeaderboardController extends _$LeaderboardController {
+  @override
+  Future<List<LeaderboardEntry>> build() async {
+    AppLogger.info('Initializing leaderboard controller', tag: 'LeaderboardController');
+    final service = ref.read(statsServiceProvider);
+    try {
+      return await service.getLeaderboard(page: 1, limit: 20);
+    } catch (e) {
+      AppLogger.error('Error loading leaderboard', tag: 'LeaderboardController', error: e);
+      return [];
+    }
+  }
+
+  Future<void> loadMore() async {
+    final currentData = state.valueOrNull ?? [];
+    if (currentData.isEmpty) {
+      // If no data, refresh instead
+      await refresh();
+      return;
+    }
+    
+    final currentPage = (currentData.length ~/ 20) + 1;
+    
+    // Don't show loading state if we already have data (to avoid flickering)
+    try {
+      final service = ref.read(statsServiceProvider);
+      final newEntries = await service.getLeaderboard(page: currentPage, limit: 20);
+      
+      if (newEntries.isEmpty) {
+        // No more entries to load - keep current data
+        AppLogger.info('No more leaderboard entries to load', tag: 'LeaderboardController');
+        return;
+      }
+      
+      // Append new entries to existing list
+      final updatedList = [...currentData, ...newEntries];
+      state = AsyncValue.data(updatedList);
+      AppLogger.info('Loaded more leaderboard entries: ${newEntries.length} new, ${updatedList.length} total', tag: 'LeaderboardController');
+    } catch (e) {
+      AppLogger.error('Error loading more leaderboard entries', tag: 'LeaderboardController', error: e);
+      // Keep existing data on error - don't change state
+    }
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    try {
+      final service = ref.read(statsServiceProvider);
+      final entries = await service.getLeaderboard(page: 1, limit: 20);
+      state = AsyncValue.data(entries);
+      AppLogger.info('Leaderboard refreshed: ${entries.length} entries', tag: 'LeaderboardController');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error refreshing leaderboard', tag: 'LeaderboardController', error: e);
+      state = AsyncValue.error(e, stackTrace);
+    }
   }
 }
 

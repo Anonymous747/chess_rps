@@ -12,6 +12,7 @@ import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 
 final navigationIndexProvider = StateNotifierProvider<NavigationIndexNotifier, int>((ref) {
   return NavigationIndexNotifier();
@@ -80,6 +81,7 @@ class MainNavigationScreen extends HookConsumerWidget {
     WidgetRef ref,
     int currentIndex,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Palette.backgroundSecondary.withValues(alpha: 0.8),
@@ -106,7 +108,7 @@ class MainNavigationScreen extends HookConsumerWidget {
                 context,
                 ref,
                 icon: Icons.home,
-                label: 'Home',
+                label: l10n.home,
                 index: 0,
                 currentIndex: currentIndex,
               ),
@@ -114,7 +116,7 @@ class MainNavigationScreen extends HookConsumerWidget {
                 context,
                 ref,
                 icon: Icons.emoji_events,
-                label: 'Events',
+                label: l10n.events,
                 index: 1,
                 currentIndex: currentIndex,
               ),
@@ -128,7 +130,7 @@ class MainNavigationScreen extends HookConsumerWidget {
                 context,
                 ref,
                 icon: Icons.chat_bubble_outline,
-                label: 'Chat',
+                label: l10n.chat,
                 index: 3,
                 currentIndex: currentIndex,
               ),
@@ -136,7 +138,7 @@ class MainNavigationScreen extends HookConsumerWidget {
                 context,
                 ref,
                 icon: Icons.person_outline,
-                label: 'Profile',
+                label: l10n.profile,
                 index: 4,
                 currentIndex: currentIndex,
               ),
@@ -265,6 +267,7 @@ class MainMenuContent extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final authUser = ref.watch(authControllerProvider).valueOrNull;
     final username = authUser?.phoneNumber ?? 'Player';
     final statsAsync = ref.watch(statsControllerProvider);
@@ -289,13 +292,14 @@ class MainMenuContent extends HookConsumerWidget {
             statsAsync.when(
               data: (stats) {
                 final level = stats.level;
-                final levelName = stats.levelName ?? 'Novice';
+                final levelName = stats.levelName ?? l10n.novice;
                 final levelProgress = stats.levelProgress;
                 final progress = levelProgress != null && levelProgress.xpForNextLevel > 0
                     ? levelProgress.currentLevelXp / levelProgress.xpForNextLevel
                     : 0.0;
                 return _MainMenuContentHelper._buildUserProfileHeader(
                   context,
+                  l10n: l10n,
                   username: username,
                   level: level,
                   levelName: levelName,
@@ -304,16 +308,18 @@ class MainMenuContent extends HookConsumerWidget {
               },
               loading: () => _MainMenuContentHelper._buildUserProfileHeader(
                 context,
+                l10n: l10n,
                 username: username,
                 level: 0,
-                levelName: 'Novice',
+                levelName: l10n.novice,
                 progress: 0.0,
               ),
               error: (_, __) => _MainMenuContentHelper._buildUserProfileHeader(
                 context,
+                l10n: l10n,
                 username: username,
                 level: 0,
-                levelName: 'Novice',
+                levelName: l10n.novice,
                 progress: 0.0,
               ),
             ),
@@ -328,9 +334,9 @@ class MainMenuContent extends HookConsumerWidget {
                     const SizedBox(height: 24),
                     
                     // Game Mode Cards
-                    _MainMenuContentHelper._buildVariationGamesCard(context, ref),
+                    _MainMenuContentHelper._buildVariationGamesCard(context, ref, l10n),
                     const SizedBox(height: 16),
-                    _MainMenuContentHelper._buildTournamentGamesCard(context, ref),
+                    _MainMenuContentHelper._buildTournamentGamesCard(context, ref, l10n),
                     
                     const SizedBox(height: 24),
                     
@@ -338,6 +344,7 @@ class MainMenuContent extends HookConsumerWidget {
                     statsAsync.when(
                       data: (stats) => _MainMenuContentHelper._buildInfoCardsGrid(
                         context,
+                        l10n: l10n,
                         rating: stats.rating,
                         onlineFriends: onlineFriends,
                       ),
@@ -355,6 +362,7 @@ class MainMenuContent extends HookConsumerWidget {
                       ),
                       error: (_, __) => _MainMenuContentHelper._buildInfoCardsGrid(
                         context,
+                        l10n: l10n,
                         rating: 1200,
                         onlineFriends: onlineFriends,
                       ),
@@ -377,6 +385,7 @@ class _MainMenuContentHelper {
 
   static Widget _buildUserProfileHeader(
     BuildContext context, {
+    required AppLocalizations l10n,
     required String username,
     required int level,
     required String levelName,
@@ -438,7 +447,7 @@ class _MainMenuContentHelper {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Level $level',
+                  l10n.level(level),
                   style: TextStyle(
                     fontSize: 14,
                     color: Palette.textSecondary,
@@ -504,7 +513,7 @@ class _MainMenuContentHelper {
     );
   }
 
-  static Widget _buildVariationGamesCard(BuildContext context, WidgetRef ref) {
+  static Widget _buildVariationGamesCard(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -566,7 +575,7 @@ class _MainMenuContentHelper {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              'FEATURED',
+                              l10n.featured,
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -579,7 +588,7 @@ class _MainMenuContentHelper {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Variation Games',
+                        l10n.variationGames,
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -588,7 +597,7 @@ class _MainMenuContentHelper {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'RPS, Blitz, Bullet & Chaos Modes',
+                        l10n.variationGamesDescription,
                         style: TextStyle(
                           fontSize: 14,
                           color: Palette.textSecondary,
@@ -618,7 +627,7 @@ class _MainMenuContentHelper {
     );
   }
 
-  static Widget _buildTournamentGamesCard(BuildContext context, WidgetRef ref) {
+  static Widget _buildTournamentGamesCard(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -677,7 +686,7 @@ class _MainMenuContentHelper {
                       Row(
                         children: [
                           Text(
-                            'Tournament Games',
+                            l10n.tournamentGames,
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -695,7 +704,7 @@ class _MainMenuContentHelper {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              '• LIVE',
+                              l10n.live,
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -707,7 +716,7 @@ class _MainMenuContentHelper {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Compete in daily events and win exclusive skins.',
+                        l10n.tournamentGamesDescription,
                         style: TextStyle(
                           fontSize: 14,
                           color: Palette.textSecondary,
@@ -726,6 +735,7 @@ class _MainMenuContentHelper {
 
   static Widget _buildInfoCardsGrid(
     BuildContext context, {
+    required AppLocalizations l10n,
     required int rating,
     required int onlineFriends,
   }) {
@@ -741,8 +751,8 @@ class _MainMenuContentHelper {
           context,
           icon: Icons.trending_up,
           iconColor: Palette.success,
-          title: 'Rating',
-          subtitle: '$rating MMR',
+          title: l10n.rating,
+          subtitle: l10n.mmr(rating),
           trailing: Icon(
             Icons.trending_up,
             color: Palette.success,
@@ -757,8 +767,8 @@ class _MainMenuContentHelper {
           context,
           icon: Icons.collections,
           iconColor: Palette.purpleAccentLight,
-          title: 'Collection',
-          subtitle: 'Skins & Boards',
+          title: l10n.collection,
+          subtitle: l10n.skinsAndBoards,
           onTap: () {
             AppLogger.info('Collection tapped', tag: 'MainNavigation');
             context.push(AppRoutes.collection);
@@ -768,8 +778,8 @@ class _MainMenuContentHelper {
           context,
           icon: Icons.people,
           iconColor: Palette.info,
-          title: 'Friends',
-          subtitle: '• $onlineFriends Online',
+          title: l10n.friends,
+          subtitle: '• $onlineFriends ${l10n.online}',
           trailing: Container(
             width: 8,
             height: 8,
@@ -787,8 +797,8 @@ class _MainMenuContentHelper {
           context,
           icon: Icons.settings,
           iconColor: Palette.textSecondary,
-          title: 'Settings',
-          subtitle: 'Preferences',
+          title: l10n.settings,
+          subtitle: l10n.preferences,
           onTap: () {
             AppLogger.info('Settings tapped', tag: 'MainNavigation');
             context.push(AppRoutes.settings);

@@ -320,16 +320,18 @@ class StatsService {
 
   /// Get leaderboard (top users by rating)
   /// [limit] - Number of top users to return (default: 10)
-  Future<List<LeaderboardEntry>> getLeaderboard({int limit = 10}) async {
+  /// [page] - Page number for pagination (default: 1)
+  Future<List<LeaderboardEntry>> getLeaderboard({int limit = 10, int page = 1}) async {
     try {
       AppLogger.info(
-        'Fetching leaderboard (limit: $limit)',
+        'Fetching leaderboard (page: $page, limit: $limit)',
         tag: 'StatsService',
       );
       final response = await _dio.get(
         '/api/v1/stats/leaderboard',
         queryParameters: {
           'limit': limit,
+          'page': page,
         },
       );
 

@@ -74,5 +74,24 @@ class AuthStorage {
   Future<String?> getToken() async {
     return await _storage.read(key: _tokenKey);
   }
+
+  Future<String?> getString(String key) async {
+    try {
+      return await _storage.read(key: key);
+    } catch (e) {
+      AppLogger.error('Error reading string', tag: 'AuthStorage', error: e);
+      return null;
+    }
+  }
+
+  Future<void> setString(String key, String value) async {
+    try {
+      await _storage.write(key: key, value: value);
+      AppLogger.info('String saved: $key', tag: 'AuthStorage');
+    } catch (e) {
+      AppLogger.error('Error saving string', tag: 'AuthStorage', error: e);
+      rethrow;
+    }
+  }
 }
 

@@ -10,6 +10,7 @@ import 'package:chess_rps/presentation/screen/chess_screen.dart';
 import 'package:chess_rps/presentation/screen/collection_screen.dart';
 import 'package:chess_rps/presentation/screen/events_screen.dart';
 import 'package:chess_rps/presentation/screen/friends_screen.dart';
+import 'package:chess_rps/presentation/screen/leaderboard_screen.dart';
 import 'package:chess_rps/presentation/screen/levels_screen.dart';
 import 'package:chess_rps/presentation/screen/login_screen.dart';
 import 'package:chess_rps/presentation/screen/main_navigation_screen.dart';
@@ -37,6 +38,7 @@ class AppRoutes {
   static const waitingRoom = '/waiting-room';
   static const chess = '/chess';
   static const rating = '/rating';
+  static const leaderboard = '/leaderboard';
   static const collection = '/collection';
   static const friends = '/friends';
   static const settings = '/settings';
@@ -202,6 +204,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.rating,
         name: 'rating',
         builder: (context, state) => const RatingScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.leaderboard,
+        name: 'leaderboard',
+        builder: (context, state) => const LeaderboardScreen(),
       ),
       GoRoute(
         path: AppRoutes.collection,

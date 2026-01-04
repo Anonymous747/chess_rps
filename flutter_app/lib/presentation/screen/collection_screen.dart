@@ -1,6 +1,7 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/collection/collection_service.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:chess_rps/presentation/controller/collection_controller.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/utils/avatar_utils.dart';
@@ -53,21 +54,22 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     });
   }
 
-  String _getTabLabel(CollectionCategory category) {
+  String _getTabLabel(CollectionCategory category, AppLocalizations l10n) {
     switch (category) {
       case CollectionCategory.PIECES:
-        return 'Pieces';
+        return l10n.pieces;
       case CollectionCategory.BOARDS:
-        return 'Boards';
+        return l10n.boards;
       case CollectionCategory.AVATARS:
-        return 'Avatars';
+        return l10n.avatars;
       case CollectionCategory.EFFECTS:
-        return 'Effects';
+        return l10n.effects;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -102,7 +104,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Collection',
+                      l10n.collection,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -139,7 +141,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       _tabs.length,
                       (index) => Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: _buildTabButton(_tabs[index], index == _selectedTab, () {
+                        child: _buildTabButton(_tabs[index], index == _selectedTab, l10n, () {
                           setState(() {
                             _selectedTab = index;
                             // Only refresh collection for non-PIECES categories
@@ -178,7 +180,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       ),
                     );
                   },
-                  child: _buildCollectionContent(),
+                  child: _buildCollectionContent(l10n),
                 ),
               ),
             ],
@@ -188,8 +190,8 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildTabButton(CollectionCategory category, bool isActive, VoidCallback onTap) {
-    final label = _getTabLabel(category);
+  Widget _buildTabButton(CollectionCategory category, bool isActive, AppLocalizations l10n, VoidCallback onTap) {
+    final label = _getTabLabel(category, l10n);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -274,27 +276,27 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildCollectionContent() {
+  Widget _buildCollectionContent(AppLocalizations l10n) {
     final currentCategory = _tabs[_selectedTab];
 
     // For PIECES category, show all available piece packs from assets
     if (currentCategory == CollectionCategory.PIECES) {
-      return _buildPiecePacksGrid(key: const ValueKey('pieces'));
+      return _buildPiecePacksGrid(key: const ValueKey('pieces'), l10n: l10n);
     }
 
     // For BOARDS category, show all available board themes
     if (currentCategory == CollectionCategory.BOARDS) {
-      return _buildBoardThemesGrid(key: const ValueKey('boards'));
+      return _buildBoardThemesGrid(key: const ValueKey('boards'), l10n: l10n);
     }
 
     // For AVATARS category, show all available avatars from assets
     if (currentCategory == CollectionCategory.AVATARS) {
-      return _buildAvatarsGrid(key: const ValueKey('avatars'));
+      return _buildAvatarsGrid(key: const ValueKey('avatars'), l10n: l10n);
     }
 
     // For EFFECTS category, show all available effects
     if (currentCategory == CollectionCategory.EFFECTS) {
-      return _buildEffectsGrid(key: const ValueKey('effects'));
+      return _buildEffectsGrid(key: const ValueKey('effects'), l10n: l10n);
     }
 
     // For other categories, use the backend collection items
@@ -353,11 +355,11 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               children: [
                 // Featured Set (show equipped item or first owned item)
                 if (equippedItem != null)
-                  _buildFeaturedSet(equippedItem.item, equippedItem.isEquipped),
+                  _buildFeaturedSet(equippedItem.item, equippedItem.isEquipped, l10n),
                 if (equippedItem != null) const SizedBox(height: 24),
 
                 // Collection Grid
-                _buildCollectionGrid(categoryItems, userCollectionMap, currentCategory),
+                _buildCollectionGrid(categoryItems, userCollectionMap, currentCategory, l10n),
                 const SizedBox(height: 100),
               ],
             ),
@@ -373,7 +375,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
         ),
         error: (error, stack) => Center(
           child: Text(
-            'Error loading items',
+            l10n.errorLoadingItems,
             style: TextStyle(color: Palette.error),
           ),
         ),
@@ -389,14 +391,14 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
       ),
       error: (error, stack) => Center(
         child: Text(
-          'Error loading collection',
+          l10n.errorLoadingCollection,
           style: TextStyle(color: Palette.error),
         ),
       ),
     );
   }
 
-  Widget _buildFeaturedSet(CollectionItem item, bool isEquipped) {
+  Widget _buildFeaturedSet(CollectionItem item, bool isEquipped, AppLocalizations l10n) {
     final isAvatar = item.category == CollectionCategory.AVATARS;
     final avatarUrl = isAvatar ? AvatarUtils.getAvatarImageUrl(item.iconName) : null;
 
@@ -426,7 +428,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 children: [
                   Row(
                     children: [
-                      if (isEquipped) _buildBadge('Equipped', Palette.success),
+                      if (isEquipped) _buildBadge(l10n.equipped, Palette.success),
                       if (isEquipped) const SizedBox(width: 8),
                       _buildBadge(
                         CollectionUtils.getRarityDisplayName(item.rarity),
@@ -528,7 +530,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                   ),
                 ),
                 child: Text(
-                  'Customize',
+                  l10n.customize,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -592,6 +594,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     List<CollectionItem> items,
     Map<int, UserCollectionItem> userCollectionMap,
     CollectionCategory category,
+    AppLocalizations l10n,
   ) {
     // Sort items by rarity (Legendary first, then Epic, etc.)
     items.sort((a, b) {
@@ -612,7 +615,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'My ${_getTabLabel(category)}',
+              l10n.myPieces(_getTabLabel(category, l10n)),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -625,7 +628,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 // TODO: Implement sorting options
               },
               child: Text(
-                'Sort by: Rarity',
+                l10n.sortByRarity,
                 style: TextStyle(
                   fontSize: 12,
                   color: Palette.purpleAccent,
@@ -659,9 +662,10 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 isOwned,
                 isEquipped,
                 isLocked,
+                l10n,
               );
             }),
-            _buildShopCard(),
+            _buildShopCard(l10n),
           ],
         ),
       ],
@@ -674,13 +678,14 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     bool isOwned,
     bool isEquipped,
     bool isLocked,
+    AppLocalizations l10n,
   ) {
     // Make the whole card tappable for avatars
     final isAvatar = item.category == CollectionCategory.AVATARS;
     final color = CollectionUtils.getColorFromHexOrRarity(item.colorHex, item.rarity);
     final icon = CollectionUtils.getIconFromName(item.iconName);
     final rarityText = item.unlockLevel != null && isLocked
-        ? 'Unlock at Lvl ${item.unlockLevel}'
+        ? l10n.unlockAtLevel(item.unlockLevel!)
         : CollectionUtils.getRarityDisplayName(item.rarity);
 
     // For avatars, use image instead of icon
@@ -812,7 +817,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('${item.name} equipped!'),
+                                  content: Text(l10n.equippedItem(item.name)),
                                   backgroundColor: Palette.success,
                                   duration: const Duration(seconds: 2),
                                 ),
@@ -822,7 +827,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Failed to equip: $e'),
+                                  content: Text(l10n.failedToEquip(e.toString())),
                                   backgroundColor: Palette.error,
                                 ),
                               );
@@ -873,9 +878,10 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     .equipItem(item.id, item.category);
               }
               if (context.mounted) {
+                final l10n = AppLocalizations.of(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${item.name} equipped!'),
+                    content: Text(l10n != null ? l10n.equippedItem(item.name) : '${item.name} equipped!'),
                     backgroundColor: Palette.success,
                     duration: const Duration(seconds: 2),
                   ),
@@ -883,9 +889,10 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               }
             } catch (e) {
               if (context.mounted) {
+                final l10n = AppLocalizations.of(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Failed to equip: $e'),
+                    content: Text(l10n != null ? l10n.failedToEquip(e.toString()) : 'Failed to equip: $e'),
                     backgroundColor: Palette.error,
                   ),
                 );
@@ -919,7 +926,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildShopCard() {
+  Widget _buildShopCard(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -952,7 +959,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Get More',
+            l10n.getMore,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -961,7 +968,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Visit the Shop',
+            l10n.visitTheShop,
             style: TextStyle(
               fontSize: 10,
               color: Palette.purpleAccentLight,
@@ -972,7 +979,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildPiecePacksGrid({Key? key}) {
+  Widget _buildPiecePacksGrid({Key? key, required AppLocalizations l10n}) {
     final piecePacks = PiecePackUtils.getKnownPiecePacks();
     final settingsAsync = ref.watch(settingsControllerProvider);
 
@@ -988,7 +995,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Available Piece Sets (${piecePacks.length})',
+                  l10n.availablePieceSets(piecePacks.length),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -1004,7 +1011,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                     ),
                     child: Text(
-                      'Selected: ${PiecePackUtils.formatPackName(settings.pieceSet)}',
+                      l10n.selected(PiecePackUtils.formatPackName(settings.pieceSet)),
                       style: TextStyle(
                         fontSize: 12,
                         color: Palette.purpleAccent,
@@ -1028,7 +1035,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               itemBuilder: (context, index) {
                 final packName = piecePacks[index];
                 final isSelected = packName == settings.pieceSet;
-                return _buildPiecePackCard(packName, isSelected: isSelected);
+                return _buildPiecePackCard(packName, isSelected: isSelected, l10n: l10n);
               },
             ),
             const SizedBox(height: 100),
@@ -1050,34 +1057,34 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
-            Text(
-              'Available Piece Sets (${piecePacks.length})',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Palette.textSecondary,
+              Text(
+                l10n.availablePieceSets(piecePacks.length),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Palette.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Palette.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Palette.error),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Palette.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Palette.error),
+                ),
+                child: Text(
+                  l10n.errorLoadingSettings,
+                  style: TextStyle(color: Palette.error),
+                ),
               ),
-              child: Text(
-                'Error loading settings',
-                style: TextStyle(color: Palette.error),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPiecePackCard(String packName, {bool isSelected = false}) {
+  Widget _buildPiecePackCard(String packName, {bool isSelected = false, required AppLocalizations l10n}) {
     final queenImageUrl = PiecePackUtils.getQueenImageUrl(packName, isWhite: true);
 
     return GestureDetector(
@@ -1216,7 +1223,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('${PiecePackUtils.formatPackName(packName)} selected'),
+                          content: Text(l10n.selectedAndSaved(PiecePackUtils.formatPackName(packName))),
                           backgroundColor: Palette.success,
                           duration: const Duration(seconds: 2),
                         ),
@@ -1227,7 +1234,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Failed to select piece set: $e'),
+                          content: Text(l10n.failedToSelect('piece set', e.toString())),
                           backgroundColor: Palette.error,
                         ),
                       );
@@ -1257,7 +1264,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildAvatarsGrid({Key? key}) {
+  Widget _buildAvatarsGrid({Key? key, required AppLocalizations l10n}) {
     final userCollectionAsync = ref.watch(userCollectionControllerProvider);
     final allItemsAsync = ref.watch(collectionControllerProvider);
 
@@ -1296,7 +1303,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Available Avatars (20)',
+                      l10n.availableAvatars,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -1312,7 +1319,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                           border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                         ),
                         child: Text(
-                          'Selected: ${equippedAvatar.item.name}',
+                          l10n.selected(equippedAvatar.item.name),
                           style: TextStyle(
                             fontSize: 12,
                             color: Palette.purpleAccent,
@@ -1348,6 +1355,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       iconName: iconName,
                       isSelected: isSelected,
                       avatarItem: avatarItem,
+                      l10n: l10n,
                     );
                   },
                 ),
@@ -1372,7 +1380,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             children: [
               const SizedBox(height: 12),
               Text(
-                'Available Avatars (20)',
+                l10n.availableAvatars,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -1388,7 +1396,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                   border: Border.all(color: Palette.error),
                 ),
                 child: Text(
-                  'Error loading collection',
+                  l10n.errorLoadingCollection,
                   style: TextStyle(color: Palette.error),
                 ),
               ),
@@ -1411,27 +1419,27 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
-            Text(
-              'Available Avatars (20)',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Palette.textSecondary,
+              Text(
+                l10n.availableAvatars,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Palette.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Palette.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Palette.error),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Palette.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Palette.error),
+                ),
+                child: Text(
+                  l10n.errorLoadingCollection,
+                  style: TextStyle(color: Palette.error),
+                ),
               ),
-              child: Text(
-                'Error loading collection',
-                style: TextStyle(color: Palette.error),
-              ),
-            ),
           ],
         ),
       ),
@@ -1445,6 +1453,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     required String iconName,
     required bool isSelected,
     CollectionItem? avatarItem,
+    required AppLocalizations l10n,
   }) {
     return Consumer(
       builder: (context, ref, child) => GestureDetector(
@@ -1461,7 +1470,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('$avatarName selected!'),
+                  content: Text(l10n.equippedItem(avatarName)),
                   backgroundColor: Palette.success,
                   duration: const Duration(seconds: 2),
                 ),
@@ -1472,7 +1481,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Failed to select avatar: $e'),
+                  content: Text(l10n.failedToEquip(e.toString())),
                   backgroundColor: Palette.error,
                 ),
               );
@@ -1590,7 +1599,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildBoardThemesGrid({Key? key}) {
+  Widget _buildBoardThemesGrid({Key? key, required AppLocalizations l10n}) {
     final boardThemes = BoardThemeUtils.getKnownBoardThemes();
     final settingsAsync = ref.watch(settingsControllerProvider);
 
@@ -1606,7 +1615,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Available Board Themes (${boardThemes.length})',
+                  l10n.availableBoardThemes(boardThemes.length),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -1622,7 +1631,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                     ),
                     child: Text(
-                      'Selected: ${BoardThemeUtils.formatThemeName(settings.boardTheme)}',
+                      l10n.selected(BoardThemeUtils.formatThemeName(settings.boardTheme)),
                       style: TextStyle(
                         fontSize: 12,
                         color: Palette.purpleAccent,
@@ -1646,7 +1655,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               itemBuilder: (context, index) {
                 final themeName = boardThemes[index];
                 final isSelected = themeName == settings.boardTheme;
-                return _buildBoardThemeCard(themeName, isSelected: isSelected);
+                return _buildBoardThemeCard(themeName, isSelected: isSelected, l10n: l10n);
               },
             ),
             const SizedBox(height: 100),
@@ -1668,34 +1677,34 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
-            Text(
-              'Available Board Themes (${boardThemes.length})',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Palette.textSecondary,
+              Text(
+                l10n.availableBoardThemes(boardThemes.length),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Palette.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Palette.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Palette.error),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Palette.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Palette.error),
+                ),
+                child: Text(
+                  l10n.errorLoadingSettings,
+                  style: TextStyle(color: Palette.error),
+                ),
               ),
-              child: Text(
-                'Error loading settings',
-                style: TextStyle(color: Palette.error),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBoardThemeCard(String themeName, {bool isSelected = false}) {
+  Widget _buildBoardThemeCard(String themeName, {bool isSelected = false, required AppLocalizations l10n}) {
     final lightColor = Color(BoardThemeUtils.getLightColor(themeName));
     final darkColor = Color(BoardThemeUtils.getDarkColor(themeName));
 
@@ -1802,7 +1811,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                              '${BoardThemeUtils.formatThemeName(themeName)} selected and saved'),
+                              l10n.selectedAndSaved(BoardThemeUtils.formatThemeName(themeName))),
                           backgroundColor: Palette.success,
                           duration: const Duration(seconds: 2),
                         ),
@@ -1814,7 +1823,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Failed to select board theme: $e'),
+                          content: Text(l10n.failedToSelect('board theme', e.toString())),
                           backgroundColor: Palette.error,
                         ),
                       );
@@ -1844,7 +1853,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _buildEffectsGrid({Key? key}) {
+  Widget _buildEffectsGrid({Key? key, required AppLocalizations l10n}) {
     final effects = EffectUtils.getKnownEffects();
     final settingsAsync = ref.watch(settingsControllerProvider);
 
@@ -1860,7 +1869,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Available Effects (${effects.length})',
+                  l10n.availableEffects(effects.length),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -1876,7 +1885,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                     ),
                     child: Text(
-                      'Selected: ${EffectUtils.formatEffectName(settings.effect!)}',
+                      l10n.selected(EffectUtils.formatEffectName(settings.effect!)),
                       style: TextStyle(
                         fontSize: 12,
                         color: Palette.purpleAccent,
@@ -1893,7 +1902,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.3)),
                     ),
                     child: Text(
-                      'Selected: Classic',
+                      l10n.selectedClassic,
                       style: TextStyle(
                         fontSize: 12,
                         color: Palette.purpleAccent,
@@ -1919,7 +1928,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 // Handle null effect - default to 'classic' if not set
                 final currentEffect = settings.effect ?? 'classic';
                 final isSelected = currentEffect == effectName;
-                return _buildEffectCard(effectName, isSelected: isSelected);
+                return _buildEffectCard(effectName, isSelected: isSelected, l10n: l10n);
               },
             ),
             const SizedBox(height: 100),
@@ -1941,34 +1950,34 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
-            Text(
-              'Available Effects (${effects.length})',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Palette.textSecondary,
+              Text(
+                l10n.availableEffects(effects.length),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Palette.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Palette.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Palette.error),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Palette.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Palette.error),
+                ),
+                child: Text(
+                  l10n.errorLoadingSettings,
+                  style: TextStyle(color: Palette.error),
+                ),
               ),
-              child: Text(
-                'Error loading settings',
-                style: TextStyle(color: Palette.error),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEffectCard(String effectName, {bool isSelected = false}) {
+  Widget _buildEffectCard(String effectName, {bool isSelected = false, required AppLocalizations l10n}) {
     final icon = EffectUtils.getEffectIcon(effectName);
     final color = EffectUtils.getEffectColor(effectName);
     final description = EffectUtils.getEffectDescription(effectName);
@@ -2105,7 +2114,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                       // The UI will automatically update because we're watching settingsControllerProvider
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('${EffectUtils.formatEffectName(effectName)} selected'),
+                          content: Text(l10n.selectedAndSaved(EffectUtils.formatEffectName(effectName))),
                           backgroundColor: Palette.success,
                           duration: const Duration(seconds: 2),
                         ),
@@ -2116,7 +2125,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Failed to select effect: $e'),
+                          content: Text(l10n.failedToSelect('effect', e.toString())),
                           backgroundColor: Palette.error,
                         ),
                       );
@@ -2155,6 +2164,7 @@ class _EffectPreviewDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final settingsAsync = ref.watch(settingsControllerProvider);
     // Handle null effect - default to 'classic' if not set
     final currentEffect = settingsAsync.valueOrNull?.effect ?? 'classic';
@@ -2302,7 +2312,7 @@ class _EffectPreviewDialog extends ConsumerWidget {
                         // The UI will automatically update because we're watching settingsControllerProvider
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('${EffectUtils.formatEffectName(effectName)} selected'),
+                            content: Text(l10n.selectedAndSaved(EffectUtils.formatEffectName(effectName))),
                             backgroundColor: Palette.success,
                             duration: const Duration(seconds: 2),
                           ),
@@ -2314,7 +2324,7 @@ class _EffectPreviewDialog extends ConsumerWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Failed to select effect: $e'),
+                            content: Text(l10n.failedToSelect('effect', e.toString())),
                             backgroundColor: Palette.error,
                           ),
                         );
@@ -2326,7 +2336,7 @@ class _EffectPreviewDialog extends ConsumerWidget {
                     color: Palette.textPrimary,
                   ),
                   label: Text(
-                    isSelected ? 'Currently Selected' : 'Select This Effect',
+                    isSelected ? l10n.currentlySelected : l10n.selectThisEffect,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -2360,6 +2370,7 @@ class _BoardThemePreviewDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final settingsAsync = ref.watch(settingsControllerProvider);
     final isSelected = settingsAsync.valueOrNull?.boardTheme == themeName;
     final lightColor = Color(BoardThemeUtils.getLightColor(themeName));
@@ -2455,7 +2466,7 @@ class _BoardThemePreviewDialog extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Light',
+                        l10n.light,
                         style: TextStyle(
                           fontSize: 12,
                           color: Palette.textSecondary,
@@ -2476,7 +2487,7 @@ class _BoardThemePreviewDialog extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Dark',
+                        l10n.dark,
                         style: TextStyle(
                           fontSize: 12,
                           color: Palette.textSecondary,
@@ -2507,7 +2518,7 @@ class _BoardThemePreviewDialog extends ConsumerWidget {
                         Navigator.of(context).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('${BoardThemeUtils.formatThemeName(themeName)} selected'),
+                            content: Text(l10n.selectedAndSaved(BoardThemeUtils.formatThemeName(themeName))),
                             backgroundColor: Palette.success,
                             duration: const Duration(seconds: 2),
                           ),
@@ -2519,7 +2530,7 @@ class _BoardThemePreviewDialog extends ConsumerWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Failed to select board theme: $e'),
+                            content: Text(l10n.failedToSelect('board theme', e.toString())),
                             backgroundColor: Palette.error,
                           ),
                         );
@@ -2531,7 +2542,7 @@ class _BoardThemePreviewDialog extends ConsumerWidget {
                     color: Palette.textPrimary,
                   ),
                   label: Text(
-                    isSelected ? 'Currently Selected' : 'Select This Theme',
+                    isSelected ? l10n.currentlySelected : l10n.selectThisTheme,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

@@ -3,6 +3,7 @@ import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/collection/collection_service.dart';
 import 'package:chess_rps/data/service/friends/friends_service.dart';
 import 'package:chess_rps/data/service/stats/stats_service.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
 import 'package:chess_rps/presentation/controller/collection_controller.dart';
 import 'package:chess_rps/presentation/controller/friends_controller.dart';
@@ -22,6 +23,7 @@ class ProfileScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final statsAsync = ref.watch(statsControllerProvider);
     final userCollectionAsync = ref.watch(userCollectionControllerProvider);
     return Scaffold(
@@ -51,7 +53,7 @@ class ProfileScreen extends HookConsumerWidget {
                       icon: Icon(Icons.arrow_back, color: Palette.textSecondary),
                     ),
                     Text(
-                      'PLAYER PROFILE',
+                      l10n.playerProfile,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -67,7 +69,7 @@ class ProfileScreen extends HookConsumerWidget {
                         }
                       },
                       icon: Icon(Icons.logout, color: Palette.error),
-                      tooltip: 'Logout',
+                      tooltip: l10n.logout,
                       style: IconButton.styleFrom(
                         backgroundColor: Palette.error.withValues(alpha: 0.1),
                         shape: RoundedRectangleBorder(
@@ -87,23 +89,23 @@ class ProfileScreen extends HookConsumerWidget {
                   child: Column(
                     children: [
                       // Profile Header
-                      _buildProfileHeader(context, ref, statsAsync, userCollectionAsync),
+                      _buildProfileHeader(context, ref, statsAsync, userCollectionAsync, l10n),
                       const SizedBox(height: 24),
 
                       // Stats Grid
-                      _buildStatsGrid(context, ref, statsAsync),
+                      _buildStatsGrid(context, ref, statsAsync, l10n),
                       const SizedBox(height: 24),
 
                       // Performance Chart
-                      _buildPerformanceSection(statsAsync),
+                      _buildPerformanceSection(statsAsync, l10n),
                       const SizedBox(height: 24),
 
                       // Achievements
-                      _buildAchievementsSection(),
+                      _buildAchievementsSection(l10n),
                       const SizedBox(height: 24),
 
                       // Showcase
-                      _buildShowcaseSection(),
+                      _buildShowcaseSection(l10n),
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -121,6 +123,7 @@ class ProfileScreen extends HookConsumerWidget {
     WidgetRef ref,
     AsyncValue<UserStats> statsAsync,
     AsyncValue<List<UserCollectionItem>> userCollectionAsync,
+    AppLocalizations l10n,
   ) {
     return statsAsync.when(
       data: (stats) {
@@ -294,7 +297,7 @@ class ProfileScreen extends HookConsumerWidget {
             ),
             const SizedBox(height: 16),
             // Profile Name with Edit Button
-            _buildProfileNameSection(context, ref),
+            _buildProfileNameSection(context, ref, l10n),
           ],
         ),
       );
@@ -312,7 +315,7 @@ class ProfileScreen extends HookConsumerWidget {
           Icon(Icons.error_outline, size: 64, color: Palette.error),
           const SizedBox(height: 16),
           Text(
-            'Error loading profile',
+            l10n.errorLoadingProfile,
             style: TextStyle(
               fontSize: 16,
               color: Palette.error,
@@ -323,7 +326,7 @@ class ProfileScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildStatsGrid(BuildContext context, WidgetRef ref, AsyncValue<UserStats> statsAsync) {
+  Widget _buildStatsGrid(BuildContext context, WidgetRef ref, AsyncValue<UserStats> statsAsync, AppLocalizations l10n) {
     return statsAsync.when(
       data: (stats) {
         final ratingChange = stats.ratingChange;
@@ -341,7 +344,7 @@ class ProfileScreen extends HookConsumerWidget {
           children: [
             Expanded(
               child: _buildStatCard(
-                'Rating',
+                l10n.rating,
                 '${stats.rating}',
                 ratingChangeText,
                 ratingChangeColor,
@@ -351,7 +354,7 @@ class ProfileScreen extends HookConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _buildStatCard(
-                'Win Rate',
+                l10n.winRate,
                 winRateText,
                 totalGamesText,
                 Palette.accent,
@@ -361,9 +364,9 @@ class ProfileScreen extends HookConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _buildStatCard(
-                'Streak',
+                l10n.streak,
                 streakText,
-                'Best: ${stats.bestStreak}',
+                l10n.best('${stats.bestStreak}'),
                 Palette.purpleAccent,
                 Icons.local_fire_department,
               ),
@@ -382,11 +385,11 @@ class ProfileScreen extends HookConsumerWidget {
       ),
       error: (error, stack) => Row(
         children: [
-          Expanded(child: _buildStatCard('Rating', 'Error', '', Palette.error, null)),
+          Expanded(child: _buildStatCard(l10n.rating, 'Error', '', Palette.error, null)),
           const SizedBox(width: 12),
-          Expanded(child: _buildStatCard('Win Rate', 'Error', '', Palette.error, null)),
+          Expanded(child: _buildStatCard(l10n.winRate, 'Error', '', Palette.error, null)),
           const SizedBox(width: 12),
-          Expanded(child: _buildStatCard('Streak', 'Error', '', Palette.error, null)),
+          Expanded(child: _buildStatCard(l10n.streak, 'Error', '', Palette.error, null)),
         ],
       ),
     );
@@ -455,7 +458,7 @@ class ProfileScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildPerformanceSection(AsyncValue<UserStats> statsAsync) {
+  Widget _buildPerformanceSection(AsyncValue<UserStats> statsAsync, AppLocalizations l10n) {
     final selectedPeriod = useState<String>('Weekly'); // Default to Weekly
     
     return Column(
@@ -465,7 +468,7 @@ class ProfileScreen extends HookConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Performance',
+              l10n.performance,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -475,13 +478,13 @@ class ProfileScreen extends HookConsumerWidget {
             Row(
               children: [
                 _buildTimeFilter(
-                  'Weekly',
+                  l10n.weekly,
                   selectedPeriod.value == 'Weekly',
                   () => selectedPeriod.value = 'Weekly',
                 ),
                 const SizedBox(width: 8),
                 _buildTimeFilter(
-                  'Monthly',
+                  l10n.monthly,
                   selectedPeriod.value == 'Monthly',
                   () => selectedPeriod.value = 'Monthly',
                 ),
@@ -530,7 +533,7 @@ class ProfileScreen extends HookConsumerWidget {
                 if (filteredHistory.isEmpty) {
                   return Center(
                     child: Text(
-                      'No performance data for ${selectedPeriod.value.toLowerCase()} period',
+                      l10n.noPerformanceData(selectedPeriod.value.toLowerCase()),
                       style: TextStyle(
                         color: Palette.textSecondary,
                         fontSize: 14,
@@ -565,7 +568,7 @@ class ProfileScreen extends HookConsumerWidget {
               } else {
                 return Center(
                   child: Text(
-                    'No performance data yet',
+                    l10n.noPerformanceDataYet,
                     style: TextStyle(
                       color: Palette.textSecondary,
                       fontSize: 14,
@@ -584,7 +587,7 @@ class ProfileScreen extends HookConsumerWidget {
             ),
             error: (error, stack) => Center(
               child: Text(
-                'Error loading performance data',
+                l10n.errorLoadingPerformance,
                 style: TextStyle(
                   color: Palette.error,
                   fontSize: 14,
@@ -626,7 +629,7 @@ class ProfileScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildAchievementsSection() {
+  Widget _buildAchievementsSection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -634,7 +637,7 @@ class ProfileScreen extends HookConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Achievements',
+              l10n.achievements,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -644,7 +647,7 @@ class ProfileScreen extends HookConsumerWidget {
             TextButton(
               onPressed: () {},
               child: Text(
-                'View All',
+                l10n.viewAll,
                 style: TextStyle(color: Palette.accent),
               ),
             ),
@@ -656,13 +659,13 @@ class ProfileScreen extends HookConsumerWidget {
           child: Row(
             children: [
               _buildAchievementCard(
-                  'Grandmaster', 'Reach 2500 MMR', Icons.emoji_events, Palette.gold, true),
+                  l10n.grandmasterAchievement, l10n.reach2500MMR, Icons.emoji_events, Palette.gold, true),
               const SizedBox(width: 12),
               _buildAchievementCard(
-                  'On Fire', '10 Win Streak', Icons.local_fire_department, Palette.error, true),
+                  l10n.onFire, l10n.winStreak10, Icons.local_fire_department, Palette.error, true),
               const SizedBox(width: 12),
               _buildAchievementCard(
-                  'Puzzle Master', 'Solve 1000 Puzzles', Icons.extension, Palette.accent, false),
+                  l10n.puzzleMaster, l10n.solve1000Puzzles, Icons.extension, Palette.accent, false),
             ],
           ),
         ),
@@ -752,12 +755,12 @@ class ProfileScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildShowcaseSection() {
+  Widget _buildShowcaseSection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Showcase',
+          l10n.showcase,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -769,12 +772,12 @@ class ProfileScreen extends HookConsumerWidget {
           children: [
             Expanded(
               child: _buildShowcaseItem(
-                  'Void Spirit Knight', 'Legendary Skin', Icons.extension, Palette.purpleAccent),
+                  l10n.voidSpiritKnight, l10n.legendarySkin, Icons.extension, Palette.purpleAccent),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _buildShowcaseItem(
-                  'Nebula Queen', 'Epic Skin', Icons.star, Palette.purpleAccentLight),
+                  l10n.nebulaQueen, l10n.epicSkin, Icons.star, Palette.purpleAccentLight),
             ),
           ],
         ),
@@ -839,6 +842,7 @@ class ProfileScreen extends HookConsumerWidget {
   }
 
   void _showAddFriendsOverlay(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final searchController = ref.read(friendsSearchControllerProvider.notifier);
     final requestsController = ref.read(friendRequestsControllerProvider.notifier);
 
@@ -885,7 +889,7 @@ class ProfileScreen extends HookConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Add Friends',
+                      l10n.addFriends,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -922,12 +926,14 @@ class ProfileScreen extends HookConsumerWidget {
                   builder: (context, ref, child) {
                     final searchAsync = ref.watch(friendsSearchControllerProvider);
                     final searchControllerRef = ref.read(friendsSearchControllerProvider.notifier);
+                    final l10n = AppLocalizations.of(bottomSheetContext);
                     return _buildSearchResultsList(
                       bottomSheetContext,
                       ref,
                       searchAsync,
                       requestsController,
                       searchControllerRef,
+                      l10n!,
                     );
                   },
                 ),
@@ -945,6 +951,7 @@ class ProfileScreen extends HookConsumerWidget {
     AsyncValue<List<SearchUserResponse>> searchAsync,
     FriendRequestsController requestsController,
     FriendsSearchController searchController,
+    AppLocalizations l10n,
   ) {
     return searchAsync.when(
       data: (results) {
@@ -956,7 +963,7 @@ class ProfileScreen extends HookConsumerWidget {
                 Icon(Icons.search, size: 64, color: Palette.textTertiary),
                 const SizedBox(height: 16),
                 Text(
-                  'Search for friends',
+                  l10n.searchForFriends,
                   style: TextStyle(
                     color: Palette.textSecondary,
                     fontSize: 16,
@@ -967,7 +974,7 @@ class ProfileScreen extends HookConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: Text(
-                    'Enter at least 3 characters to search for users',
+                    l10n.enterAtLeast3Characters,
                     style: TextStyle(
                       color: Palette.textTertiary,
                       fontSize: 12,
@@ -1061,10 +1068,10 @@ class ProfileScreen extends HookConsumerWidget {
                           const SizedBox(height: 4),
                           Text(
                             user.isFriend
-                                ? 'Already friends'
+                                ? l10n.alreadyFriends
                                 : (user.friendshipStatus == 'pending'
-                                    ? 'Request pending'
-                                    : 'Not friends'),
+                                    ? l10n.requestPending
+                                    : l10n.notFriends),
                             style: TextStyle(
                               fontSize: 12,
                               color: Palette.textSecondary,
@@ -1079,9 +1086,10 @@ class ProfileScreen extends HookConsumerWidget {
                           try {
                             await requestsController.sendFriendRequest(user.id);
                             if (context.mounted) {
+                              final l10n = AppLocalizations.of(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Friend request sent'),
+                                  content: Text(l10n != null ? l10n.friendRequestSent : 'Friend request sent'),
                                   backgroundColor: Palette.success,
                                   behavior: SnackBarBehavior.floating,
                                 ),
@@ -1089,9 +1097,10 @@ class ProfileScreen extends HookConsumerWidget {
                             }
                           } catch (e) {
                             if (context.mounted) {
+                              final l10n = AppLocalizations.of(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Failed to send request: $e'),
+                                  content: Text(l10n != null ? l10n.failedToSendRequest(e.toString()) : 'Failed to send request: $e'),
                                   backgroundColor: Palette.error,
                                   behavior: SnackBarBehavior.floating,
                                 ),
@@ -1129,13 +1138,13 @@ class ProfileScreen extends HookConsumerWidget {
             Icon(Icons.error_outline, size: 64, color: Palette.error),
             const SizedBox(height: 16),
             Text(
-              'Error searching users',
+              l10n.errorSearchingUsers,
               style: TextStyle(color: Palette.error, fontSize: 14),
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => searchController.clearSearch(),
-              child: Text('Try again'),
+              child: Text(l10n.tryAgain),
             ),
           ],
         ),
@@ -1143,14 +1152,15 @@ class ProfileScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildProfileNameSection(BuildContext context, WidgetRef ref) {
-    return _ProfileNameSection(key: const ValueKey('profile_name_section'));
+  Widget _buildProfileNameSection(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+    return _ProfileNameSection(key: const ValueKey('profile_name_section'), l10n: l10n);
   }
 }
 
 // Separate HookWidget for profile name section to maintain hook consistency
 class _ProfileNameSection extends HookConsumerWidget {
-  const _ProfileNameSection({Key? key}) : super(key: key);
+  final AppLocalizations l10n;
+  const _ProfileNameSection({Key? key, required this.l10n}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1192,7 +1202,7 @@ class _ProfileNameSection extends HookConsumerWidget {
                 ),
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: 'Enter name',
+                  hintText: l10n.enterName,
                   hintStyle: TextStyle(color: Palette.textSecondary),
                 ),
                 maxLength: 50,
@@ -1216,7 +1226,7 @@ class _ProfileNameSection extends HookConsumerWidget {
                   if (newName.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Name cannot be empty'),
+                        content: Text(l10n.nameCannotBeEmpty),
                         backgroundColor: Palette.error,
                       ),
                     );
@@ -1237,7 +1247,7 @@ class _ProfileNameSection extends HookConsumerWidget {
                     AppLogger.info('Profile name updated: $newName', tag: 'ProfileScreen');
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Profile name updated'),
+                        content: Text(l10n.profileNameUpdated),
                         backgroundColor: Palette.success,
                       ),
                     );
@@ -1245,7 +1255,7 @@ class _ProfileNameSection extends HookConsumerWidget {
                     AppLogger.error('Failed to update profile name', tag: 'ProfileScreen', error: e);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Failed to update profile name'),
+                        content: Text(l10n.failedToUpdateProfileName),
                         backgroundColor: Palette.error,
                       ),
                     );

@@ -7,6 +7,7 @@ import 'package:chess_rps/data/service/socket/game_room_handler.dart';
 import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/mediator/player_side_mediator.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -151,8 +152,9 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
       });
     } catch (e) {
       AppLogger.error('Failed to connect to room: $e', tag: 'WaitingRoom', error: e);
+      final l10n = AppLocalizations.of(context);
       setState(() {
-        _errorMessage = 'Failed to connect: $e';
+        _errorMessage = l10n != null ? l10n.failedToConnect(e.toString()) : 'Failed to connect: $e';
         _isWaiting = false;
         _isConnecting = false;
       });
@@ -228,6 +230,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -266,7 +269,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                           ),
                           const SizedBox(height: 32),
                           Text(
-                            'Connecting to room...',
+                            l10n.connectingToRoom,
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
@@ -275,7 +278,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Please wait',
+                            l10n.pleaseWait,
                             style: TextStyle(
                               fontSize: 14,
                               color: Palette.textSecondary,
@@ -320,7 +323,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                           ),
                           const SizedBox(height: 32),
                           Text(
-                            'Waiting for opponent...',
+                            l10n.waitingForOpponentMessage,
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -329,7 +332,7 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'We are searching for an opponent for you...',
+                            l10n.searchingForOpponent,
                             style: TextStyle(
                               fontSize: 16,
                               color: Palette.textSecondary,
@@ -354,8 +357,8 @@ class _WaitingRoomScreenState extends State<WaitingRoomScreen> {
                                   ),
                                 ),
                               ),
-                              child: const Text(
-                                'Cancel',
+                              child: Text(
+                                l10n.cancel,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,

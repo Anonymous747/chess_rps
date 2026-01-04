@@ -1,0 +1,1421 @@
+{
+  "@@locale": "en",
+  "appName": "Chess Arena",
+  "@appName": {
+    "description": "The application name"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings screen title"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Language setting"
+  },
+  "english": "English",
+  "@english": {
+    "description": "English language name"
+  },
+  "russian": "Russian",
+  "@russian": {
+    "description": "Russian language name"
+  },
+  "account": "ACCOUNT",
+  "@account": {
+    "description": "Account section header"
+  },
+  "gameplay": "GAMEPLAY",
+  "@gameplay": {
+    "description": "Gameplay section header"
+  },
+  "audioAndSync": "AUDIO & SYNC",
+  "@audioAndSync": {
+    "description": "Audio section header"
+  },
+  "privacy": "PRIVACY",
+  "@privacy": {
+    "description": "Privacy section header"
+  },
+  "boardTheme": "Board Theme",
+  "@boardTheme": {
+    "description": "Board theme setting"
+  },
+  "pieceSet": "Piece Set",
+  "@pieceSet": {
+    "description": "Piece set setting"
+  },
+  "autoQueen": "Auto-Queen",
+  "@autoQueen": {
+    "description": "Auto-queen toggle setting"
+  },
+  "autoQueenDescription": "Automatically promote to Queen",
+  "@autoQueenDescription": {
+    "description": "Auto-queen setting description"
+  },
+  "confirmMoves": "Confirm Moves",
+  "@confirmMoves": {
+    "description": "Confirm moves toggle setting"
+  },
+  "masterVolume": "Master Volume",
+  "@masterVolume": {
+    "description": "Master volume setting"
+  },
+  "pushNotifications": "Push Notifications",
+  "@pushNotifications": {
+    "description": "Push notifications toggle setting"
+  },
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy setting"
+  },
+  "onlineStatus": "Online Status",
+  "@onlineStatus": {
+    "description": "Online status toggle setting"
+  },
+  "onlineStatusDescription": "Visible to friends only",
+  "@onlineStatusDescription": {
+    "description": "Online status setting description"
+  },
+  "logout": "Log Out",
+  "@logout": {
+    "description": "Log out button"
+  },
+  "editProfile": "Edit Profile",
+  "@editProfile": {
+    "description": "Edit profile button"
+  },
+  "membership": "Membership",
+  "@membership": {
+    "description": "Membership button"
+  },
+  "general": "GENERAL",
+  "@general": {
+    "description": "General section header"
+  },
+  "grandmaster": "Grandmaster",
+  "@grandmaster": {
+    "description": "Grandmaster rank title"
+  },
+  "ratingPosition": "Rating Position: #{position}",
+  "@ratingPosition": {
+    "description": "Rating position text with placeholder",
+    "placeholders": {
+      "position": {
+        "type": "int",
+        "example": "42"
+      }
+    }
+  },
+  "errorLoadingSettings": "Error loading settings",
+  "@errorLoadingSettings": {
+    "description": "Error message when settings fail to load"
+  },
+  "errorLoadingLanguageSettings": "Error loading language settings",
+  "@errorLoadingLanguageSettings": {
+    "description": "Error message when language settings fail to load"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+  "appVersion": "Chess Arena v2.4.1 (Build 890)",
+  "@appVersion": {
+    "description": "App version text"
+  },
+  "home": "Home",
+  "@home": {
+    "description": "Home navigation label"
+  },
+  "events": "Events",
+  "@events": {
+    "description": "Events navigation label"
+  },
+  "chat": "Chat",
+  "@chat": {
+    "description": "Chat navigation label"
+  },
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile navigation label"
+  },
+  "rating": "Rating",
+  "@rating": {
+    "description": "Rating card title"
+  },
+  "collection": "Collection",
+  "@collection": {
+    "description": "Collection card title"
+  },
+  "friends": "Friends",
+  "@friends": {
+    "description": "Friends card title"
+  },
+  "skinsAndBoards": "Skins & Boards",
+  "@skinsAndBoards": {
+    "description": "Collection card subtitle"
+  },
+  "online": "Online",
+  "@online": {
+    "description": "Online status label"
+  },
+  "preferences": "Preferences",
+  "@preferences": {
+    "description": "Settings card subtitle"
+  },
+  "variationGames": "Variation Games",
+  "@variationGames": {
+    "description": "Variation games card title"
+  },
+  "variationGamesDescription": "RPS, Blitz, Bullet & Chaos Modes",
+  "@variationGamesDescription": {
+    "description": "Variation games card description"
+  },
+  "tournamentGames": "Tournament Games",
+  "@tournamentGames": {
+    "description": "Tournament games card title"
+  },
+  "tournamentGamesDescription": "Compete in daily events and win exclusive skins.",
+  "@tournamentGamesDescription": {
+    "description": "Tournament games card description"
+  },
+  "featured": "FEATURED",
+  "@featured": {
+    "description": "Featured badge text"
+  },
+  "live": "• LIVE",
+  "@live": {
+    "description": "Live badge text"
+  },
+  "level": "Level {level}",
+  "@level": {
+    "description": "Level text with placeholder",
+    "placeholders": {
+      "level": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "novice": "Novice",
+  "@novice": {
+    "description": "Novice rank title"
+  },
+  "mmr": "{rating} MMR",
+  "@mmr": {
+    "description": "MMR rating text with placeholder",
+    "placeholders": {
+      "rating": {
+        "type": "int",
+        "example": "1200"
+      }
+    }
+  },
+  "chessRps": "Chess RPS",
+  "@chessRps": {
+    "description": "App title on game selection"
+  },
+  "selectGameMode": "Select Game Mode",
+  "@selectGameMode": {
+    "description": "Game mode selection title"
+  },
+  "classicalMode": "Classical Mode",
+  "@classicalMode": {
+    "description": "Classical chess mode option"
+  },
+  "rpsMode": "RPS Mode",
+  "@rpsMode": {
+    "description": "Rock Paper Scissors mode option"
+  },
+  "selectOpponent": "Select Opponent",
+  "@selectOpponent": {
+    "description": "Opponent selection title"
+  },
+  "chooseOpponentDescription": "Choose who you want to play with",
+  "@chooseOpponentDescription": {
+    "description": "Opponent selection description"
+  },
+  "playWithAI": "Play with AI",
+  "@playWithAI": {
+    "description": "Play against AI option"
+  },
+  "comingSoon": "Coming Soon",
+  "@comingSoon": {
+    "description": "Coming soon text for unavailable features"
+  },
+  "playOnline": "Play Online",
+  "@playOnline": {
+    "description": "Play online option"
+  },
+  "failedToFindMatch": "Failed to find match: {error}",
+  "@failedToFindMatch": {
+    "description": "Error message when matchmaking fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Connection error"
+      }
+    }
+  },
+  "youWonRps": "You won RPS! Make your move",
+  "@youWonRps": {
+    "description": "Message when player wins RPS"
+  },
+  "opponentWonRps": "Opponent won RPS. Waiting...",
+  "@opponentWonRps": {
+    "description": "Message when opponent wins RPS"
+  },
+  "draw": "Draw!",
+  "@draw": {
+    "description": "Draw game result"
+  },
+  "victory": "Victory!",
+  "@victory": {
+    "description": "Victory game result"
+  },
+  "defeat": "Defeat",
+  "@defeat": {
+    "description": "Defeat game result"
+  },
+  "stalemateMessage": "The game ended in a stalemate.\nNeither player wins.",
+  "@stalemateMessage": {
+    "description": "Stalemate result message"
+  },
+  "drawMessage": "The game ended in a draw.",
+  "@drawMessage": {
+    "description": "Draw result message"
+  },
+  "checkmateWin": "Congratulations! You won by checkmate!",
+  "@checkmateWin": {
+    "description": "Checkmate victory message"
+  },
+  "winMessage": "Congratulations! You won!",
+  "@winMessage": {
+    "description": "General victory message"
+  },
+  "checkmateLoss": "You were checkmated.\nBetter luck next time!",
+  "@checkmateLoss": {
+    "description": "Checkmate loss message"
+  },
+  "lossMessage": "You lost the game.\nBetter luck next time!",
+  "@lossMessage": {
+    "description": "General loss message"
+  },
+  "experience": "Experience",
+  "@experience": {
+    "description": "Experience label"
+  },
+  "xpGained": "+{xp} XP",
+  "@xpGained": {
+    "description": "XP gained text with placeholder",
+    "placeholders": {
+      "xp": {
+        "type": "int",
+        "example": "100"
+      }
+    }
+  },
+  "returnToMenu": "Return to Menu",
+  "@returnToMenu": {
+    "description": "Return to menu button"
+  },
+  "finishGame": "Finish Game?",
+  "@finishGame": {
+    "description": "Finish game dialog title"
+  },
+  "warning": "Warning",
+  "@warning": {
+    "description": "Warning label"
+  },
+  "finishGameWarning": "Are you sure you want to finish this game?\nYour progress will be lost.",
+  "@finishGameWarning": {
+    "description": "Finish game warning message"
+  },
+  "finish": "Finish",
+  "@finish": {
+    "description": "Finish button"
+  },
+  "chooseYourSide": "Choose Your Side",
+  "@chooseYourSide": {
+    "description": "Side selection dialog title"
+  },
+  "whiteMovesFirst": "White always moves first",
+  "@whiteMovesFirst": {
+    "description": "Side selection description"
+  },
+  "white": "White",
+  "@white": {
+    "description": "White side option"
+  },
+  "black": "Black",
+  "@black": {
+    "description": "Black side option"
+  },
+  "randomize": "Randomize",
+  "@randomize": {
+    "description": "Randomize side option"
+  },
+  "movesFirst": "Moves First",
+  "@movesFirst": {
+    "description": "Player moves first indicator"
+  },
+  "aiMovesFirst": "AI Moves First",
+  "@aiMovesFirst": {
+    "description": "AI moves first indicator"
+  },
+  "selectDifficulty": "Select Difficulty",
+  "@selectDifficulty": {
+    "description": "AI difficulty selection title"
+  },
+  "chooseAIDifficulty": "Choose the AI difficulty level",
+  "@chooseAIDifficulty": {
+    "description": "AI difficulty selection description"
+  },
+  "beginner": "Beginner",
+  "@beginner": {
+    "description": "Beginner difficulty level"
+  },
+  "beginnerDescription": "Perfect for learning the basics",
+  "@beginnerDescription": {
+    "description": "Beginner difficulty description"
+  },
+  "easy": "Easy",
+  "@easy": {
+    "description": "Easy difficulty level"
+  },
+  "easyDescription": "A gentle challenge",
+  "@easyDescription": {
+    "description": "Easy difficulty description"
+  },
+  "medium": "Medium",
+  "@medium": {
+    "description": "Medium difficulty level"
+  },
+  "mediumDescription": "A balanced opponent",
+  "@mediumDescription": {
+    "description": "Medium difficulty description"
+  },
+  "hard": "Hard",
+  "@hard": {
+    "description": "Hard difficulty level"
+  },
+  "hardDescription": "A tough challenge",
+  "@hardDescription": {
+    "description": "Hard difficulty description"
+  },
+  "expert": "Expert",
+  "@expert": {
+    "description": "Expert difficulty level"
+  },
+  "expertDescription": "Maximum difficulty",
+  "@expertDescription": {
+    "description": "Expert difficulty description"
+  },
+  "welcomeBack": "Welcome Back",
+  "@welcomeBack": {
+    "description": "Login screen welcome message"
+  },
+  "signInToContinue": "Sign in to continue",
+  "@signInToContinue": {
+    "description": "Login screen subtitle"
+  },
+  "phoneNumber": "Phone Number",
+  "@phoneNumber": {
+    "description": "Phone number field label"
+  },
+  "enterPhoneNumber": "Enter your phone number",
+  "@enterPhoneNumber": {
+    "description": "Phone number field hint"
+  },
+  "pleaseEnterPhoneNumber": "Please enter your phone number",
+  "@pleaseEnterPhoneNumber": {
+    "description": "Phone number validation error"
+  },
+  "phoneNumberMinDigits": "Phone number must contain at least 10 digits",
+  "@phoneNumberMinDigits": {
+    "description": "Phone number minimum digits error"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+  "enterPassword": "Enter your password",
+  "@enterPassword": {
+    "description": "Password field hint"
+  },
+  "passwordMinLength": "At least 8 characters",
+  "@passwordMinLength": {
+    "description": "Password minimum length hint"
+  },
+  "pleaseEnterPassword": "Please enter your password",
+  "@pleaseEnterPassword": {
+    "description": "Password validation error"
+  },
+  "passwordMinCharacters": "Password must be at least 8 characters",
+  "@passwordMinCharacters": {
+    "description": "Password minimum characters error"
+  },
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": {
+    "description": "Confirm password field label"
+  },
+  "reenterPassword": "Re-enter your password",
+  "@reenterPassword": {
+    "description": "Confirm password field hint"
+  },
+  "pleaseConfirmPassword": "Please confirm your password",
+  "@pleaseConfirmPassword": {
+    "description": "Confirm password validation error"
+  },
+  "passwordsDoNotMatch": "Passwords do not match",
+  "@passwordsDoNotMatch": {
+    "description": "Password mismatch error"
+  },
+  "signIn": "Sign In",
+  "@signIn": {
+    "description": "Sign in button"
+  },
+  "signUp": "Sign Up",
+  "@signUp": {
+    "description": "Sign up button"
+  },
+  "dontHaveAccount": "Don't have an account? ",
+  "@dontHaveAccount": {
+    "description": "Sign up prompt text"
+  },
+  "createAccount": "Create Account",
+  "@createAccount": {
+    "description": "Create account title"
+  },
+  "signUpToGetStarted": "Sign up to get started",
+  "@signUpToGetStarted": {
+    "description": "Sign up screen subtitle"
+  },
+  "waitingForOpponent": "Waiting for Opponent",
+  "@waitingForOpponent": {
+    "description": "Waiting room title"
+  },
+  "connecting": "Connecting...",
+  "@connecting": {
+    "description": "Connecting status"
+  },
+  "roomCode": "Room Code",
+  "@roomCode": {
+    "description": "Room code label"
+  },
+  "connectingToRoom": "Connecting to room...",
+  "@connectingToRoom": {
+    "description": "Connecting to room message"
+  },
+  "pleaseWait": "Please wait",
+  "@pleaseWait": {
+    "description": "Please wait message"
+  },
+  "waitingForOpponentMessage": "Waiting for opponent...",
+  "@waitingForOpponentMessage": {
+    "description": "Waiting for opponent message"
+  },
+  "searchingForOpponent": "We are searching for an opponent for you...",
+  "@searchingForOpponent": {
+    "description": "Searching for opponent message"
+  },
+  "failedToConnect": "Failed to connect: {error}",
+  "@failedToConnect": {
+    "description": "Failed to connect error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Connection error"
+      }
+    }
+  },
+  "season4ShadowGambit": "Season 4: Shadow Gambit",
+  "@season4ShadowGambit": {
+    "description": "Events screen season title"
+  },
+  "liveNow": "LIVE NOW",
+  "@liveNow": {
+    "description": "Live event badge"
+  },
+  "grandPrix2024": "Grand Prix 2024",
+  "@grandPrix2024": {
+    "description": "Grand Prix event title"
+  },
+  "grandPrixDescription": "The ultimate rapid chess showdown. Watch grandmasters battle for the throne.",
+  "@grandPrixDescription": {
+    "description": "Grand Prix event description"
+  },
+  "watchStream": "Watch Stream",
+  "@watchStream": {
+    "description": "Watch stream button"
+  },
+  "details": "Details",
+  "@details": {
+    "description": "Details button"
+  },
+  "allEvents": "All Events",
+  "@allEvents": {
+    "description": "All events filter tab"
+  },
+  "challenges": "Challenges",
+  "@challenges": {
+    "description": "Challenges filter tab"
+  },
+  "community": "Community",
+  "@community": {
+    "description": "Community filter tab"
+  },
+  "weeklyBlitz": "Weekly Blitz",
+  "@weeklyBlitz": {
+    "description": "Weekly Blitz event name"
+  },
+  "startsIn": "Starts in {time}",
+  "@startsIn": {
+    "description": "Event start time",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "2h 15m"
+      }
+    }
+  },
+  "blitzArena": "{time} Blitz Arena",
+  "@blitzArena": {
+    "description": "Blitz arena format",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "3+2"
+      }
+    }
+  },
+  "prize": "{amount} Prize",
+  "@prize": {
+    "description": "Event prize amount",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "$500"
+      }
+    }
+  },
+  "participants": "{current}/{max}",
+  "@participants": {
+    "description": "Event participants count",
+    "placeholders": {
+      "current": {
+        "type": "String",
+        "example": "128"
+      },
+      "max": {
+        "type": "String",
+        "example": "256"
+      }
+    }
+  },
+  "registrationOpen": "Registration Open",
+  "@registrationOpen": {
+    "description": "Registration open status"
+  },
+  "dailyChallenge": "DAILY CHALLENGE",
+  "@dailyChallenge": {
+    "description": "Daily challenge badge"
+  },
+  "mateIn3Puzzle": "Mate in 3 Puzzle",
+  "@mateIn3Puzzle": {
+    "description": "Mate in 3 puzzle title"
+  },
+  "solvePuzzleDescription": "Solve today's hardest puzzle to earn points.",
+  "@solvePuzzleDescription": {
+    "description": "Solve puzzle description"
+  },
+  "clubWars": "Club Wars",
+  "@clubWars": {
+    "description": "Club Wars event name"
+  },
+  "teamVsTeam": "Team vs Team • Starts in {days} days",
+  "@teamVsTeam": {
+    "description": "Team vs Team event description",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "join": "Join",
+  "@join": {
+    "description": "Join button"
+  },
+  "topStandings": "Top Standings",
+  "@topStandings": {
+    "description": "Top standings section title"
+  },
+  "viewAll": "View All",
+  "@viewAll": {
+    "description": "View all button"
+  },
+  "noStandingsAvailable": "No standings available",
+  "@noStandingsAvailable": {
+    "description": "No standings available message"
+  },
+  "failedToLoadStandings": "Failed to load standings",
+  "@failedToLoadStandings": {
+    "description": "Failed to load standings error"
+  },
+  "player": "Player",
+  "@player": {
+    "description": "Player column header"
+  },
+  "competeAndClimb": "Compete and climb the rankings",
+  "@competeAndClimb": {
+    "description": "Tournaments screen subtitle"
+  },
+  "allModes": "All Modes",
+  "@allModes": {
+    "description": "All modes filter option"
+  },
+  "classical": "Classical",
+  "@classical": {
+    "description": "Classical game mode"
+  },
+  "allStatus": "All Status",
+  "@allStatus": {
+    "description": "All status filter option"
+  },
+  "inProgress": "In Progress",
+  "@inProgress": {
+    "description": "In progress status"
+  },
+  "finished": "Finished",
+  "@finished": {
+    "description": "Finished status"
+  },
+  "noTournamentsFound": "No tournaments found",
+  "@noTournamentsFound": {
+    "description": "No tournaments found message"
+  },
+  "createNewTournament": "Create a new tournament to get started",
+  "@createNewTournament": {
+    "description": "Create new tournament prompt"
+  },
+  "failedToLoadTournaments": "Failed to load tournaments: {error}",
+  "@failedToLoadTournaments": {
+    "description": "Failed to load tournaments error",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
+  },
+  "singleElim": "Single Elim",
+  "@singleElim": {
+    "description": "Single elimination format"
+  },
+  "doubleElim": "Double Elim",
+  "@doubleElim": {
+    "description": "Double elimination format"
+  },
+  "swiss": "Swiss",
+  "@swiss": {
+    "description": "Swiss format"
+  },
+  "roundRobin": "Round Robin",
+  "@roundRobin": {
+    "description": "Round robin format"
+  },
+  "registrationEnded": "Registration ended",
+  "@registrationEnded": {
+    "description": "Registration ended message"
+  },
+  "startsInDays": "Starts in {days} day{plural}",
+  "@startsInDays": {
+    "description": "Starts in days",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "3"
+      },
+      "plural": {
+        "type": "String",
+        "example": "s"
+      }
+    }
+  },
+  "startsInHours": "Starts in {hours} hour{plural}",
+  "@startsInHours": {
+    "description": "Starts in hours",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "example": "2"
+      },
+      "plural": {
+        "type": "String",
+        "example": "s"
+      }
+    }
+  },
+  "startsInMinutes": "Starts in {minutes} minute{plural}",
+  "@startsInMinutes": {
+    "description": "Starts in minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "15"
+      },
+      "plural": {
+        "type": "String",
+        "example": "s"
+      }
+    }
+  },
+  "endsInDays": "Ends in {days} day{plural}",
+  "@endsInDays": {
+    "description": "Ends in days",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "3"
+      },
+      "plural": {
+        "type": "String",
+        "example": "s"
+      }
+    }
+  },
+  "endsInHours": "Ends in {hours} hour{plural}",
+  "@endsInHours": {
+    "description": "Ends in hours",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "example": "2"
+      },
+      "plural": {
+        "type": "String",
+        "example": "s"
+      }
+    }
+  },
+  "endsInMinutes": "Ends in {minutes} minute{plural}",
+  "@endsInMinutes": {
+    "description": "Ends in minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "15"
+      },
+      "plural": {
+        "type": "String",
+        "example": "s"
+      }
+    }
+  },
+  "soon": "soon",
+  "@soon": {
+    "description": "Soon time indicator"
+  },
+  "cancelled": "Cancelled",
+  "@cancelled": {
+    "description": "Cancelled status"
+  },
+  "playerProfile": "PLAYER PROFILE",
+  "@playerProfile": {
+    "description": "Player profile header"
+  },
+  "errorLoadingProfile": "Error loading profile",
+  "@errorLoadingProfile": {
+    "description": "Error loading profile message"
+  },
+  "winRate": "Win Rate",
+  "@winRate": {
+    "description": "Win rate stat label"
+  },
+  "streak": "Streak",
+  "@streak": {
+    "description": "Streak stat label"
+  },
+  "best": "Best: {value}",
+  "@best": {
+    "description": "Best value label",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "10"
+      }
+    }
+  },
+  "games": "{count} Games",
+  "@games": {
+    "description": "Games count",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "50"
+      }
+    }
+  },
+  "performance": "Performance",
+  "@performance": {
+    "description": "Performance section title"
+  },
+  "weekly": "Weekly",
+  "@weekly": {
+    "description": "Weekly time filter"
+  },
+  "monthly": "Monthly",
+  "@monthly": {
+    "description": "Monthly time filter"
+  },
+  "noPerformanceData": "No performance data for {period} period",
+  "@noPerformanceData": {
+    "description": "No performance data message",
+    "placeholders": {
+      "period": {
+        "type": "String",
+        "example": "weekly"
+      }
+    }
+  },
+  "noPerformanceDataYet": "No performance data yet",
+  "@noPerformanceDataYet": {
+    "description": "No performance data yet message"
+  },
+  "errorLoadingPerformance": "Error loading performance data",
+  "@errorLoadingPerformance": {
+    "description": "Error loading performance data"
+  },
+  "achievements": "Achievements",
+  "@achievements": {
+    "description": "Achievements section title"
+  },
+  "grandmasterAchievement": "Grandmaster",
+  "@grandmasterAchievement": {
+    "description": "Grandmaster achievement title"
+  },
+  "reach2500MMR": "Reach 2500 MMR",
+  "@reach2500MMR": {
+    "description": "Reach 2500 MMR achievement description"
+  },
+  "onFire": "On Fire",
+  "@onFire": {
+    "description": "On Fire achievement title"
+  },
+  "winStreak10": "10 Win Streak",
+  "@winStreak10": {
+    "description": "10 win streak achievement description"
+  },
+  "puzzleMaster": "Puzzle Master",
+  "@puzzleMaster": {
+    "description": "Puzzle Master achievement title"
+  },
+  "solve1000Puzzles": "Solve 1000 Puzzles",
+  "@solve1000Puzzles": {
+    "description": "Solve 1000 puzzles achievement description"
+  },
+  "showcase": "Showcase",
+  "@showcase": {
+    "description": "Showcase section title"
+  },
+  "voidSpiritKnight": "Void Spirit Knight",
+  "@voidSpiritKnight": {
+    "description": "Void Spirit Knight showcase item"
+  },
+  "legendarySkin": "Legendary Skin",
+  "@legendarySkin": {
+    "description": "Legendary skin label"
+  },
+  "nebulaQueen": "Nebula Queen",
+  "@nebulaQueen": {
+    "description": "Nebula Queen showcase item"
+  },
+  "epicSkin": "Epic Skin",
+  "@epicSkin": {
+    "description": "Epic skin label"
+  },
+  "enterName": "Enter name",
+  "@enterName": {
+    "description": "Enter name hint"
+  },
+  "nameCannotBeEmpty": "Name cannot be empty",
+  "@nameCannotBeEmpty": {
+    "description": "Name cannot be empty error"
+  },
+  "profileNameUpdated": "Profile name updated",
+  "@profileNameUpdated": {
+    "description": "Profile name updated message"
+  },
+  "failedToUpdateProfileName": "Failed to update profile name",
+  "@failedToUpdateProfileName": {
+    "description": "Failed to update profile name error"
+  },
+  "addFriends": "Add Friends",
+  "@addFriends": {
+    "description": "Add friends dialog title"
+  },
+  "searchForFriends": "Search for friends",
+  "@searchForFriends": {
+    "description": "Search for friends message"
+  },
+  "enterAtLeast3Characters": "Enter at least 3 characters to search for users",
+  "@enterAtLeast3Characters": {
+    "description": "Enter at least 3 characters hint"
+  },
+  "errorSearchingUsers": "Error searching users",
+  "@errorSearchingUsers": {
+    "description": "Error searching users"
+  },
+  "tryAgain": "Try again",
+  "@tryAgain": {
+    "description": "Try again button"
+  },
+  "alreadyFriends": "Already friends",
+  "@alreadyFriends": {
+    "description": "Already friends status"
+  },
+  "requestPending": "Request pending",
+  "@requestPending": {
+    "description": "Request pending status"
+  },
+  "notFriends": "Not friends",
+  "@notFriends": {
+    "description": "Not friends status"
+  },
+  "friendRequestSent": "Friend request sent",
+  "@friendRequestSent": {
+    "description": "Friend request sent message"
+  },
+  "failedToSendRequest": "Failed to send request: {error}",
+  "@failedToSendRequest": {
+    "description": "Failed to send request error",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
+  },
+  "searchByPhoneOrId": "Search by phone number or user ID (min 3 characters)...",
+  "@searchByPhoneOrId": {
+    "description": "Search by phone or ID hint"
+  },
+  "searchUsers": "Search Users",
+  "@searchUsers": {
+    "description": "Search users tab"
+  },
+  "myFriends": "My Friends",
+  "@myFriends": {
+    "description": "My friends tab"
+  },
+  "requests": "REQUESTS",
+  "@requests": {
+    "description": "Requests section header"
+  },
+  "pending": "{count} Pending",
+  "@pending": {
+    "description": "Pending requests count",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "sentYouARequest": "Sent you a request • {timeAgo}",
+  "@sentYouARequest": {
+    "description": "Sent you a request message",
+    "placeholders": {
+      "timeAgo": {
+        "type": "String",
+        "example": "2h ago"
+      }
+    }
+  },
+  "friendRequestAccepted": "Friend request accepted",
+  "@friendRequestAccepted": {
+    "description": "Friend request accepted message"
+  },
+  "failedToAcceptRequest": "Failed to accept request: {error}",
+  "@failedToAcceptRequest": {
+    "description": "Failed to accept request error",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
+  },
+  "friendRequestDeclined": "Friend request declined",
+  "@friendRequestDeclined": {
+    "description": "Friend request declined message"
+  },
+  "failedToDeclineRequest": "Failed to decline request: {error}",
+  "@failedToDeclineRequest": {
+    "description": "Failed to decline request error",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
+  },
+  "noFriendsYet": "No friends yet",
+  "@noFriendsYet": {
+    "description": "No friends yet message"
+  },
+  "addFriendsToChallenge": "Add friends to challenge them to games",
+  "@addFriendsToChallenge": {
+    "description": "Add friends to challenge message"
+  },
+  "errorLoadingFriends": "Error loading friends",
+  "@errorLoadingFriends": {
+    "description": "Error loading friends"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button"
+  },
+  "offline": "Offline",
+  "@offline": {
+    "description": "Offline status"
+  },
+  "inGame": "In Game",
+  "@inGame": {
+    "description": "In game status"
+  },
+  "onlineFriends": "ONLINE",
+  "@onlineFriends": {
+    "description": "Online friends section header"
+  },
+  "offlineFriends": "OFFLINE",
+  "@offlineFriends": {
+    "description": "Offline friends section header"
+  },
+  "noUsersFound": "No users found",
+  "@noUsersFound": {
+    "description": "No users found message"
+  },
+  "tryDifferentQuery": "Try searching with a different query. Make sure to enter at least 3 characters.",
+  "@tryDifferentQuery": {
+    "description": "Try different query message"
+  },
+  "discoverUsers": "DISCOVER USERS",
+  "@discoverUsers": {
+    "description": "Discover users section header"
+  },
+  "users": "{count} users",
+  "@users": {
+    "description": "Users count",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "42"
+      }
+    }
+  },
+  "noUsersAvailable": "No users available",
+  "@noUsersAvailable": {
+    "description": "No users available message"
+  },
+  "trySearchingForUsers": "Try searching for specific users",
+  "@trySearchingForUsers": {
+    "description": "Try searching for users message"
+  },
+  "errorLoadingUsers": "Error loading users",
+  "@errorLoadingUsers": {
+    "description": "Error loading users"
+  },
+  "enterPhoneNumberOrUserId": "Enter phone number or user ID",
+  "@enterPhoneNumberOrUserId": {
+    "description": "Enter phone or user ID hint"
+  },
+  "ratingOverview": "Rating Overview",
+  "@ratingOverview": {
+    "description": "Rating overview title"
+  },
+  "errorLoadingRating": "Error loading rating",
+  "@errorLoadingRating": {
+    "description": "Error loading rating error"
+  },
+  "goBack": "Go Back",
+  "@goBack": {
+    "description": "Go back button"
+  },
+  "currentLevel": "Current Level",
+  "@currentLevel": {
+    "description": "Current level label"
+  },
+  "history": "History",
+  "@history": {
+    "description": "History section title"
+  },
+  "modeBreakdown": "Mode Breakdown",
+  "@modeBreakdown": {
+    "description": "Mode breakdown section title"
+  },
+  "standardChess": "Standard Chess",
+  "@standardChess": {
+    "description": "Standard chess description"
+  },
+  "rockPaperScissors": "Rock Paper Scissors",
+  "@rockPaperScissors": {
+    "description": "Rock Paper Scissors description"
+  },
+  "pieces": "Pieces",
+  "@pieces": {
+    "description": "Pieces tab label"
+  },
+  "boards": "Boards",
+  "@boards": {
+    "description": "Boards tab label"
+  },
+  "avatars": "Avatars",
+  "@avatars": {
+    "description": "Avatars tab label"
+  },
+  "effects": "Effects",
+  "@effects": {
+    "description": "Effects tab label"
+  },
+  "availablePieceSets": "Available Piece Sets ({count})",
+  "@availablePieceSets": {
+    "description": "Available piece sets title",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "selected": "Selected: {name}",
+  "@selected": {
+    "description": "Selected item label",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Classic"
+      }
+    }
+  },
+  "select": "Select",
+  "@select": {
+    "description": "Select button"
+  },
+  "errorLoadingSettings": "Error loading settings",
+  "@errorLoadingSettings": {
+    "description": "Error loading settings"
+  },
+  "availableAvatars": "Available Avatars (20)",
+  "@availableAvatars": {
+    "description": "Available avatars title"
+  },
+  "availableBoardThemes": "Available Board Themes ({count})",
+  "@availableBoardThemes": {
+    "description": "Available board themes title",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "availableEffects": "Available Effects ({count})",
+  "@availableEffects": {
+    "description": "Available effects title",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "selectedClassic": "Selected: Classic",
+  "@selectedClassic": {
+    "description": "Selected classic label"
+  },
+  "myPieces": "My {category}",
+  "@myPieces": {
+    "description": "My category items title",
+    "placeholders": {
+      "category": {
+        "type": "String",
+        "example": "Pieces"
+      }
+    }
+  },
+  "sortByRarity": "Sort by: Rarity",
+  "@sortByRarity": {
+    "description": "Sort by rarity label"
+  },
+  "equipped": "Equipped",
+  "@equipped": {
+    "description": "Equipped badge"
+  },
+  "unlockAtLevel": "Unlock at Lvl {level}",
+  "@unlockAtLevel": {
+    "description": "Unlock at level label",
+    "placeholders": {
+      "level": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "equippedItem": "{name} equipped!",
+  "@equippedItem": {
+    "description": "Item equipped message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Avatar"
+      }
+    }
+  },
+  "failedToEquip": "Failed to equip: {error}",
+  "@failedToEquip": {
+    "description": "Failed to equip error",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
+  },
+  "customize": "Customize",
+  "@customize": {
+    "description": "Customize button"
+  },
+  "getMore": "Get More",
+  "@getMore": {
+    "description": "Get more button"
+  },
+  "visitTheShop": "Visit the Shop",
+  "@visitTheShop": {
+    "description": "Visit the shop label"
+  },
+  "errorLoadingCollection": "Error loading collection",
+  "@errorLoadingCollection": {
+    "description": "Error loading collection"
+  },
+  "errorLoadingItems": "Error loading items",
+  "@errorLoadingItems": {
+    "description": "Error loading items"
+  },
+  "selectedAndSaved": "{name} selected and saved",
+  "@selectedAndSaved": {
+    "description": "Selected and saved message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Theme"
+      }
+    }
+  },
+  "failedToSelect": "Failed to select {item}: {error}",
+  "@failedToSelect": {
+    "description": "Failed to select error",
+    "placeholders": {
+      "item": {
+        "type": "String",
+        "example": "theme"
+      },
+      "error": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
+  },
+  "currentlySelected": "Currently Selected",
+  "@currentlySelected": {
+    "description": "Currently selected label"
+  },
+  "selectThisEffect": "Select This Effect",
+  "@selectThisEffect": {
+    "description": "Select this effect button"
+  },
+  "selectThisTheme": "Select This Theme",
+  "@selectThisTheme": {
+    "description": "Select this theme button"
+  },
+  "light": "Light",
+  "@light": {
+    "description": "Light square label"
+  },
+  "dark": "Dark",
+  "@dark": {
+    "description": "Dark square label"
+  },
+  "levelsAndTitles": "Levels & Titles",
+  "@levelsAndTitles": {
+    "description": "Levels and titles screen title"
+  },
+  "failedToLoadLevels": "Failed to load levels",
+  "@failedToLoadLevels": {
+    "description": "Failed to load levels error"
+  },
+  "allLevels": "All Levels",
+  "@allLevels": {
+    "description": "All levels section title"
+  },
+  "current": "CURRENT",
+  "@current": {
+    "description": "Current level badge"
+  },
+  "xpToUnlock": "{xp} XP to unlock",
+  "@xpToUnlock": {
+    "description": "XP to unlock label",
+    "placeholders": {
+      "xp": {
+        "type": "int",
+        "example": "500"
+      }
+    }
+  },
+  "globalLobby": "Global Lobby",
+  "@globalLobby": {
+    "description": "Global lobby channel"
+  },
+  "clan": "Clan",
+  "@clan": {
+    "description": "Clan channel"
+  },
+  "mentions": "Mentions",
+  "@mentions": {
+    "description": "Mentions channel"
+  },
+  "today": "Today",
+  "@today": {
+    "description": "Today date divider"
+  },
+  "welcomeToGlobalStrategy": "Welcome to the Global Strategy Channel",
+  "@welcomeToGlobalStrategy": {
+    "description": "Welcome to global strategy channel message"
+  },
+  "you": "You",
+  "@you": {
+    "description": "You label"
+  },
+  "replyingToYou": "Replying to you",
+  "@replyingToYou": {
+    "description": "Replying to you label"
+  },
+  "typeAMessage": "Type a message...",
+  "@typeAMessage": {
+    "description": "Type a message hint"
+  },
+  "leaderboard": "Leaderboard",
+  "@leaderboard": {
+    "description": "Leaderboard screen title"
+  },
+  "noLeaderboardData": "No leaderboard data available",
+  "@noLeaderboardData": {
+    "description": "No leaderboard data message"
+  },
+  "errorLoadingLeaderboard": "Error loading leaderboard",
+  "@errorLoadingLeaderboard": {
+    "description": "Error loading leaderboard message"
+  }
+}
+
+

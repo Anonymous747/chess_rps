@@ -41,6 +41,8 @@ class Palette {
   static const gold = Color(0xFFFFD700); // Gold
   static const goldAccent = Color(0xFFFFC107); // Amber gold
   static const goldDark = Color(0xFFB8860B); // Dark goldenrod
+  static const silver = Color(0xFFC0C0C0); // Silver
+  static const bronze = Color(0xFFCD7F32); // Bronze
   
   // Online status green
   static const onlineGreen = Color(0xFF4CAF50); // Bright green for online status

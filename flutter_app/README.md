@@ -1,4 +1,4 @@
-# Chess RPS - Flutter Mobile Application
+# Chess Arena - Flutter Mobile Application
 
 A cross-platform chess game application built with Flutter, featuring Rock Paper Scissors mechanics integrated into chess gameplay.
 

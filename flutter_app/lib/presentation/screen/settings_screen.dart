@@ -2,12 +2,15 @@ import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/settings/settings_service.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
+import 'package:chess_rps/presentation/controller/locale_controller.dart';
 import 'package:chess_rps/presentation/controller/settings_controller.dart';
 import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
+import 'package:chess_rps/presentation/widget/settings/language_selection_dialog.dart';
 import 'package:chess_rps/presentation/widget/settings/piece_set_selection_dialog.dart';
 import 'package:chess_rps/presentation/widget/settings/theme_selection_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -18,6 +21,8 @@ class SettingsScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -52,7 +57,7 @@ class SettingsScreen extends HookConsumerWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Settings',
+                      l10n.settings,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -76,6 +81,8 @@ class SettingsScreen extends HookConsumerWidget {
                     children: [
                       _buildAccountSection(context, ref),
                       const SizedBox(height: 24),
+                      _buildGeneralSection(context, ref),
+                      const SizedBox(height: 24),
                       _buildGameplaySection(context, ref),
                       const SizedBox(height: 24),
                       _buildAudioSection(context, ref),
@@ -85,7 +92,7 @@ class SettingsScreen extends HookConsumerWidget {
                       _buildLogoutButton(context, ref),
                       const SizedBox(height: 24),
                       Text(
-                        'Chess RPS v2.4.1 (Build 890)',
+                        AppLocalizations.of(context)!.appVersion,
                         style: TextStyle(
                           fontSize: 12,
                           color: Palette.textTertiary,
@@ -104,6 +111,7 @@ class SettingsScreen extends HookConsumerWidget {
   }
 
   Widget _buildAccountSection(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final authUser = ref.watch(authControllerProvider).valueOrNull;
     final leaderboardAsync = ref.watch(leaderboardProvider(1000)); // Fetch large leaderboard to find user position
     
@@ -126,7 +134,7 @@ class SettingsScreen extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'ACCOUNT',
+          l10n.account,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -172,7 +180,7 @@ class SettingsScreen extends HookConsumerWidget {
                   ],
                 ),
                 title: Text(
-                  'Grandmaster',
+                  l10n.grandmaster,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -197,7 +205,7 @@ class SettingsScreen extends HookConsumerWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Rating Position: #$userPosition',
+                            l10n.ratingPosition(userPosition),
                             style: TextStyle(
                               color: Palette.purpleAccent,
                               fontSize: 12,
@@ -227,14 +235,14 @@ class SettingsScreen extends HookConsumerWidget {
                   Expanded(
                     child: TextButton(
                       onPressed: () {},
-                      child: Text('Edit Profile', style: TextStyle(color: Palette.textSecondary)),
+                      child: Text(l10n.editProfile, style: TextStyle(color: Palette.textSecondary)),
                     ),
                   ),
                   Container(width: 1, height: 40, color: Palette.glassBorder),
                   Expanded(
                     child: TextButton(
                       onPressed: () {},
-                      child: Text('Membership', style: TextStyle(color: Palette.textSecondary)),
+                      child: Text(l10n.membership, style: TextStyle(color: Palette.textSecondary)),
                     ),
                   ),
                 ],
@@ -246,7 +254,92 @@ class SettingsScreen extends HookConsumerWidget {
     );
   }
 
+  Widget _buildGeneralSection(BuildContext context, WidgetRef ref) {
+    final localeAsync = ref.watch(localeNotifierProvider);
+    final l10n = AppLocalizations.of(context)!;
+    
+    return localeAsync.when(
+      data: (locale) {
+        String localeName;
+        if (locale.languageCode == 'ru') {
+          localeName = l10n.russian;
+        } else {
+          localeName = l10n.english;
+        }
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.general,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Palette.textTertiary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: Palette.backgroundTertiary,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Palette.glassBorder),
+              ),
+              child: _buildSettingItem(
+                Icons.language,
+                l10n.language,
+                localeName,
+                Icons.chevron_right,
+                onTap: () {
+                  AppLogger.info('Language selection tapped', tag: 'SettingsScreen');
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) => LanguageSelectionDialog(
+                      currentLocale: locale,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Palette.accent),
+          ),
+        ),
+      ),
+      error: (error, stack) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'GENERAL',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Palette.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Palette.backgroundTertiary,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Palette.error),
+            ),
+            child: Text(l10n.errorLoadingLanguageSettings, style: TextStyle(color: Palette.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildGameplaySection(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final settingsAsync = ref.watch(settingsControllerProvider);
     
     return settingsAsync.when(
@@ -263,7 +356,7 @@ class SettingsScreen extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'GAMEPLAY',
+            l10n.gameplay,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -278,7 +371,7 @@ class SettingsScreen extends HookConsumerWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Palette.error),
             ),
-            child: Text('Error loading settings', style: TextStyle(color: Palette.error)),
+            child: Text(l10n.errorLoadingSettings, style: TextStyle(color: Palette.error)),
           ),
         ],
       ),
@@ -286,11 +379,12 @@ class SettingsScreen extends HookConsumerWidget {
   }
 
   Widget _buildGameplaySectionContent(BuildContext context, WidgetRef ref, UserSettings settings) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'GAMEPLAY',
+          l10n.gameplay,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -308,7 +402,7 @@ class SettingsScreen extends HookConsumerWidget {
             children: [
               _buildSettingItem(
                 Icons.palette,
-                'Board Theme',
+                l10n.boardTheme,
                 _formatThemeName(settings.boardTheme),
                 Icons.chevron_right,
                 onTap: () {
@@ -327,7 +421,7 @@ class SettingsScreen extends HookConsumerWidget {
               Divider(color: Palette.glassBorder, height: 1),
               _buildSettingItem(
                 Icons.extension,
-                'Piece Set',
+                l10n.pieceSet,
                 _formatPieceSetName(settings.pieceSet),
                 Icons.chevron_right,
                 onTap: () {
@@ -346,8 +440,8 @@ class SettingsScreen extends HookConsumerWidget {
               Divider(color: Palette.glassBorder, height: 1),
               _buildToggleItem(
                 Icons.auto_awesome,
-                'Auto-Queen',
-                'Automatically promote to Queen',
+                l10n.autoQueen,
+                l10n.autoQueenDescription,
                 settings.autoQueen,
                 onChanged: (value) {
                   ref.read(settingsControllerProvider.notifier).updateAutoQueen(value);
@@ -356,7 +450,7 @@ class SettingsScreen extends HookConsumerWidget {
               Divider(color: Palette.glassBorder, height: 1),
               _buildToggleItem(
                 Icons.check_circle,
-                'Confirm Moves',
+                l10n.confirmMoves,
                 '',
                 settings.confirmMoves,
                 onChanged: (value) {
@@ -371,6 +465,7 @@ class SettingsScreen extends HookConsumerWidget {
   }
 
   Widget _buildAudioSection(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final settingsAsync = ref.watch(settingsControllerProvider);
     
     return settingsAsync.when(
@@ -387,7 +482,7 @@ class SettingsScreen extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'AUDIO & SYNC',
+            l10n.audioAndSync,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -402,7 +497,7 @@ class SettingsScreen extends HookConsumerWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Palette.error),
             ),
-            child: Text('Error loading settings', style: TextStyle(color: Palette.error)),
+            child: Text(l10n.errorLoadingSettings, style: TextStyle(color: Palette.error)),
           ),
         ],
       ),
@@ -410,11 +505,12 @@ class SettingsScreen extends HookConsumerWidget {
   }
 
   Widget _buildAudioSectionContent(BuildContext context, WidgetRef ref, UserSettings settings) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'AUDIO & SYNC',
+          l10n.audioAndSync,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -450,7 +546,7 @@ class SettingsScreen extends HookConsumerWidget {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              'Master Volume',
+                              l10n.masterVolume,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -491,7 +587,7 @@ class SettingsScreen extends HookConsumerWidget {
               Divider(color: Palette.glassBorder, height: 1),
               _buildToggleItem(
                 Icons.notifications_active,
-                'Push Notifications',
+                l10n.pushNotifications,
                 '',
                 settings.pushNotifications,
                 onChanged: (value) {
@@ -506,6 +602,7 @@ class SettingsScreen extends HookConsumerWidget {
   }
 
   Widget _buildPrivacySection(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final settingsAsync = ref.watch(settingsControllerProvider);
     
     return settingsAsync.when(
@@ -522,7 +619,7 @@ class SettingsScreen extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'PRIVACY',
+            l10n.privacy,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -537,7 +634,7 @@ class SettingsScreen extends HookConsumerWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Palette.error),
             ),
-            child: Text('Error loading settings', style: TextStyle(color: Palette.error)),
+            child: Text(l10n.errorLoadingSettings, style: TextStyle(color: Palette.error)),
           ),
         ],
       ),
@@ -545,11 +642,12 @@ class SettingsScreen extends HookConsumerWidget {
   }
 
   Widget _buildPrivacySectionContent(BuildContext context, WidgetRef ref, UserSettings settings) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'PRIVACY',
+          l10n.privacy,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -567,7 +665,7 @@ class SettingsScreen extends HookConsumerWidget {
             children: [
               _buildSettingItem(
                 Icons.lock,
-                'Privacy Policy',
+                l10n.privacyPolicy,
                 null,
                 Icons.open_in_new,
                 onTap: () {
@@ -578,8 +676,8 @@ class SettingsScreen extends HookConsumerWidget {
               Divider(color: Palette.glassBorder, height: 1),
               _buildToggleItem(
                 Icons.visibility,
-                'Online Status',
-                'Visible to friends only',
+                l10n.onlineStatus,
+                l10n.onlineStatusDescription,
                 settings.onlineStatusVisible,
                 onChanged: (value) {
                   ref.read(settingsControllerProvider.notifier).updateOnlineStatusVisible(value);
@@ -675,6 +773,7 @@ class SettingsScreen extends HookConsumerWidget {
   }
 
   Widget _buildLogoutButton(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -694,7 +793,7 @@ class SettingsScreen extends HookConsumerWidget {
           ),
         ),
         child: Text(
-          'Log Out',
+          l10n.logout,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,

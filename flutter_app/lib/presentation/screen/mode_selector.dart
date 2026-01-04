@@ -5,9 +5,7 @@ import 'package:chess_rps/presentation/mediator/game_mode_mediator.dart';
 import 'package:chess_rps/presentation/screen/play_flow_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-const _normalModeText = 'Classical Mode';
-const _rpsModeText = 'RPS Mode';
+import 'package:chess_rps/l10n/app_localizations.dart';
 
 class ModeSelector extends StatelessWidget {
   static const routeName = "modeSelector";
@@ -29,6 +27,7 @@ class ModeSelectorContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -91,8 +90,8 @@ class ModeSelectorContent extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 24),
-                            const Text(
-                              'Chess RPS',
+                            Text(
+                              l10n.chessRps,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 36,
@@ -105,7 +104,7 @@ class ModeSelectorContent extends ConsumerWidget {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
-                                'Select Game Mode',
+                                l10n.selectGameMode,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 16,
@@ -126,7 +125,7 @@ class ModeSelectorContent extends ConsumerWidget {
                             _buildModeButton(
                               context,
                               ref,
-                              title: _normalModeText,
+                              title: l10n.classicalMode,
                               icon: Icons.sports_esports,
                               color: Palette.accent,
                               onPressed: () {
@@ -139,7 +138,7 @@ class ModeSelectorContent extends ConsumerWidget {
                             _buildModeButton(
                               context,
                               ref,
-                              title: _rpsModeText,
+                              title: l10n.rpsMode,
                               icon: Icons.handshake,
                               color: Palette.purpleAccent,
                               onPressed: () {
@@ -213,16 +212,20 @@ class ModeSelectorContent extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 20),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Palette.textPrimary,
-                    letterSpacing: 0.5,
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Palette.textPrimary,
+                      letterSpacing: 0.5,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 12),
                 Icon(
                   Icons.arrow_forward_ios,
                   size: 18,

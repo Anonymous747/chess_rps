@@ -43,6 +43,23 @@ typedef _$StatsController = AutoDisposeAsyncNotifier<UserStats>;
 final leaderboardProvider = FutureProvider.autoDispose.family<List<LeaderboardEntry>, int>(
   (ref, limit) => leaderboard(ref, limit),
 );
+
+String _$leaderboardControllerHash() => r'leaderboard_controller_provider_hash';
+
+/// See also [LeaderboardController].
+@ProviderFor(LeaderboardController)
+final leaderboardControllerProvider =
+    AutoDisposeAsyncNotifierProvider<LeaderboardController, List<LeaderboardEntry>>.internal(
+  LeaderboardController.new,
+  name: r'leaderboardControllerProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$leaderboardControllerHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$LeaderboardController = AutoDisposeAsyncNotifier<List<LeaderboardEntry>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
 

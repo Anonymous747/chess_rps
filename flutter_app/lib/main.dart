@@ -1,13 +1,16 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
+import 'package:chess_rps/presentation/controller/locale_controller.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/widget/app_loading_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 
 void main() {
-  AppLogger.info('Starting Chess RPS application', tag: 'Main');
+  AppLogger.info('Starting Chess Arena application', tag: 'Main');
   runApp(
     const ProviderScope(
       child: Root(),
@@ -43,12 +46,27 @@ class _RootState extends ConsumerState<Root> {
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     final authState = ref.watch(authControllerProvider);
+    final localeAsync = ref.watch(localeNotifierProvider);
     
     // Show loading screen if auth is loading OR if minimum display time hasn't passed
     final shouldShowLoading = _showLoadingScreen || authState.isLoading;
     
+    final locale = localeAsync.valueOrNull ?? const Locale('en');
+    
     return MaterialApp.router(
+      key: ValueKey('locale_${locale.languageCode}'),
       routerConfig: router,
+      locale: locale,
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ru'),
+      ],
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: ThemeData(
         useMaterial3: true,
         primaryColor: Palette.accent,

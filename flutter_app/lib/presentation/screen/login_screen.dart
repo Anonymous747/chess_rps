@@ -3,6 +3,7 @@ import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/presentation/controller/auth_controller.dart';
 import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/utils/auth_error_helper.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +16,7 @@ class LoginScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final phoneController = useTextEditingController();
     final passwordController = useTextEditingController();
     final formKey = useMemoized(() => GlobalKey<FormState>());
@@ -73,8 +75,8 @@ class LoginScreen extends HookConsumerWidget {
                     const SizedBox(height: 40),
                     
                     // Title
-                    const Text(
-                      'Welcome Back',
+                    Text(
+                      l10n.welcomeBack,
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -84,7 +86,7 @@ class LoginScreen extends HookConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Sign in to continue',
+                      l10n.signInToContinue,
                       style: TextStyle(
                         fontSize: 16,
                         color: Palette.textSecondary,
@@ -107,9 +109,9 @@ class LoginScreen extends HookConsumerWidget {
                         keyboardType: TextInputType.phone,
                         style: const TextStyle(color: Palette.textPrimary),
                         decoration: InputDecoration(
-                          labelText: 'Phone Number',
+                          labelText: l10n.phoneNumber,
                           labelStyle: TextStyle(color: Palette.textSecondary),
-                          hintText: 'Enter your phone number',
+                          hintText: l10n.enterPhoneNumber,
                           hintStyle: TextStyle(color: Palette.textTertiary),
                           prefixIcon: Icon(Icons.phone, color: Palette.accent),
                           border: InputBorder.none,
@@ -120,11 +122,11 @@ class LoginScreen extends HookConsumerWidget {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your phone number';
+                            return l10n.pleaseEnterPhoneNumber;
                           }
                           final cleaned = value.replaceAll(RegExp(r'[^\d]'), '');
                           if (cleaned.length < 10) {
-                            return 'Phone number must contain at least 10 digits';
+                            return l10n.phoneNumberMinDigits;
                           }
                           return null;
                         },
@@ -147,9 +149,9 @@ class LoginScreen extends HookConsumerWidget {
                         obscureText: obscurePassword.value,
                         style: const TextStyle(color: Palette.textPrimary),
                         decoration: InputDecoration(
-                          labelText: 'Password',
+                          labelText: l10n.password,
                           labelStyle: TextStyle(color: Palette.textSecondary),
-                          hintText: 'Enter your password',
+                          hintText: l10n.enterPassword,
                           hintStyle: TextStyle(color: Palette.textTertiary),
                           prefixIcon: Icon(Icons.lock_outline, color: Palette.accent),
                           suffixIcon: IconButton(
@@ -171,10 +173,10 @@ class LoginScreen extends HookConsumerWidget {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
+                            return l10n.pleaseEnterPassword;
                           }
                           if (value.length < 8) {
-                            return 'Password must be at least 8 characters';
+                            return l10n.passwordMinCharacters;
                           }
                           return null;
                         },
@@ -236,8 +238,8 @@ class LoginScreen extends HookConsumerWidget {
                                   ),
                                 ),
                               )
-                            : const Text(
-                                'Sign In',
+                            : Text(
+                                l10n.signIn,
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -252,7 +254,7 @@ class LoginScreen extends HookConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account? ",
+                          l10n.dontHaveAccount,
                           style: TextStyle(
                             color: Palette.textSecondary,
                             fontSize: 14,
@@ -263,7 +265,7 @@ class LoginScreen extends HookConsumerWidget {
                             context.push(AppRoutes.signup);
                           },
                           child: Text(
-                            'Sign Up',
+                            l10n.signUp,
                             style: TextStyle(
                               color: Palette.accent,
                               fontSize: 14,

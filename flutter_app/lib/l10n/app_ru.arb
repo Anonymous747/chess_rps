@@ -1,0 +1,584 @@
+{
+  "@@locale": "ru",
+  "appName": "Шахматная Арена",
+  "settings": "Настройки",
+  "language": "Язык",
+  "english": "Английский",
+  "russian": "Русский",
+  "account": "АККАУНТ",
+  "gameplay": "ИГРОВОЙ ПРОЦЕСС",
+  "audioAndSync": "АУДИО И СИНХРОНИЗАЦИЯ",
+  "privacy": "ПРИВАТНОСТЬ",
+  "boardTheme": "Тема доски",
+  "pieceSet": "Набор фигур",
+  "autoQueen": "Автоматический ферзь",
+  "autoQueenDescription": "Автоматически повышать до ферзя",
+  "confirmMoves": "Подтверждать ходы",
+  "masterVolume": "Главная громкость",
+  "pushNotifications": "Push-уведомления",
+  "privacyPolicy": "Политика конфиденциальности",
+  "onlineStatus": "Статус онлайн",
+  "onlineStatusDescription": "Видно только друзьям",
+  "logout": "Выйти",
+  "editProfile": "Редактировать профиль",
+  "membership": "Членство",
+  "general": "ОБЩЕЕ",
+  "grandmaster": "Гроссмейстер",
+  "ratingPosition": "Позиция в рейтинге: #{position}",
+  "@ratingPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "errorLoadingSettings": "Ошибка загрузки настроек",
+  "errorLoadingLanguageSettings": "Ошибка загрузки языковых настроек",
+  "cancel": "Отмена",
+  "appVersion": "Шахматная Арена v2.4.1 (Сборка 890)",
+  "home": "Главная",
+  "events": "События",
+  "chat": "Чат",
+  "profile": "Профиль",
+  "rating": "Рейтинг",
+  "collection": "Коллекция",
+  "friends": "Друзья",
+  "skinsAndBoards": "Скины и доски",
+  "online": "Онлайн",
+  "preferences": "Настройки",
+  "variationGames": "Вариативные игры",
+  "variationGamesDescription": "КНБ, Блиц, Буллет и Хаос режимы",
+  "tournamentGames": "Турнирные игры",
+  "tournamentGamesDescription": "Участвуйте в ежедневных событиях и выигрывайте эксклюзивные скины.",
+  "featured": "РЕКОМЕНДУЕМОЕ",
+  "live": "• В ЭФИРЕ",
+  "level": "Уровень {level}",
+  "@level": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "novice": "Новичок",
+  "mmr": "{rating} MMR",
+  "@mmr": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      }
+    }
+  },
+  "chessRps": "Шахматы КНБ",
+  "selectGameMode": "Выберите режим игры",
+  "classicalMode": "Классический режим",
+  "rpsMode": "Режим КНБ",
+  "selectOpponent": "Выберите соперника",
+  "chooseOpponentDescription": "Выберите, с кем хотите играть",
+  "playWithAI": "Играть с ИИ",
+  "comingSoon": "Скоро...",
+  "playOnline": "Играть онлайн",
+  "failedToFindMatch": "Не удалось найти матч: {error}",
+  "@failedToFindMatch": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "youWonRps": "Вы выиграли КНБ! Сделайте ход",
+  "opponentWonRps": "Соперник выиграл КНБ. Ожидание...",
+  "draw": "Ничья!",
+  "victory": "Победа!",
+  "defeat": "Поражение",
+  "stalemateMessage": "Игра закончилась патом.\nНикто не выиграл.",
+  "drawMessage": "Игра закончилась вничью.",
+  "checkmateWin": "Поздравляем! Вы выиграли матом!",
+  "winMessage": "Поздравляем! Вы выиграли!",
+  "checkmateLoss": "Вам поставили мат.\nУдачи в следующий раз!",
+  "lossMessage": "Вы проиграли игру.\nУдачи в следующий раз!",
+  "experience": "Опыт",
+  "xpGained": "+{xp} ОП",
+  "@xpGained": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "returnToMenu": "Вернуться в меню",
+  "finishGame": "Завершить игру?",
+  "warning": "Предупреждение",
+  "finishGameWarning": "Вы уверены, что хотите завершить эту игру?\nВаш прогресс будет потерян.",
+  "finish": "Завершить",
+  "chooseYourSide": "Выберите свою сторону",
+  "whiteMovesFirst": "Белые всегда ходят первыми",
+  "white": "Белые",
+  "black": "Черные",
+  "randomize": "Случайно",
+  "movesFirst": "Ходит первым",
+  "aiMovesFirst": "ИИ ходит первым",
+  "selectDifficulty": "Выберите сложность",
+  "chooseAIDifficulty": "Выберите уровень сложности ИИ",
+  "beginner": "Новичок",
+  "beginnerDescription": "Идеально для изучения основ",
+  "easy": "Легко",
+  "easyDescription": "Мягкий вызов",
+  "medium": "Средне",
+  "mediumDescription": "Сбалансированный соперник",
+  "hard": "Сложно",
+  "hardDescription": "Серьезный вызов",
+  "expert": "Эксперт",
+  "expertDescription": "Максимальная сложность",
+  "welcomeBack": "С возвращением",
+  "signInToContinue": "Войдите, чтобы продолжить",
+  "phoneNumber": "Номер телефона",
+  "enterPhoneNumber": "Введите номер телефона",
+  "pleaseEnterPhoneNumber": "Пожалуйста, введите номер телефона",
+  "phoneNumberMinDigits": "Номер телефона должен содержать не менее 10 цифр",
+  "password": "Пароль",
+  "enterPassword": "Введите пароль",
+  "passwordMinLength": "Не менее 8 символов",
+  "pleaseEnterPassword": "Пожалуйста, введите пароль",
+  "passwordMinCharacters": "Пароль должен содержать не менее 8 символов",
+  "confirmPassword": "Подтвердите пароль",
+  "reenterPassword": "Повторите пароль",
+  "pleaseConfirmPassword": "Пожалуйста, подтвердите пароль",
+  "passwordsDoNotMatch": "Пароли не совпадают",
+  "signIn": "Войти",
+  "signUp": "Зарегистрироваться",
+  "dontHaveAccount": "Нет аккаунта? ",
+  "createAccount": "Создать аккаунт",
+  "signUpToGetStarted": "Зарегистрируйтесь, чтобы начать",
+  "waitingForOpponent": "Ожидание соперника",
+  "connecting": "Подключение...",
+  "roomCode": "Код комнаты",
+  "connectingToRoom": "Подключение к комнате...",
+  "pleaseWait": "Пожалуйста, подождите",
+  "waitingForOpponentMessage": "Ожидание соперника...",
+  "searchingForOpponent": "Мы ищем для вас соперника...",
+  "failedToConnect": "Не удалось подключиться: {error}",
+  "@failedToConnect": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "season4ShadowGambit": "Сезон 4: Теневой Гамбит",
+  "liveNow": "В ЭФИРЕ",
+  "grandPrix2024": "Гран-при 2024",
+  "grandPrixDescription": "Главное рапид-шоу. Смотрите, как гроссмейстеры сражаются за трон.",
+  "watchStream": "Смотреть трансляцию",
+  "details": "Подробности",
+  "allEvents": "Все события",
+  "challenges": "Вызовы",
+  "community": "Сообщество",
+  "weeklyBlitz": "Еженедельный блиц",
+  "startsIn": "Начинается через {time}",
+  "@startsIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "blitzArena": "Блиц-арена {time}",
+  "@blitzArena": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "prize": "Приз {amount}",
+  "@prize": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "participants": "{current}/{max}",
+  "@participants": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "registrationOpen": "Регистрация открыта",
+  "dailyChallenge": "ЕЖЕДНЕВНЫЙ ВЫЗОВ",
+  "mateIn3Puzzle": "Мат в 3 хода",
+  "solvePuzzleDescription": "Решите самую сложную головоломку дня, чтобы заработать очки.",
+  "clubWars": "Войны клубов",
+  "teamVsTeam": "Команда против команды • Начинается через {days} дней",
+  "@teamVsTeam": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "join": "Присоединиться",
+  "topStandings": "Топ рейтинга",
+  "viewAll": "Посмотреть все",
+  "noStandingsAvailable": "Рейтинг недоступен",
+  "failedToLoadStandings": "Не удалось загрузить рейтинг",
+  "player": "Игрок",
+  "competeAndClimb": "Соревнуйтесь и поднимайтесь в рейтинге",
+  "allModes": "Все режимы",
+  "classical": "Классический",
+  "allStatus": "Все статусы",
+  "inProgress": "В процессе",
+  "finished": "Завершено",
+  "noTournamentsFound": "Турниры не найдены",
+  "createNewTournament": "Создайте новый турнир, чтобы начать",
+  "failedToLoadTournaments": "Не удалось загрузить турниры: {error}",
+  "@failedToLoadTournaments": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "singleElim": "Олимпийская система",
+  "doubleElim": "Двойная олимпийская",
+  "swiss": "Швейцарская",
+  "roundRobin": "Круговая",
+  "registrationEnded": "Регистрация завершена",
+  "startsInDays": "Начинается через {days} день{plural}",
+  "@startsInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "startsInHours": "Начинается через {hours} час{plural}",
+  "@startsInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "startsInMinutes": "Начинается через {minutes} минут{plural}",
+  "@startsInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "endsInDays": "Заканчивается через {days} день{plural}",
+  "@endsInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "endsInHours": "Заканчивается через {hours} час{plural}",
+  "@endsInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "endsInMinutes": "Заканчивается через {minutes} минут{plural}",
+  "@endsInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "soon": "скоро",
+  "cancelled": "Отменено",
+  "playerProfile": "ПРОФИЛЬ ИГРОКА",
+  "errorLoadingProfile": "Ошибка загрузки профиля",
+  "winRate": "Процент побед",
+  "streak": "Серия",
+  "best": "Лучший: {value}",
+  "@best": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "games": "{count} игр",
+  "@games": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "performance": "Производительность",
+  "weekly": "Неделя",
+  "monthly": "Месяц",
+  "noPerformanceData": "Нет данных о производительности за {period} период",
+  "@noPerformanceData": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "noPerformanceDataYet": "Пока нет данных о производительности",
+  "errorLoadingPerformance": "Ошибка загрузки данных о производительности",
+  "achievements": "Достижения",
+  "grandmasterAchievement": "Гроссмейстер",
+  "reach2500MMR": "Достичь 2500 MMR",
+  "onFire": "В огне",
+  "winStreak10": "Серия из 10 побед",
+  "puzzleMaster": "Мастер головоломок",
+  "solve1000Puzzles": "Решить 1000 головоломок",
+  "showcase": "Витрина",
+  "voidSpiritKnight": "Рыцарь Духа Пустоты",
+  "legendarySkin": "Легендарный скин",
+  "nebulaQueen": "Королева Туманности",
+  "epicSkin": "Эпический скин",
+  "enterName": "Введите имя",
+  "nameCannotBeEmpty": "Имя не может быть пустым",
+  "profileNameUpdated": "Имя профиля обновлено",
+  "failedToUpdateProfileName": "Не удалось обновить имя профиля",
+  "addFriends": "Добавить друзей",
+  "searchForFriends": "Искать друзей",
+  "enterAtLeast3Characters": "Введите не менее 3 символов для поиска пользователей",
+  "errorSearchingUsers": "Ошибка поиска пользователей",
+  "tryAgain": "Попробовать снова",
+  "alreadyFriends": "Уже друзья",
+  "requestPending": "Запрос ожидает",
+  "notFriends": "Не друзья",
+  "friendRequestSent": "Запрос на дружбу отправлен",
+  "failedToSendRequest": "Не удалось отправить запрос: {error}",
+  "@failedToSendRequest": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "searchByPhoneOrId": "Поиск по номеру телефона или ID пользователя (минимум 3 символа)...",
+  "searchUsers": "Поиск пользователей",
+  "myFriends": "Мои друзья",
+  "requests": "ЗАПРОСЫ",
+  "pending": "{count} Ожидает",
+  "@pending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sentYouARequest": "Отправил вам запрос • {timeAgo}",
+  "@sentYouARequest": {
+    "placeholders": {
+      "timeAgo": {
+        "type": "String"
+      }
+    }
+  },
+  "friendRequestAccepted": "Запрос на дружбу принят",
+  "failedToAcceptRequest": "Не удалось принять запрос: {error}",
+  "@failedToAcceptRequest": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "friendRequestDeclined": "Запрос на дружбу отклонен",
+  "failedToDeclineRequest": "Не удалось отклонить запрос: {error}",
+  "@failedToDeclineRequest": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noFriendsYet": "Пока нет друзей",
+  "addFriendsToChallenge": "Добавьте друзей, чтобы бросить им вызов",
+  "errorLoadingFriends": "Ошибка загрузки друзей",
+  "retry": "Повторить",
+  "offline": "Офлайн",
+  "inGame": "В игре",
+  "onlineFriends": "ОНЛАЙН",
+  "offlineFriends": "ОФЛАЙН",
+  "noUsersFound": "Пользователи не найдены",
+  "tryDifferentQuery": "Попробуйте другой запрос. Убедитесь, что введено не менее 3 символов.",
+  "discoverUsers": "ОТКРЫТЬ ПОЛЬЗОВАТЕЛЕЙ",
+  "users": "{count} пользователей",
+  "@users": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noUsersAvailable": "Пользователи недоступны",
+  "trySearchingForUsers": "Попробуйте поискать конкретных пользователей",
+  "errorLoadingUsers": "Ошибка загрузки пользователей",
+  "enterPhoneNumberOrUserId": "Введите номер телефона или ID пользователя",
+  "ratingOverview": "Обзор рейтинга",
+  "errorLoadingRating": "Ошибка загрузки рейтинга",
+  "goBack": "Назад",
+  "currentLevel": "Текущий уровень",
+  "history": "История",
+  "modeBreakdown": "Разбивка по режимам",
+  "standardChess": "Стандартные шахматы",
+  "rockPaperScissors": "Камень, ножницы, бумага",
+  "pieces": "Фигуры",
+  "boards": "Доски",
+  "avatars": "Аватары",
+  "effects": "Эффекты",
+  "availablePieceSets": "Доступные наборы фигур ({count})",
+  "@availablePieceSets": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selected": "Выбрано: {name}",
+  "@selected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "select": "Выбрать",
+  "errorLoadingSettings": "Ошибка загрузки настроек",
+  "availableAvatars": "Доступные аватары (20)",
+  "availableBoardThemes": "Доступные темы доски ({count})",
+  "@availableBoardThemes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "availableEffects": "Доступные эффекты ({count})",
+  "@availableEffects": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedClassic": "Выбрано: Классика",
+  "myPieces": "Мои {category}",
+  "@myPieces": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "sortByRarity": "Сортировать по: Редкость",
+  "equipped": "Надета",
+  "unlockAtLevel": "Разблокировать на уровне {level}",
+  "@unlockAtLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "equippedItem": "{name} надета!",
+  "@equippedItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToEquip": "Не удалось надеть: {error}",
+  "@failedToEquip": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "customize": "Настроить",
+  "getMore": "Получить больше",
+  "visitTheShop": "Посетить магазин",
+  "errorLoadingCollection": "Ошибка загрузки коллекции",
+  "errorLoadingItems": "Ошибка загрузки предметов",
+  "selectedAndSaved": "{name} выбрано и сохранено",
+  "@selectedAndSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSelect": "Не удалось выбрать {item}: {error}",
+  "@failedToSelect": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "currentlySelected": "В настоящее время выбрано",
+  "selectThisEffect": "Выбрать этот эффект",
+  "selectThisTheme": "Выбрать эту тему",
+  "light": "Светлая",
+  "dark": "Темная",
+  "levelsAndTitles": "Уровни и звания",
+  "failedToLoadLevels": "Не удалось загрузить уровни",
+  "allLevels": "Все уровни",
+  "current": "ТЕКУЩИЙ",
+  "xpToUnlock": "{xp} ОП для разблокировки",
+  "@xpToUnlock": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "globalLobby": "Глобальный лобби",
+  "clan": "Клан",
+  "mentions": "Упоминания",
+  "today": "Сегодня",
+  "welcomeToGlobalStrategy": "Добро пожаловать в Глобальный стратегический канал",
+  "you": "Вы",
+  "replyingToYou": "Ответ на ваше сообщение",
+  "typeAMessage": "Введите сообщение...",
+  "leaderboard": "Таблица лидеров",
+  "noLeaderboardData": "Нет данных таблицы лидеров",
+  "errorLoadingLeaderboard": "Ошибка загрузки таблицы лидеров"
+}
+
+

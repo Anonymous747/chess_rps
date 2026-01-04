@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:chess_rps/presentation/controller/stats_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -11,6 +12,7 @@ class LevelsScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final statsAsync = ref.watch(statsControllerProvider);
 
     return Scaffold(
@@ -40,7 +42,7 @@ class LevelsScreen extends HookConsumerWidget {
                     ),
                     Expanded(
                       child: Text(
-                        'Levels & Titles',
+                        l10n.levelsAndTitles,
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -89,7 +91,7 @@ class LevelsScreen extends HookConsumerWidget {
                             child: Column(
                               children: [
                                 Text(
-                                  'Current Level',
+                                  l10n.currentLevel,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Palette.textPrimary.withValues(alpha: 0.8),
@@ -97,7 +99,7 @@ class LevelsScreen extends HookConsumerWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  stats.levelName ?? 'Novice',
+                                  stats.levelName ?? l10n.novice,
                                   style: TextStyle(
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
@@ -106,7 +108,7 @@ class LevelsScreen extends HookConsumerWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Level $currentLevel',
+                                  l10n.level(currentLevel),
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Palette.textPrimary.withValues(alpha: 0.8),
@@ -151,7 +153,7 @@ class LevelsScreen extends HookConsumerWidget {
 
                           // All Levels List
                           Text(
-                            'All Levels',
+                            l10n.allLevels,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -159,7 +161,7 @@ class LevelsScreen extends HookConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          ..._buildAllLevelsList(currentLevel, totalXp),
+                          ..._buildAllLevelsList(currentLevel, totalXp, l10n),
                           const SizedBox(height: 100),
                         ],
                       ),
@@ -175,7 +177,7 @@ class LevelsScreen extends HookConsumerWidget {
                   ),
                   error: (error, stack) => Center(
                     child: Text(
-                      'Failed to load levels',
+                      l10n.failedToLoadLevels,
                       style: TextStyle(color: Palette.error),
                     ),
                   ),
@@ -188,7 +190,7 @@ class LevelsScreen extends HookConsumerWidget {
     );
   }
 
-  List<Widget> _buildAllLevelsList(int currentLevel, int totalXp) {
+  List<Widget> _buildAllLevelsList(int currentLevel, int totalXp, AppLocalizations l10n) {
     // Level names from the backend level system
     final levelNames = {
       0: "Novice",
@@ -323,7 +325,7 @@ class LevelsScreen extends HookConsumerWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'CURRENT',
+                            l10n.current,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -371,7 +373,7 @@ class LevelsScreen extends HookConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$xpNeeded XP to unlock',
+                      l10n.xpToUnlock(xpNeeded),
                       style: TextStyle(
                         fontSize: 10,
                         color: Palette.textTertiary,

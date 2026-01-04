@@ -65,9 +65,9 @@ class AIActionHandler extends ActionHandler {
       await _stockfishInterpreter.visualizeBoard();
       AppLogger.info('Board visualization completed', tag: 'AIActionHandler');
       
-      // Get the best move from Stockfish
-      AppLogger.info('Step 3: Requesting best move from Stockfish (this may take a moment)...', tag: 'AIActionHandler');
-      final bestMove = await _stockfishInterpreter.getBestMove();
+      // Get the best move from Stockfish with 5 second maximum time limit (5000 milliseconds)
+      AppLogger.info('Step 3: Requesting best move from Stockfish (max 5 seconds)...', tag: 'AIActionHandler');
+      final bestMove = await _stockfishInterpreter.getBestMoveTime(time: 5000);
       AppLogger.info('Stockfish response received: $bestMove', tag: 'AIActionHandler');
 
       if (bestMove.isNullOrEmpty) {

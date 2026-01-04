@@ -1,6 +1,7 @@
 import 'package:chess_rps/common/logger.dart';
 import 'package:chess_rps/common/palette.dart';
 import 'package:chess_rps/data/service/friends/friends_service.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:chess_rps/presentation/controller/friends_controller.dart';
 import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:chess_rps/presentation/widget/skeleton_loader.dart';
@@ -16,6 +17,7 @@ class FriendsScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final friendsAsync = ref.watch(friendsControllerProvider);
     final requestsAsync = ref.watch(friendRequestsControllerProvider);
     final searchAsync = ref.watch(friendsSearchControllerProvider);
@@ -79,7 +81,7 @@ class FriendsScreen extends HookConsumerWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Friends',
+                      l10n.friends,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -89,7 +91,7 @@ class FriendsScreen extends HookConsumerWidget {
                     const Spacer(),
                     IconButton(
                       onPressed: () {
-                        _showAddFriendDialog(context, ref, searchController);
+                        _showAddFriendDialog(context, ref, searchController, l10n);
                       },
                       icon: Icon(Icons.person_add, color: Palette.purpleAccent),
                       style: IconButton.styleFrom(
@@ -127,7 +129,7 @@ class FriendsScreen extends HookConsumerWidget {
                     style: TextStyle(color: Palette.textPrimary),
                     onChanged: onSearchChanged,
                     decoration: InputDecoration(
-                      hintText: 'Search by phone number or ID (min 3 characters)...',
+                      hintText: l10n.searchByPhoneOrId,
                       hintStyle: TextStyle(color: Palette.textSecondary),
                       prefixIcon: Icon(Icons.search, color: Palette.textSecondary),
                       border: InputBorder.none,
@@ -145,7 +147,7 @@ class FriendsScreen extends HookConsumerWidget {
                   children: [
                     Expanded(
                       child: _buildToggleButton(
-                        'Search Users',
+                        l10n.searchUsers,
                         showSearchResults.value,
                         () {
                           showSearchResults.value = true;
@@ -158,7 +160,7 @@ class FriendsScreen extends HookConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildToggleButton(
-                        'My Friends',
+                        l10n.myFriends,
                         !showSearchResults.value,
                         () {
                           showSearchResults.value = false;
@@ -174,24 +176,25 @@ class FriendsScreen extends HookConsumerWidget {
               // Show search results, users list, or friends list
               Expanded(
                 child: showSearchResults.value
-                    ? _buildSearchResults(context, ref, searchAsync, requestsController)
+                    ? _buildSearchResults(context, ref, searchAsync, requestsController, l10n)
                     : (showUsersList.value && (searchTextController.text.isEmpty || searchTextController.text.length < 3))
                         ? _UsersListWidget(
                             usersListAsync: usersListAsync,
                             usersListController: usersListController,
                             requestsController: requestsController,
+                            l10n: l10n,
                           )
                         : SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Column(
                               children: [
                                 // Friend Requests Section
-                                _buildFriendRequestsSection(context, ref, requestsAsync, requestsController),
+                                _buildFriendRequestsSection(context, ref, requestsAsync, requestsController, l10n),
                                 
                                 const SizedBox(height: 24),
                                 
                                 // Friends List
-                                _buildFriendsList(context, ref, friendsAsync, friendsController, selectedFilterState),
+                                _buildFriendsList(context, ref, friendsAsync, friendsController, selectedFilterState, l10n),
                                 
                                 const SizedBox(height: 100),
                               ],
@@ -210,6 +213,7 @@ class FriendsScreen extends HookConsumerWidget {
     WidgetRef ref,
     AsyncValue<List<FriendRequestInfo>> requestsAsync,
     FriendRequestsController requestsController,
+    AppLocalizations l10n,
   ) {
     return requestsAsync.when(
       data: (requests) {
@@ -224,7 +228,7 @@ class FriendsScreen extends HookConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'REQUESTS',
+                  l10n.requests,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -244,7 +248,7 @@ class FriendsScreen extends HookConsumerWidget {
                     ],
                   ),
                   child: Text(
-                    '${requests.length} Pending',
+                    l10n.pending(requests.length),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -257,7 +261,7 @@ class FriendsScreen extends HookConsumerWidget {
             const SizedBox(height: 12),
             ...requests.map((request) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _buildRequestItem(context, ref, request, requestsController),
+              child: _buildRequestItem(context, ref, request, requestsController, l10n),
             )),
           ],
         );
@@ -277,7 +281,7 @@ class FriendsScreen extends HookConsumerWidget {
       error: (error, stack) => Container(
         padding: const EdgeInsets.all(20),
         child: Text(
-          'Error loading requests',
+          l10n.errorLoadingFriends,
           style: TextStyle(color: Palette.error, fontSize: 12),
         ),
       ),
@@ -289,6 +293,7 @@ class FriendsScreen extends HookConsumerWidget {
     WidgetRef ref,
     FriendRequestInfo request,
     FriendRequestsController requestsController,
+    AppLocalizations l10n,
   ) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -324,7 +329,7 @@ class FriendsScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Sent you a request • ${_formatTimeAgo(request.createdAt)}',
+                  l10n.sentYouARequest(_formatTimeAgo(request.createdAt)),
                   style: TextStyle(
                     fontSize: 12,
                     color: Palette.textSecondary,
@@ -340,7 +345,7 @@ class FriendsScreen extends HookConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Friend request accepted'),
+                      content: Text(l10n.friendRequestAccepted),
                       backgroundColor: Palette.success,
                     ),
                   );
@@ -349,7 +354,7 @@ class FriendsScreen extends HookConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to accept request: $e'),
+                      content: Text(l10n.failedToAcceptRequest(e.toString())),
                       backgroundColor: Palette.error,
                     ),
                   );
@@ -373,7 +378,7 @@ class FriendsScreen extends HookConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Friend request declined'),
+                      content: Text(l10n.friendRequestDeclined),
                       backgroundColor: Palette.textSecondary,
                     ),
                   );
@@ -382,7 +387,7 @@ class FriendsScreen extends HookConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to decline request: $e'),
+                      content: Text(l10n.failedToDeclineRequest(e.toString())),
                       backgroundColor: Palette.error,
                     ),
                   );
@@ -409,6 +414,7 @@ class FriendsScreen extends HookConsumerWidget {
     AsyncValue<List<FriendInfo>> friendsAsync,
     FriendsController friendsController,
     ValueNotifier<int> selectedFilterState,
+    AppLocalizations l10n,
   ) {
     return friendsAsync.when(
       data: (friends) {
@@ -422,7 +428,7 @@ class FriendsScreen extends HookConsumerWidget {
                   Icon(Icons.people_outline, size: 64, color: Palette.textTertiary),
                   const SizedBox(height: 16),
                   Text(
-                    'No friends yet',
+                    l10n.noFriendsYet,
                     style: TextStyle(
                       fontSize: 16,
                       color: Palette.textSecondary,
@@ -431,7 +437,7 @@ class FriendsScreen extends HookConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Add friends to challenge them to games',
+                    l10n.addFriendsToChallenge,
                     style: TextStyle(
                       fontSize: 12,
                       color: Palette.textTertiary,
@@ -457,15 +463,15 @@ class FriendsScreen extends HookConsumerWidget {
             // Filter Buttons
             Row(
               children: [
-                _buildFilterButton('Online', onlineFriends.length, 0, selectedFilter, (v) {
+                _buildFilterButton(l10n.online, onlineFriends.length, 0, selectedFilter, (v) {
                   selectedFilterState.value = v;
                 }),
                 const SizedBox(width: 12),
-                _buildFilterButton('In Game', 0, 1, selectedFilter, (v) {
+                _buildFilterButton(l10n.inGame, 0, 1, selectedFilter, (v) {
                   selectedFilterState.value = v;
                 }),
                 const SizedBox(width: 12),
-                _buildFilterButton('Offline', offlineFriends.length, 2, selectedFilter, (v) {
+                _buildFilterButton(l10n.offline, offlineFriends.length, 2, selectedFilter, (v) {
                   selectedFilterState.value = v;
                 }),
               ],
@@ -475,7 +481,7 @@ class FriendsScreen extends HookConsumerWidget {
             // Online Friends
             if (onlineFriends.isNotEmpty) ...[
               Text(
-                'ONLINE',
+                l10n.onlineFriends,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -485,7 +491,7 @@ class FriendsScreen extends HookConsumerWidget {
               const SizedBox(height: 12),
               ...onlineFriends.map((friend) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: _buildFriendItem(context, ref, friend, friendsController),
+                child: _buildFriendItem(context, ref, friend, friendsController, l10n),
               )),
               const SizedBox(height: 20),
             ],
@@ -493,7 +499,7 @@ class FriendsScreen extends HookConsumerWidget {
             // Offline Friends
             if (offlineFriends.isNotEmpty) ...[
               Text(
-                'OFFLINE',
+                l10n.offlineFriends,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -503,7 +509,7 @@ class FriendsScreen extends HookConsumerWidget {
               const SizedBox(height: 12),
               ...offlineFriends.map((friend) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: _buildFriendItem(context, ref, friend, friendsController),
+                child: _buildFriendItem(context, ref, friend, friendsController, l10n),
               )),
             ],
           ],
@@ -526,13 +532,13 @@ class FriendsScreen extends HookConsumerWidget {
         child: Column(
           children: [
             Text(
-              'Error loading friends',
+              l10n.errorLoadingFriends,
               style: TextStyle(color: Palette.error, fontSize: 12),
             ),
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () => friendsController.refreshFriends(),
-              child: Text('Retry'),
+              child: Text(l10n.retry),
             ),
           ],
         ),
@@ -545,6 +551,7 @@ class FriendsScreen extends HookConsumerWidget {
     WidgetRef ref,
     FriendInfo friend,
     FriendsController friendsController,
+    AppLocalizations l10n,
   ) {
     final isOffline = !friend.isOnline;
     
@@ -636,7 +643,7 @@ class FriendsScreen extends HookConsumerWidget {
                       ),
                     if (friend.isOnline) const SizedBox(width: 4),
                     Text(
-                      friend.isOnline ? 'Online' : 'Offline',
+                      friend.isOnline ? l10n.online : l10n.offline,
                       style: TextStyle(
                         fontSize: 12,
                         color: isOffline
@@ -750,6 +757,7 @@ class FriendsScreen extends HookConsumerWidget {
     WidgetRef ref,
     AsyncValue<List<SearchUserResponse>> searchAsync,
     FriendRequestsController requestsController,
+    AppLocalizations l10n,
   ) {
     return searchAsync.when(
       data: (results) {
@@ -763,7 +771,7 @@ class FriendsScreen extends HookConsumerWidget {
                   Icon(Icons.search_off, size: 64, color: Palette.textTertiary),
                   const SizedBox(height: 16),
                   Text(
-                    'No users found',
+                    l10n.noUsersFound,
                     style: TextStyle(
                       color: Palette.textSecondary,
                       fontSize: 16,
@@ -774,7 +782,7 @@ class FriendsScreen extends HookConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Text(
-                      'Try searching with a different query. Make sure to enter at least 3 characters.',
+                      l10n.tryDifferentQuery,
                       style: TextStyle(
                         color: Palette.textTertiary,
                         fontSize: 12,
@@ -847,10 +855,10 @@ class FriendsScreen extends HookConsumerWidget {
                           const SizedBox(height: 4),
                           Text(
                             user.isFriend
-                                ? 'Already friends'
+                                ? l10n.alreadyFriends
                                 : (user.friendshipStatus == 'pending'
-                                    ? 'Request pending'
-                                    : 'Not friends'),
+                                    ? l10n.requestPending
+                                    : l10n.notFriends),
                             style: TextStyle(
                               fontSize: 12,
                               color: Palette.textSecondary,
@@ -867,7 +875,7 @@ class FriendsScreen extends HookConsumerWidget {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Friend request sent'),
+                                  content: Text(l10n.friendRequestSent),
                                   backgroundColor: Palette.success,
                                 ),
                               );
@@ -876,7 +884,7 @@ class FriendsScreen extends HookConsumerWidget {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Failed to send request: $e'),
+                                  content: Text(l10n.failedToSendRequest(e.toString())),
                                   backgroundColor: Palette.error,
                                 ),
                               );
@@ -917,7 +925,7 @@ class FriendsScreen extends HookConsumerWidget {
       ),
       error: (error, stack) => Center(
         child: Text(
-          'Error searching users',
+          l10n.errorSearchingUsers,
           style: TextStyle(color: Palette.error, fontSize: 14),
         ),
       ),
@@ -928,6 +936,7 @@ class FriendsScreen extends HookConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     FriendsSearchController searchController,
+    AppLocalizations l10n,
   ) {
     final searchTextController = TextEditingController();
     
@@ -941,7 +950,7 @@ class FriendsScreen extends HookConsumerWidget {
             side: BorderSide(color: Palette.glassBorder, width: 1),
           ),
           title: Text(
-            'Add Friend',
+            l10n.addFriends,
             style: TextStyle(
               color: Palette.textPrimary,
               fontWeight: FontWeight.bold,
@@ -955,7 +964,7 @@ class FriendsScreen extends HookConsumerWidget {
                 controller: searchTextController,
                 style: TextStyle(color: Palette.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Enter phone number or user ID',
+                  hintText: l10n.enterPhoneNumberOrUserId,
                   hintStyle: TextStyle(color: Palette.textSecondary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -985,7 +994,7 @@ class FriendsScreen extends HookConsumerWidget {
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(
-                'Cancel',
+                l10n.cancel,
                 style: TextStyle(
                   color: Palette.textSecondary,
                   fontWeight: FontWeight.w600,
@@ -1067,11 +1076,13 @@ class _UsersListWidget extends HookConsumerWidget {
   final AsyncValue<List<SearchUserResponse>> usersListAsync;
   final UsersListController usersListController;
   final FriendRequestsController requestsController;
+  final AppLocalizations l10n;
 
   const _UsersListWidget({
     required this.usersListAsync,
     required this.usersListController,
     required this.requestsController,
+    required this.l10n,
   });
 
   @override
@@ -1107,7 +1118,7 @@ class _UsersListWidget extends HookConsumerWidget {
                   Icon(Icons.people_outline, size: 64, color: Palette.textTertiary),
                   const SizedBox(height: 16),
                   Text(
-                    'No users available',
+                    l10n.noUsersAvailable,
                     style: TextStyle(
                       color: Palette.textSecondary,
                       fontSize: 16,
@@ -1116,7 +1127,7 @@ class _UsersListWidget extends HookConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Try searching for specific users',
+                    l10n.trySearchingForUsers,
                     style: TextStyle(
                       color: Palette.textTertiary,
                       fontSize: 12,
@@ -1138,7 +1149,7 @@ class _UsersListWidget extends HookConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'DISCOVER USERS',
+                    l10n.discoverUsers,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -1153,7 +1164,7 @@ class _UsersListWidget extends HookConsumerWidget {
                       border: Border.all(color: Palette.purpleAccent.withValues(alpha: 0.2)),
                     ),
                     child: Text(
-                      '${users.length} users',
+                      l10n.users(users.length),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -1246,10 +1257,10 @@ class _UsersListWidget extends HookConsumerWidget {
                                 const SizedBox(height: 4),
                                 Text(
                                   user.isFriend
-                                      ? 'Already friends'
+                                      ? l10n.alreadyFriends
                                       : (user.friendshipStatus == 'pending'
-                                          ? 'Request pending'
-                                          : 'Not friends'),
+                                          ? l10n.requestPending
+                                          : l10n.notFriends),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Palette.textSecondary,
@@ -1266,7 +1277,7 @@ class _UsersListWidget extends HookConsumerWidget {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Friend request sent'),
+                                        content: Text(l10n.friendRequestSent),
                                         backgroundColor: Palette.success,
                                         behavior: SnackBarBehavior.floating,
                                       ),
@@ -1278,7 +1289,7 @@ class _UsersListWidget extends HookConsumerWidget {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Failed to send request: $e'),
+                                        content: Text(l10n.failedToSendRequest(e.toString())),
                                         backgroundColor: Palette.error,
                                         behavior: SnackBarBehavior.floating,
                                       ),
@@ -1328,7 +1339,7 @@ class _UsersListWidget extends HookConsumerWidget {
             Icon(Icons.error_outline, size: 64, color: Palette.error),
             const SizedBox(height: 16),
             Text(
-              'Error loading users',
+              l10n.errorLoadingUsers,
               style: TextStyle(
                 color: Palette.error,
                 fontSize: 14,
@@ -1337,7 +1348,7 @@ class _UsersListWidget extends HookConsumerWidget {
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () => usersListController.refresh(),
-              child: Text('Retry'),
+              child: Text(l10n.retry),
             ),
           ],
         ),

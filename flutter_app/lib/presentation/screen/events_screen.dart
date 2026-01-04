@@ -1,5 +1,7 @@
 import 'package:chess_rps/common/palette.dart';
+import 'package:chess_rps/l10n/app_localizations.dart';
 import 'package:chess_rps/presentation/controller/stats_controller.dart';
+import 'package:chess_rps/presentation/utils/app_router.dart';
 import 'package:chess_rps/presentation/widget/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +14,7 @@ class EventsScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -38,7 +41,7 @@ class EventsScreen extends HookConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Events',
+                          l10n.events,
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -47,7 +50,7 @@ class EventsScreen extends HookConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Season 4: Shadow Gambit',
+                          l10n.season4ShadowGambit,
                           style: TextStyle(
                             fontSize: 14,
                             color: Palette.textSecondary,
@@ -117,7 +120,7 @@ class EventsScreen extends HookConsumerWidget {
                                     border: Border.all(color: Palette.error.withValues(alpha: 0.3)),
                                   ),
                                   child: Text(
-                                    'LIVE NOW',
+                                    l10n.liveNow,
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
@@ -151,7 +154,7 @@ class EventsScreen extends HookConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Grand Prix 2024',
+                                  l10n.grandPrix2024,
                                   style: TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold,
@@ -161,7 +164,7 @@ class EventsScreen extends HookConsumerWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'The ultimate rapid chess showdown. Watch grandmasters battle for the throne.',
+                                  l10n.grandPrixDescription,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Palette.purpleAccentLight,
@@ -182,7 +185,7 @@ class EventsScreen extends HookConsumerWidget {
                                     children: [
                                       Icon(Icons.play_circle, size: 18),
                                       const SizedBox(width: 8),
-                                      Text('Watch Stream'),
+                                      Text(l10n.watchStream),
                                     ],
                                   ),
                                 ),
@@ -194,7 +197,7 @@ class EventsScreen extends HookConsumerWidget {
                                     side: BorderSide(color: Palette.glassBorder),
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                   ),
-                                  child: Text('Details'),
+                                  child: Text(l10n.details),
                                 ),
                               ],
                             ),
@@ -215,15 +218,15 @@ class EventsScreen extends HookConsumerWidget {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildFilterTab('All Events', true),
+                      _buildFilterTab(l10n.allEvents, true),
                       const SizedBox(width: 12),
-                      _buildFilterTab('Tournaments', false, onTap: () {
+                      _buildFilterTab(l10n.tournamentGames, false, onTap: () {
                         context.push('/tournaments');
                       }),
                       const SizedBox(width: 12),
-                      _buildFilterTab('Challenges', false),
+                      _buildFilterTab(l10n.challenges, false),
                       const SizedBox(width: 12),
-                      _buildFilterTab('Community', false),
+                      _buildFilterTab(l10n.community, false),
                     ],
                   ),
                 ),
@@ -238,21 +241,22 @@ class EventsScreen extends HookConsumerWidget {
                   child: Column(
                     children: [
                       _buildEventCard(
-                        'Weekly Blitz',
-                        'Starts in 2h 15m • 3+2 Blitz Arena',
-                        '\$500 Prize',
-                        '128/256',
+                        l10n.weeklyBlitz,
+                        '${l10n.startsIn('2h 15m')} • ${l10n.blitzArena('3+2')}',
+                        l10n.prize('\$500'),
+                        l10n.participants('128', '256'),
                         Icons.emoji_events,
                         Palette.gold,
-                        'Registration Open',
+                        l10n.registrationOpen,
                         0.5,
+                        l10n,
                       ),
                       const SizedBox(height: 16),
-                      _buildChallengeCard(),
+                      _buildChallengeCard(l10n),
                       const SizedBox(height: 16),
-                      _buildClubWarsCard(),
+                      _buildClubWarsCard(l10n),
                       const SizedBox(height: 16),
-                      _buildStandingsSection(context, ref),
+                      _buildStandingsSection(context, ref, l10n),
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -318,6 +322,7 @@ class EventsScreen extends HookConsumerWidget {
     Color iconColor,
     String status,
     double progress,
+    AppLocalizations l10n,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -453,7 +458,7 @@ class EventsScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildChallengeCard() {
+  Widget _buildChallengeCard(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -489,7 +494,7 @@ class EventsScreen extends HookConsumerWidget {
                     border: Border.all(color: Palette.accent.withValues(alpha: 0.2)),
                   ),
                   child: Text(
-                    'DAILY CHALLENGE',
+                    l10n.dailyChallenge,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -499,7 +504,7 @@ class EventsScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Mate in 3 Puzzle',
+                  l10n.mateIn3Puzzle,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -508,7 +513,7 @@ class EventsScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Solve today\'s hardest puzzle to earn points.',
+                  l10n.solvePuzzleDescription,
                   style: TextStyle(
                     fontSize: 12,
                     color: Palette.textSecondary,
@@ -545,7 +550,7 @@ class EventsScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildClubWarsCard() {
+  Widget _buildClubWarsCard(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -585,7 +590,7 @@ class EventsScreen extends HookConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Club Wars',
+                  l10n.clubWars,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -594,7 +599,7 @@ class EventsScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Team vs Team • Starts in 3 days',
+                  l10n.teamVsTeam(3),
                   style: TextStyle(
                     fontSize: 12,
                     color: Palette.textSecondary,
@@ -649,14 +654,14 @@ class EventsScreen extends HookConsumerWidget {
               foregroundColor: Palette.textPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
-            child: Text('Join'),
+            child: Text(l10n.join),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStandingsSection(BuildContext context, WidgetRef ref) {
+  Widget _buildStandingsSection(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
     final leaderboardAsync = ref.watch(leaderboardProvider(3));
     
     return Column(
@@ -666,7 +671,7 @@ class EventsScreen extends HookConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Top Standings',
+              l10n.topStandings,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -674,9 +679,11 @@ class EventsScreen extends HookConsumerWidget {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                context.push(AppRoutes.leaderboard);
+              },
               child: Text(
-                'View All',
+                l10n.viewAll,
                 style: TextStyle(color: Palette.purpleAccent),
               ),
             ),
@@ -695,7 +702,7 @@ class EventsScreen extends HookConsumerWidget {
                 ),
                 child: Center(
                   child: Text(
-                    'No standings available',
+                    l10n.noStandingsAvailable,
                     style: TextStyle(
                       fontSize: 14,
                       color: Palette.textSecondary,
@@ -725,8 +732,8 @@ class EventsScreen extends HookConsumerWidget {
                     child: Row(
                       children: [
                         SizedBox(width: 24, child: Text('#', style: TextStyle(fontSize: 12, color: Palette.textSecondary))),
-                        Expanded(child: Text('Player', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
-                        SizedBox(width: 64, child: Text('Rating', textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
+                        Expanded(child: Text(l10n.player, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
+                        SizedBox(width: 64, child: Text(l10n.rating, textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Palette.textSecondary))),
                       ],
                     ),
                   ),
@@ -767,7 +774,7 @@ class EventsScreen extends HookConsumerWidget {
             ),
             child: Center(
               child: Text(
-                'Failed to load standings',
+                l10n.failedToLoadStandings,
                 style: TextStyle(
                   fontSize: 14,
                   color: Palette.error,
